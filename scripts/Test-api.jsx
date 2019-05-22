@@ -107,11 +107,11 @@ function settingsDialog() {
         settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
         settingsDialog.publicationDropDownGroup.orientation = 'row';
         settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publications");
-        settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:getPublicationsName(publications)})
+        settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:mapItemsName(publications)})
         
         if(!!savedSettings.PublicationID) {
-            selectedPublication = getPublicationByID(publications, savedSettings.PublicationID);
-            settingsDialog.publicationDropDownGroup.dropDown.selection = getPublicationIndexByID(publications, savedSettings.PublicationID)
+            selectedPublication = getItemByID(publications, savedSettings.PublicationID);
+            settingsDialog.publicationDropDownGroup.dropDown.selection = getItemIndexByID(publications, savedSettings.PublicationID)
         } else {
             selectedPublication = publications[0];
             settingsDialog.publicationDropDownGroup.dropDown.selection = 0;
@@ -125,11 +125,11 @@ function settingsDialog() {
             settingsDialog.issueDropDownGroup = settingsDialog.add('group');
             settingsDialog.issueDropDownGroup.orientation = 'row';
             settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issues");
-            settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:getIssuesNames(issues)})
+            settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:mapItemsName(issues)})
 
             if(!!savedSettings.IssueID) {
-                selectedIssue = getIssueByID(issues, savedSettings.IssueID);
-                settingsDialog.issueDropDownGroup.dropDown.selection = getIssueIndexByID(issues, savedSettings.IssueID)
+                selectedIssue = getItemByID(issues, savedSettings.IssueID);
+                settingsDialog.issueDropDownGroup.dropDown.selection = getItemIndexByID(issues, savedSettings.IssueID)
             } else {
                 selectedIssue = issues[0];
                 settingsDialog.issueDropDownGroup.dropDown.selection = 0;
@@ -141,11 +141,11 @@ function settingsDialog() {
         settingsDialog.styleDropDownGroup = settingsDialog.add('group');
         settingsDialog.styleDropDownGroup.orientation = 'row';
         settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Styles");
-        settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:getIssuesNames(styles)})
+        settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:mapItemsName(styles)})
 
         if(!!savedSettings.StyleID) {
-            selectedStyle = getIssueByID(styles, savedSettings.StyleID);
-            settingsDialog.styleDropDownGroup.dropDown.selection = getIssueIndexByID(styles, savedSettings.StyleID)
+            selectedStyle = getItemByID(styles, savedSettings.StyleID);
+            settingsDialog.styleDropDownGroup.dropDown.selection = getItemIndexByID(styles, savedSettings.StyleID)
         } else {
             selectedStyle = styles[0];
             settingsDialog.styleDropDownGroup.dropDown.selection = 0;
@@ -167,13 +167,7 @@ function settingsDialog() {
             var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
             var response = JSON.parse(reply);
             if(response.isValid) {
-                if(savedSettings.apiKey !== settingsDialog.apiKeyGroup.apiKey.text) {
-                    savedSettings.PublicationID = '';
-                    savedSettings.IssueID = '';
-                    savedSettings.StyleID = '';    
-                }
-                savedSettings.apiKey = settingsDialog.apiKeyGroup.apiKey.text;
-                saveSettings(savedSettings);
+                resetFromApi(settingsDialog.apiKeyGroup.apiKey.text)
                 settingsDialog.destroy();
             } else {
                 alert(reply.replace(/(")/gi, ''));
@@ -184,21 +178,42 @@ function settingsDialog() {
                 var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
                 var response = JSON.parse(reply);
                 if(response.isValid) {
-                    savedSettings.apiKey = settingsDialog.apiKeyGroup.apiKey.text;
-                    savedSettings.PublicationID = '';
-                    savedSettings.IssueID = '';
-                    savedSettings.StyleID = '';    
-                    saveSettings(savedSettings);
+                    resetFromApi(settingsDialog.apiKeyGroup.apiKey.text)
                     settingsDialog.destroy();
                 } else {
                     alert(reply.replace(/(")/gi, ''));
                 }
             } else {
                 savedSettings.apiKey = settingsDialog.apiKeyGroup.apiKey.text;
+                var PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
+                if(savedSettings.PublicationID != PublicationID) {
+                    resetFromPublication(savedSettings.apiKey, PublicationID);
+                    settingsDialog.destroy();
+                } else {
+                    var StyleID = '';
+                    try {
+                        StyleID = styles[settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
+                    } catch(e) {
+                        StyleID = '';
+                    }
+
+                    var IssueID = '';
+                    try {
+                        IssueID = issues[settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
+                    } catch(e) {
+                        IssueID = '';
+                    }
+                    
+                    savedSettings.PublicationID = PublicationID;
+                    savedSettings.StyleID = StyleID;
+                    savedSettings.IssueID = IssueID;
+
+                    saveSettings(savedSettings);
+                    settingsDialog.destroy();
+                }
                 savedSettings.PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
                 
-                saveSettings(savedSettings);
-                settingsDialog.destroy();
+                
             }
         } 
     }
@@ -214,66 +229,40 @@ function getPublications(apiKey) {
     return JSON.parse(reply);
 }
 
-
-
-function getPublicationsName(publications) {
-    var response = [];
-    for(var i = 0; i< publications.length; i++) {
-        response.push(publications[i].name);
-    }
-    return response;
-}
-
-function getPublicationByID(publications, id) {
-    for(var i = 0; i< publications.length; i++) {
-        if(publications[i].id == id) {
-            return publications[i];
-        }
-    }
-    return null;
-}
-
-function getPublicationIndexByID(publications, id) {
-    for(var i = 0; i< publications.length; i++) {
-        if(publications[i].id == id) {
-            return i;
-        }
-    }
-}
-
 function getIssues(apiKey, PublicationID) {
     var reply = canvasflowApi.getIssues(apiKey, PublicationID);
     return JSON.parse(reply);
 }
 
-function getIssuesNames(issues) {
-    var response = [];
-    for(var i = 0; i< issues.length; i++) {
-        response.push(issues[i].name);
-    }
-    return response;
+function getStyles(apiKey, PublicationID) {
+    var reply = canvasflowApi.getStyles(apiKey, PublicationID);
+    return JSON.parse(reply);
 }
 
-function getIssueByID(issues, id) {
-    for(var i = 0; i< issues.length; i++) {
-        if(issues[i].id == id) {
-            return issues[i];
+function getItemIndexByID(items, id) {
+    for(var i = 0; i< items.length; i++) {
+        if(items[i].id == id) {
+            return i;
         }
     }
     return null;
 }
 
-function getIssueIndexByID(issues, id) {
-    for(var i = 0; i< issues.length; i++) {
-        if(issues[i].id == id) {
-            return i;
+function getItemByID(items, id) {
+    for(var i = 0; i< items.length; i++) {
+        if(items[i].id == id) {
+            return items[i];
         }
     }
+    return null;
 }
 
-function getStyles(apiKey, PublicationID) {
-    var reply = canvasflowApi.getStyles(apiKey, PublicationID);
-    return JSON.parse(reply);
+function mapItemsName(items) {
+    var response = [];
+    for(var i = 0; i< items.length; i++) {
+        response.push(items[i].name);
+    }
+    return response;
 }
 
 function getSettings() {
@@ -298,4 +287,55 @@ function saveSettings(settings) {
     file.open('w');
     file.write('{"apiKey":"' + settings.apiKey + '", "PublicationID": "' + settings.PublicationID + '", "IssueID":"' + settings.IssueID + '", "StyleID": "' + settings.StyleID + '"}');
     file.close();
+}
+
+function resetFromApi(apiKey) {
+    var PublicationID = '';
+    var IssueID = '';
+    var StyleID = '';
+
+    var publications = getPublications(apiKey);
+    var publication = publications[0];
+    PublicationID = publication.id;
+    if(publication.type === 'issue') {
+        var issues = getIssues(apiKey, PublicationID);
+        var issue = issues[0];
+        IssueID = issue.id;
+    }
+
+    var styles = getStyles(apiKey, PublicationID);
+    var style = styles[0];
+    StyleID = style.id;
+
+    saveSettings({
+        apiKey: apiKey,
+        PublicationID: PublicationID,
+        IssueID: IssueID,
+        StyleID: StyleID
+    });
+}
+
+function resetFromPublication(apiKey, PublicationID) {
+    var IssueID = '';
+    var StyleID = '';
+
+    var publications = getPublications(apiKey);
+    var publication = getItemByID(publications, PublicationID);
+    
+    if(publication.type === 'issue') {
+        var issues = getIssues(apiKey, PublicationID);
+        var issue = issues[0];
+        IssueID = issue.id;
+    }
+
+    var styles = getStyles(apiKey, PublicationID);
+    var style = styles[0];
+    StyleID = style.id;
+
+    saveSettings({
+        apiKey: apiKey,
+        PublicationID: PublicationID,
+        IssueID: IssueID,
+        StyleID: StyleID
+    });
 }
