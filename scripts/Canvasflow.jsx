@@ -1,3 +1,4 @@
+#targetengine "session"  
 
 if (typeof JSON !== "object") {
     JSON = {};
@@ -358,14 +359,105 @@ if (typeof JSON !== "object") {
         };
     }
 }());
+      
+// app.menus.item("$ID/Main").submenus.item("Canvasflow").remove();
+var apiKeySetting = 1;
+var canvasflowSettingsKey = "CanvasflowSettings";
 
+install();
+function install() {
+    try {
+        app.menus.item("$ID/Main").submenus.item("Canvasflow").remove();
+    } catch(e) {
 
+    }
 
-const apiKeySetting = 1;
-const canvasflowSettingsKey = "CanvasflowSettings";
+    var canvasflowScriptActionSettings = app.scriptMenuActions.add("Settings");  
+    canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
+        createSettings()
+    }); 
+    
+    var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
+    canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
+        publishArticle();
+    });  
 
-main();
-function main(){
+    var canvasflowScriptMenu = null;
+    try {  
+        canvasflowScriptMenu = app.menus.item("$ID/Main").submenus.item("Canvasflow");  
+        canvasflowScriptMenu.title;  
+    } catch (e) {  
+        canvasflowScriptMenu = app.menus.item("$ID/Main").submenus.add("Canvasflow");  
+    }  
+
+    canvasflowScriptMenu.menuItems.add(canvasflowScriptActionSettings);
+    canvasflowScriptMenu.menuItems.add(canvasflowScriptActionPublish);
+}
+
+function createSettings() {
+    var settingsDialog = new Window('dialog', 'Settings');
+    settingsDialog.orientation = 'column';
+    settingsDialog.alignment = 'right';
+    settingsDialog.preferredSize = [130,100];
+
+    //Add Api Key
+    settingsDialog.apiKeyGroup = settingsDialog.add('group');
+    settingsDialog.apiKeyGroup.orientation = 'row';
+    settingsDialog.apiKeyGroup.add('statictext', [0, 0, 100, 20], "Api Key");
+    var savedApiKey = getApiKey();
+    settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, 120, 20], savedApiKey)
+    
+    //Add Publication list
+    settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
+    settingsDialog.publicationDropDownGroup.orientation = 'row';
+    settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, 100, 20], "Publications");
+    var publications = ["Apple", "Test", "New publication"];
+    settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, 120, 20], undefined, {items:publications})
+    settingsDialog.publicationDropDownGroup.dropDown.selection = 1;
+
+    // Panel buttons
+    settingsDialog.buttonsBarGroup = settingsDialog.add('group');
+    settingsDialog.buttonsBarGroup.orientation = 'row';
+    settingsDialog.buttonsBarGroup.cancelBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'Cancel');
+    settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
+    
+
+    settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+        var selectedPublication = settingsDialog.publicationDropDownGroup.dropDown.selection;
+        var apiKey = settingsDialog.apiKeyGroup.apiKey.text;
+        saveToFile(apiKey);
+        settingsDialog.destroy();
+    }
+
+    settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
+        settingsDialog.destroy();
+    }
+    settingsDialog.show();
+
+    /*dialog = app.dialogs.add({name:"Settings"});
+    with(dialog){
+        with(dialogColumns.add()){
+            with (dialogColumns.add()){
+                staticTexts.add({staticLabel:"Api Key:", minWidth:50});
+            }
+            with (dialogColumns.add()){
+                var apiKeyEditbox = textEditboxes.add({minWidth:200});
+                apiKeyEditbox.editContents = getApiKey();
+            }
+        }
+    }
+
+    var myReturn = dialog.show();
+    if (myReturn == true){
+        var apiKey = apiKeyEditbox.editContents;
+        saveToFile(apiKey);
+        dialog.destroy();
+    } else {
+        dialog.destroy();
+    }*/	
+}
+
+function publishArticle(){
     if (app.documents.length != 0){	
         var baseDirectory = app.activeDocument.filePath + '/';
         var filePath = baseDirectory + app.activeDocument.name;
@@ -373,7 +465,9 @@ function main(){
         baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
         createExportFolder(baseDirectory);
 
-        displayDialog(baseDirectory, filePath);			
+        var apiKey = ""; //getApiKey();
+        run(filePath, baseDirectory, apiKey);
+        saveToFile(apiKey);		
 	}
 	else{
 		alert ("Please open a document.");
@@ -391,33 +485,12 @@ function createExportFolder(folderPath) {
     imageDirectory.create();
 }
 
-function displayDialog(baseDirectory, filePath) {
-    dialog = app.dialogs.add({name:"Publish to Canvasflow"});
-    with(dialog){
-        with(dialogColumns.add()){
-            with (dialogColumns.add()){
-                staticTexts.add({staticLabel:"Api Key:", minWidth:50});
-            }
-            with (dialogColumns.add()){
-                var apiKeyEditbox = textEditboxes.add({minWidth:200});
-                apiKeyEditbox.editContents = getApiKey();
-            }
-        }
-    }
-
-    var myReturn = dialog.show();
-    if (myReturn == true){
-        var apiKey = apiKeyEditbox.editContents;
-        run(filePath, baseDirectory);
-        saveToFile(apiKey);
-        dialog.destroy();
-    }
-    else{
-        dialog.destroy();
-    }
+function sendTheFile(baseDirectory, filePath) {
+    var apiKey = getApiKey();
+    run(filePath, baseDirectory, apiKey);
 }
 
-function run(filePath, baseDirectory) {
+function run(filePath, baseDirectory, apiKey) {
     var templateFile = new File(filePath);
     templateFile.open("r");
 
@@ -430,7 +503,7 @@ function run(filePath, baseDirectory) {
         getImages(page, data, baseDirectory);
     }
 
-    save(document, data, baseDirectory);
+    save(document, data, baseDirectory, apiKey);
 }
 
 function saveToFile(apiKey) {
@@ -479,7 +552,7 @@ function getTextFrames(page, data) {
 function getFontStyle(paragraphs) {
     var response;
     for(var i=0; i < paragraphs.count(); i++) {
-        var paragraph = paragraphs[i];
+        var paragraph = paragraphs.item(i);
         response = {
             fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
             fontSize: paragraph.appliedParagraphStyle.pointSize
@@ -556,7 +629,7 @@ function getItemPosition(bounds) {
     }
 }
 
-function save(document, data, baseDirectory) {
+function save(document, data, baseDirectory, apiKey) {
     var output = baseDirectory + '/data.json'; 
     var dataFile = new File(output);
     if(dataFile.exists) {
@@ -571,8 +644,12 @@ function save(document, data, baseDirectory) {
 
     var baseFile = new File(baseDirectory);
     app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
-    // cleanUp(baseDirectory);
-    alert('Article created successfully');
+    if(uploadZip(baseFile.fsName + '.zip', apiKey)) {
+        // cleanUp(baseDirectory);
+        alert('Article was uploaded successfully');
+    } else {
+        alert("Error uploading the content, please try again")
+    }
 }
 
 function cleanUp(baseDirectory) {
@@ -599,4 +676,107 @@ function createPreview(document, baseDirectory) {
         imagePath.remove();
     }
     document.exportFile(ExportFormat.JPG, new File(imagePath));
+}
+
+function uploadZip(filepath, apiKey) {
+    var conn = new Socket;
+
+    var reply = "";
+    var host = "api.cflowdev.com:80"
+
+    var f = File ( filepath);
+    var filename = f.name
+    f.encoding = 'BINARY';
+    f.open("r");
+    var fContent = f.read();
+    f.close();
+
+    apiKey = "12345";
+    var PublicationID = "2560";
+    var IssueID = "2379";
+    var StyleID = "2789"
+
+    if(conn.open(host, "BINARY")) {
+        conn.timeout=20000;
+
+        var boundary = Math.random().toString().substr(2);
+
+        var fileContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"contentFile\"; filename=\"" + filename +"\"\r\n"
+        + "Content-Type: application/octet-stream\r\n"
+        + "\r\n"
+        + fContent
+        + "\r\n";
+
+        var apiKeyContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"secretKey\"\r\n"
+        + "\r\n"
+        + apiKey + "\r\n"
+        + "\r\n";
+
+        var PublicationIDContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"publicationId\"\r\n"
+        + "\r\n"
+        + PublicationID + "\r\n"
+        + "\r\n";
+
+        var IssueIDContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"issueId\"\r\n"
+        + "\r\n"
+        + IssueID + "\r\n"
+        + "\r\n";
+
+        var StyleIDContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"styleId\"\r\n"
+        + "\r\n"
+        + StyleID + "\r\n"
+        + "\r\n";
+
+        var contentType = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"contentType\"\r\n"
+        + "\r\n"
+        + "indesign" + "\r\n"
+        + "\r\n";
+
+        var articleIdContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"articleId\"\r\n"
+        + "\r\n"
+        + "xxxxxx" + "\r\n"
+        + "\r\n";
+
+        var content = fileContent
+        + apiKeyContent
+        + contentType
+        + PublicationIDContent
+        + IssueIDContent
+        + StyleIDContent
+        + articleIdContent
+        + "--" + boundary + "--\r\n\r";
+
+        var cs = "POST /v1/index.cfm/article HTTP/1.1\r\n"
+        + "Content-Length: " + content.length + "\r\n"
+        + "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n" 
+        + "Host: "+ host + "\r\n"
+        + "Authorization: " + apiKey + "\r\n"
+        + "Accept: */*\r\n"
+        + "\r\n"
+        + content;
+
+        conn.write( cs );
+
+        reply = conn.read();
+        conn.close();
+
+        if( reply.indexOf( "200" ) > 0 ) {
+            var data = reply.substring(reply.indexOf("{"), reply.length);
+            
+            var response = JSON.parse(data);
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        alert("I couldn't connect to the server");
+        return false;
+    }
 }
