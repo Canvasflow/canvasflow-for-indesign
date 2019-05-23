@@ -363,6 +363,337 @@ if (typeof JSON !== "object") {
 // app.menus.item("$ID/Main").submenus.item("Canvasflow").remove();
 var apiKeySetting = 1;
 var canvasflowSettingsKey = "CanvasflowSettings";
+var host = "http://api.cflowdev.com/v1/index.cfm";
+var settingsFilePath = "~/canvaflow_settings.json";
+
+var HTTPFile = function (url,port) {
+    if (arguments.length == 1) {
+        url = arguments[0];
+        port = 80;
+    };
+
+    this.url = url;
+    this.port = port;
+    this.httpPrefix = this.url.match(/http:\/\//);
+    this.domain = this.httpPrefix == null ? this.url.split("/")[0]+":"+this.port :this.url.split("/")[2]+":"+this.port;
+    this.call = "GET "+ (this.httpPrefix == null ? "http://"+this.url : this.url)+" HTTP/1.0\r\nHost:" +(this.httpPrefix == null ? this.url.split("/")[0] :this.url.split("/")[2])+"\r\nConnection: close\r\n\r\n";
+    this.reply = new String();
+    this.conn = new Socket();
+    this.conn.encoding = "binary";
+
+    HTTPFile.prototype.getResponse = function(f) {
+        var typeMatch = this.url.match(/(\.)(\w{3,4}\b)/g);
+        if (this.conn.open(this.domain,"binary")) {
+            this.conn.write(this.call);
+            this.reply = this.conn.read(9999999999);
+            this.conn.close();
+        } else {
+            this.reply = "";
+        }
+        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);;
+    };
+}
+
+var CanvasflowApi = function (host) {
+    this.host = host;
+
+    CanvasflowApi.prototype.getPublications = function(apiKey) {
+        var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
+        return reply.getResponse();
+    };
+
+    CanvasflowApi.prototype.validate = function(apiKey) {
+        var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey);
+        return reply.getResponse();
+    };
+
+    CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
+        var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        return reply.getResponse();
+    };
+
+    CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
+        var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        return reply.getResponse();
+    };
+}
+
+var CanvasflowDialog = function(canvasflowApi, settingsPath) {
+    var $ = this;
+    $.canvasflowApi = canvasflowApi;
+    $.settingsPath = settingsPath;
+
+    $.getSavedSettings = function() {
+        var file = new File($.settingsPath);
+        if(file.exists) {
+            file.open('r');
+            return JSON.parse(file.read());
+        } else {
+            var file = new File($.settingsPath);
+            file.encoding = 'UTF-8';
+            file.open('w');
+            file.write('{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": ""}');
+            file.close();
+
+            $.getSavedSettings();
+        }
+    };
+
+    $.savedSettings = $.getSavedSettings();
+
+    $.getPublications = function(apiKey) {
+        var reply = $.canvasflowApi.getPublications(apiKey);
+        return JSON.parse(reply);
+    };
+
+    $.getIssues = function(apiKey, PublicationID) {
+        var reply = $.canvasflowApi.getIssues(apiKey, PublicationID);
+        return JSON.parse(reply);
+    };
+
+    $.getStyles = function(apiKey, PublicationID) {
+        var reply = $.canvasflowApi.getStyles(apiKey, PublicationID);
+        return JSON.parse(reply);
+    };
+
+    $.getItemIndexByID = function(items, id) {
+        for(var i = 0; i< items.length; i++) {
+            if(items[i].id == id) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    $.getItemByID = function(items, id) {
+        for(var i = 0; i< items.length; i++) {
+            if(items[i].id == id) {
+                return items[i];
+            }
+        }
+        return null;
+    }
+
+    $.mapItemsName = function(items) {
+        var response = [];
+        for(var i = 0; i< items.length; i++) {
+            response.push(items[i].name);
+        }
+        return response;
+    }
+
+
+    $.resetFromApi = function(apiKey) {
+        var PublicationID = '';
+        var IssueID = '';
+        var StyleID = '';
+
+        var publications = $.getPublications(apiKey);
+        
+        var publication = publications[0];
+        PublicationID = publication.id;
+        if(publication.type === 'issue') {
+            var issues = $.getIssues(apiKey, PublicationID);
+            var issue = issues[0];
+            IssueID = issue.id;
+        }
+
+        var styles = $.getStyles(apiKey, PublicationID);
+        var style = styles[0];
+        StyleID = style.id;
+
+        var settings = {
+            apiKey: apiKey,
+            PublicationID: PublicationID,
+            IssueID: IssueID,
+            StyleID: StyleID
+        };
+
+        $.save(settings);
+    }
+
+    $.resetFromPublication = function(apiKey, PublicationID) {
+        var IssueID = '';
+        var StyleID = '';
+    
+        var publications = $.getPublications(apiKey);
+        var publication = $.getItemByID(publications, PublicationID);
+        
+        if(publication.type === 'issue') {
+            var issues = $.getIssues(apiKey, PublicationID);
+            var issue = issues[0];
+            IssueID = issue.id;
+        }
+    
+        var styles = $.getStyles(apiKey, PublicationID);
+        var style = styles[0];
+        StyleID = style.id;
+
+        var settings = {
+            apiKey: apiKey,
+            PublicationID: PublicationID,
+            IssueID: IssueID,
+            StyleID: StyleID
+        };
+
+        $.save(settings);
+    }
+    // this.getOkCallback = getOkCallback.bind(this);
+
+    $.save = function(settings) {
+        var file = new File($.settingsPath);
+        file.encoding = 'UTF-8';
+        file.open('w');
+        var content = '{"apiKey":"' + settings.apiKey + '", "PublicationID": "' + settings.PublicationID + '", "IssueID":"' + settings.IssueID + '", "StyleID": "' + settings.StyleID + '"}';
+        file.write(content);
+        file.close();
+    }
+
+    $.show = function() {
+        var savedSettings = $.savedSettings;
+
+        var apiKeyExist = false;
+        var settingsDialog = new Window('dialog', 'Settings');
+        settingsDialog.orientation = 'column';
+        settingsDialog.alignment = 'right';
+        settingsDialog.preferredSize = [200,100];
+
+        var valuesWidth = 200;
+        var labelWidth = 80;
+
+        var publications = [];
+        var selectedPublication;
+        var publicationType = '';
+
+        var issues = [];
+        var styles = [];
+
+        //Add Api Key
+        settingsDialog.apiKeyGroup = settingsDialog.add('group');
+        settingsDialog.apiKeyGroup.orientation = 'row';
+        settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "Api Key");
+        settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.apiKey);
+        
+        if(!!savedSettings.apiKey) {
+            apiKeyExist = true
+
+            //Add Publication list
+            publications = $.getPublications(savedSettings.apiKey);
+            settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
+            settingsDialog.publicationDropDownGroup.orientation = 'row';
+            settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publications");
+            settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(publications)});
+            
+            if(!!savedSettings.PublicationID) {
+                selectedPublication = $.getItemByID(publications, savedSettings.PublicationID);
+                settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID(publications, savedSettings.PublicationID);
+            } else {
+                selectedPublication = publications[0];
+                settingsDialog.publicationDropDownGroup.dropDown.selection = 0;
+            }
+
+            publicationType = selectedPublication.type;
+
+            // Check if publication is an issue
+            if(publicationType === 'issue') {
+                issues = $.getIssues(savedSettings.apiKey, selectedPublication.id);
+                settingsDialog.issueDropDownGroup = settingsDialog.add('group');
+                settingsDialog.issueDropDownGroup.orientation = 'row';
+                settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issues");
+                settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)})
+
+                if(!!savedSettings.IssueID) {
+                    settingsDialog.issueDropDownGroup.dropDown.selection = $.getItemIndexByID(issues, savedSettings.IssueID)
+                } else {
+                    settingsDialog.issueDropDownGroup.dropDown.selection = 0;
+                }
+            }
+
+            // Select styles
+            styles = $.getStyles(savedSettings.apiKey, selectedPublication.id);
+            settingsDialog.styleDropDownGroup = settingsDialog.add('group');
+            settingsDialog.styleDropDownGroup.orientation = 'row';
+            settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Styles");
+            settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(styles)})
+
+            if(!!savedSettings.StyleID) {
+                settingsDialog.styleDropDownGroup.dropDown.selection = $.getItemIndexByID(styles, savedSettings.StyleID)
+            } else {
+                settingsDialog.styleDropDownGroup.dropDown.selection = 0;
+            }
+        } else {
+            apiKeyExist = false;
+        }
+
+        // Panel buttons
+        settingsDialog.buttonsBarGroup = settingsDialog.add('group');
+        settingsDialog.buttonsBarGroup.orientation = 'row';
+        settingsDialog.buttonsBarGroup.alignChildren = 'bottom';    
+        settingsDialog.buttonsBarGroup.cancelBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'Cancel');
+        settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
+        
+        settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+            // var selectedPublication = settingsDialog.publicationDropDownGroup.dropDown.selection;
+            if(!apiKeyExist) {
+                var reply = $.canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
+                var response = JSON.parse(reply);
+                if(response.isValid) {
+                    $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text);
+                    settingsDialog.destroy();
+                } else {
+                    alert(reply.replace(/(")/gi, ''));
+                }
+            } else {
+                // The api key was already validated
+                if(savedSettings.apiKey !== settingsDialog.apiKeyGroup.apiKey.text) {
+                    var reply = $.canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
+                    var response = JSON.parse(reply);
+                    if(response.isValid) {
+                        $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text);
+                        settingsDialog.destroy();
+                    } else {
+                        alert(reply.replace(/(")/gi, ''));
+                    }
+                } else {
+                    var PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
+                    if(savedSettings.PublicationID != PublicationID) {
+                        $.resetFromPublication(savedSettings.apiKey, PublicationID);
+                        settingsDialog.destroy();
+                    } else {
+                        var StyleID = '';
+                        try {
+                            StyleID = styles[settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
+                        } catch(e) {
+                            StyleID = '';
+                        }
+
+                        var IssueID = '';
+                        try {
+                            IssueID = issues[settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
+                        } catch(e) {
+                            IssueID = '';
+                        }
+                        
+                        savedSettings.PublicationID = PublicationID;
+                        savedSettings.StyleID = StyleID;
+                        savedSettings.IssueID = IssueID;
+
+                        $.save(savedSettings);
+                        settingsDialog.destroy();
+                    }
+                }
+            } 
+        }
+
+        settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
+            settingsDialog.destroy();
+        }
+        settingsDialog.show();
+    };
+}
+
+var canvasflowApi = new CanvasflowApi(host);
+var canvasflowDialog = new CanvasflowDialog(canvasflowApi, settingsFilePath);
 
 install();
 function install() {
@@ -374,7 +705,7 @@ function install() {
 
     var canvasflowScriptActionSettings = app.scriptMenuActions.add("Settings");  
     canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
-        createSettings()
+        canvasflowDialog.show();
     }); 
     
     var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
@@ -394,69 +725,6 @@ function install() {
     canvasflowScriptMenu.menuItems.add(canvasflowScriptActionPublish);
 }
 
-function createSettings() {
-    var settingsDialog = new Window('dialog', 'Settings');
-    settingsDialog.orientation = 'column';
-    settingsDialog.alignment = 'right';
-    settingsDialog.preferredSize = [130,100];
-
-    //Add Api Key
-    settingsDialog.apiKeyGroup = settingsDialog.add('group');
-    settingsDialog.apiKeyGroup.orientation = 'row';
-    settingsDialog.apiKeyGroup.add('statictext', [0, 0, 100, 20], "Api Key");
-    var savedApiKey = getApiKey();
-    settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, 120, 20], savedApiKey)
-    
-    //Add Publication list
-    settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
-    settingsDialog.publicationDropDownGroup.orientation = 'row';
-    settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, 100, 20], "Publications");
-    var publications = ["Apple", "Test", "New publication"];
-    settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, 120, 20], undefined, {items:publications})
-    settingsDialog.publicationDropDownGroup.dropDown.selection = 1;
-
-    // Panel buttons
-    settingsDialog.buttonsBarGroup = settingsDialog.add('group');
-    settingsDialog.buttonsBarGroup.orientation = 'row';
-    settingsDialog.buttonsBarGroup.cancelBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'Cancel');
-    settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
-    
-
-    settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
-        var selectedPublication = settingsDialog.publicationDropDownGroup.dropDown.selection;
-        var apiKey = settingsDialog.apiKeyGroup.apiKey.text;
-        saveToFile(apiKey);
-        settingsDialog.destroy();
-    }
-
-    settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
-        settingsDialog.destroy();
-    }
-    settingsDialog.show();
-
-    /*dialog = app.dialogs.add({name:"Settings"});
-    with(dialog){
-        with(dialogColumns.add()){
-            with (dialogColumns.add()){
-                staticTexts.add({staticLabel:"Api Key:", minWidth:50});
-            }
-            with (dialogColumns.add()){
-                var apiKeyEditbox = textEditboxes.add({minWidth:200});
-                apiKeyEditbox.editContents = getApiKey();
-            }
-        }
-    }
-
-    var myReturn = dialog.show();
-    if (myReturn == true){
-        var apiKey = apiKeyEditbox.editContents;
-        saveToFile(apiKey);
-        dialog.destroy();
-    } else {
-        dialog.destroy();
-    }*/	
-}
-
 function publishArticle(){
     if (app.documents.length != 0){	
         var baseDirectory = app.activeDocument.filePath + '/';
@@ -465,7 +733,7 @@ function publishArticle(){
         baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
         createExportFolder(baseDirectory);
 
-        var apiKey = getApiKey();
+        var apiKey = ""; //getApiKey();
         run(filePath, baseDirectory, apiKey);
         saveToFile(apiKey);		
 	}
@@ -552,7 +820,7 @@ function getTextFrames(page, data) {
 function getFontStyle(paragraphs) {
     var response;
     for(var i=0; i < paragraphs.count(); i++) {
-        var paragraph = paragraphs[i];
+        var paragraph = paragraphs.item(i);
         response = {
             fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
             fontSize: paragraph.appliedParagraphStyle.pointSize
@@ -645,7 +913,7 @@ function save(document, data, baseDirectory, apiKey) {
     var baseFile = new File(baseDirectory);
     app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
     if(uploadZip(baseFile.fsName + '.zip', apiKey)) {
-        cleanUp(baseDirectory);
+        // cleanUp(baseDirectory);
         alert('Article was uploaded successfully');
     } else {
         alert("Error uploading the content, please try again")
@@ -682,7 +950,7 @@ function uploadZip(filepath, apiKey) {
     var conn = new Socket;
 
     var reply = "";
-    var host = "127.0.0.1:3000"
+    var host = "api.cflowdev.com:80"
 
     var f = File ( filepath);
     var filename = f.name
@@ -691,6 +959,10 @@ function uploadZip(filepath, apiKey) {
     var fContent = f.read();
     f.close();
 
+    apiKey = "12345";
+    var PublicationID = "2560";
+    var IssueID = "2379";
+    var StyleID = "2789"
 
     if(conn.open(host, "BINARY")) {
         conn.timeout=20000;
@@ -710,18 +982,46 @@ function uploadZip(filepath, apiKey) {
         + apiKey + "\r\n"
         + "\r\n";
 
+        var PublicationIDContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"publicationId\"\r\n"
+        + "\r\n"
+        + PublicationID + "\r\n"
+        + "\r\n";
+
+        var IssueIDContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"issueId\"\r\n"
+        + "\r\n"
+        + IssueID + "\r\n"
+        + "\r\n";
+
+        var StyleIDContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"styleId\"\r\n"
+        + "\r\n"
+        + StyleID + "\r\n"
+        + "\r\n";
+
         var contentType = "--" + boundary + "\r\n"
         + "Content-Disposition: form-data; name=\"contentType\"\r\n"
         + "\r\n"
         + "indesign" + "\r\n"
         + "\r\n";
 
+        var articleIdContent = "--" + boundary + "\r\n"
+        + "Content-Disposition: form-data; name=\"articleId\"\r\n"
+        + "\r\n"
+        + "xxxxxx" + "\r\n"
+        + "\r\n";
+
         var content = fileContent
         + apiKeyContent
         + contentType
+        + PublicationIDContent
+        + IssueIDContent
+        + StyleIDContent
+        + articleIdContent
         + "--" + boundary + "--\r\n\r";
 
-        var cs = "POST /upload HTTP/1.1\r\n"
+        var cs = "POST /v1/index.cfm/article HTTP/1.1\r\n"
         + "Content-Length: " + content.length + "\r\n"
         + "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n" 
         + "Host: "+ host + "\r\n"
@@ -732,14 +1032,13 @@ function uploadZip(filepath, apiKey) {
 
         conn.write( cs );
 
-        reply = conn.read(999999);
+        reply = conn.read();
         conn.close();
-        if( reply.indexOf( "200 OK" ) > 0 ) {
+
+        if( reply.indexOf( "200" ) > 0 ) {
             var data = reply.substring(reply.indexOf("{"), reply.length);
             
             var response = JSON.parse(data);
-
-            alert(response.success);
             return true;
         } else {
             return false;
