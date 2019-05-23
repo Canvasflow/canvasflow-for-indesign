@@ -1,58 +1,5 @@
 //@include "json2.js"
-var host = "api.cflowdev.com"
-var settingsFilePath = "~/canvaflow_settings.json";
-
-var HTTPFile = function (url,port) {
-    if (arguments.length == 1) {
-        url = arguments[0];
-        port = 80;
-    };
-
-    this.url = url;
-    this.port = port;
-    this.httpPrefix = this.url.match(/http:\/\//);
-    this.domain = this.httpPrefix == null ? this.url.split("/")[0]+":"+this.port :this.url.split("/")[2]+":"+this.port;
-    this.call = "GET "+ (this.httpPrefix == null ? "http://"+this.url : this.url)+" HTTP/1.0\r\nHost:" +(this.httpPrefix == null ? this.url.split("/")[0] :this.url.split("/")[2])+"\r\nConnection: close\r\n\r\n";
-    this.reply = new String();
-    this.conn = new Socket();
-    this.conn.encoding = "binary";
-
-    HTTPFile.prototype.getResponse = function(f) {
-        var typeMatch = this.url.match(/(\.)(\w{3,4}\b)/g);
-        if (this.conn.open(this.domain,"binary")) {
-            this.conn.write(this.call);
-            this.reply = this.conn.read(9999999999);
-            this.conn.close();
-        } else {
-            this.reply = "";
-        }
-        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);;
-    };
-}
-
-var CanvasflowApi = function (host) {
-    this.host = host;
-
-    CanvasflowApi.prototype.getPublications = function(apiKey) {
-        var reply = new HTTPFile(host + "/publications?secretkey=" + apiKey);
-        return reply.getResponse();
-    };
-
-    CanvasflowApi.prototype.validate = function(apiKey) {
-        var reply = new HTTPFile(host + "/info?secretkey=" + apiKey);
-        return reply.getResponse();
-    };
-
-    CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID);
-        return reply.getResponse();
-    };
-
-    CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID);
-        return reply.getResponse();
-    };
-}
+//@include "api.js"
 
 var CanvasflowDialog = function(canvasflowApi, settingsPath) {
     var $ = this;
@@ -329,7 +276,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
 }
 
 var host = "http://api.cflowdev.com/v1/index.cfm";
-
+var settingsFilePath = "~/canvaflow_settings.json";
 var canvasflowApi = new CanvasflowApi(host);
 
 var dialog = new CanvasflowDialog(canvasflowApi, settingsFilePath);
