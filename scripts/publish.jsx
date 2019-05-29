@@ -50,7 +50,6 @@ var CanvasflowPublish = function(settingsPath, host) {
                 continue
             }
 
-
             var characterFontFamily = paragraph.appliedCharacterStyle.appliedFont;
             var characterFontSize = paragraph.appliedCharacterStyle.pointSize;
 
@@ -74,7 +73,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                     fontSize: paragraph.pointSize,
                 },
                 characterStyle: characterStyle,
-                style: {
+                paragraphStyle: {
                     fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
                     fontSize: paragraph.appliedParagraphStyle.pointSize
                 }
