@@ -38,17 +38,29 @@ var CanvasflowPublish = function(settingsPath, host) {
             dt = Math.floor(dt/16);
             return (c=='x' ? r :(r&0x3|0x8)).toString(16);
         });
-        return uuid;
+
+        return uuid.substring(0, uuid.length / 2);
     }
 
-    $.getFontStyle = function(paragraphs) {
-        var response;
+    $.getParagraphs = function(paragraphs) {
+        var response = [];
         for(var i=0; i < paragraphs.count(); i++) {
             var paragraph = paragraphs.item(i);
-            response = {
-                fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
-                fontSize: paragraph.appliedParagraphStyle.pointSize
+            if(paragraph.contents === '\r') {
+                continue
             }
+
+            response.push({
+                content: paragraph.contents,
+                font: {
+                    fontFamily: paragraph.appliedFont.fontFamily,
+                    fontSize: paragraph.pointSize,
+                },
+                style: {
+                    fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
+                    fontSize: paragraph.appliedParagraphStyle.pointSize
+                }
+            });
         }
     
         return response;
@@ -83,7 +95,11 @@ var CanvasflowPublish = function(settingsPath, host) {
                     content: textFrame.contents,
                     width: position.width,
                     height: position.height,
-                    font: $.getFontStyle(textFrame.paragraphs),
+                    font: {
+                        fontFamily: textFrame.appliedObjectStyle.appliedParagraphStyle.appliedFont.fontFamily,
+                        fontSize: textFrame.appliedObjectStyle.appliedParagraphStyle.pointSize
+                    },
+                    paragraphs: $.getParagraphs(textFrame.paragraphs),
                     position: {
                         x: position.x,
                         y: position.y
@@ -148,7 +164,11 @@ var CanvasflowPublish = function(settingsPath, host) {
         if(imagePath.exists) {
             imagePath.remove();
         }
-        document.exportFile(ExportFormat.JPG, new File(imagePath));
+        try {
+            app.jpegExportPreferences.pageString = "1";  
+            app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
+            document.exportFile(ExportFormat.JPG, new File(imagePath));
+        } catch(e) {}
     }
 
     $.uploadZip = function(filepath) {
@@ -163,6 +183,8 @@ var CanvasflowPublish = function(settingsPath, host) {
         f.open("r");
         var fContent = f.read();
         f.close();
+
+        var articleName = f.displayName.replace('.zip', '');
     
         apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
@@ -185,6 +207,12 @@ var CanvasflowPublish = function(settingsPath, host) {
             + "Content-Disposition: form-data; name=\"secretKey\"\r\n"
             + "\r\n"
             + apiKey + "\r\n"
+            + "\r\n";
+
+            var articleNameContent = "--" + boundary + "\r\n"
+            + "Content-Disposition: form-data; name=\"articleName\"\r\n"
+            + "\r\n"
+            + articleName + "\r\n"
             + "\r\n";
     
             var PublicationIDContent = "--" + boundary + "\r\n"
@@ -214,12 +242,13 @@ var CanvasflowPublish = function(settingsPath, host) {
             var articleIdContent = "--" + boundary + "\r\n"
             + "Content-Disposition: form-data; name=\"articleId\"\r\n"
             + "\r\n"
-            // + $.uuid + "\r\n"
-            + "xxxxxx" + "\r\n"
+            + $.uuid + "\r\n"
+            // + "xxxxxxx" + "\r\n"
             + "\r\n";
     
             var content = fileContent
             + apiKeyContent
+            + articleNameContent
             + contentType
             + PublicationIDContent
             + IssueIDContent
@@ -244,9 +273,6 @@ var CanvasflowPublish = function(settingsPath, host) {
             alert(reply);
     
             if( reply.indexOf( "200" ) > 0 ) {
-
-                
-                
                 var data = reply.substring(reply.indexOf("{"), reply.length);
                 
                 var response = JSON.parse(data);
@@ -294,12 +320,14 @@ var CanvasflowPublish = function(settingsPath, host) {
     
         var baseFile = new File(baseDirectory);
         app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
-        if($.uploadZip(baseFile.fsName + '.zip')) {
-            // $.cleanUp();
+        alert('Article was uploaded successfully');
+
+        /*if($.uploadZip(baseFile.fsName + '.zip')) {
+            $.cleanUp();
             alert('Article was uploaded successfully');
         } else {
             alert("Error uploading the content, please try again")
-        }
+        }*/
     }
 
     $.getUUIDFromDocument = function(doc) {
