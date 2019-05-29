@@ -50,12 +50,30 @@ var CanvasflowPublish = function(settingsPath, host) {
                 continue
             }
 
+
+            var characterFontFamily = paragraph.appliedCharacterStyle.appliedFont;
+            var characterFontSize = paragraph.appliedCharacterStyle.pointSize;
+
+            var characterStyle ={
+                fontFamily: characterFontFamily,
+                fontSize: characterFontSize
+            };
+
+            if(!characterStyle.fontFamily) {
+                characterStyle.fontFamily = null;
+            }
+            
+            if(typeof characterStyle.fontSize == 'object') {
+                characterStyle.fontSize = null;
+            } 
+
             response.push({
                 content: paragraph.contents,
                 font: {
                     fontFamily: paragraph.appliedFont.fontFamily,
                     fontSize: paragraph.pointSize,
                 },
+                characterStyle: characterStyle,
                 style: {
                     fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
                     fontSize: paragraph.appliedParagraphStyle.pointSize
