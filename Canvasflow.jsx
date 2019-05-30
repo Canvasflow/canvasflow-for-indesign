@@ -862,6 +862,7 @@ var CanvasflowPublish = function(settingsPath, host) {
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
+        
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;

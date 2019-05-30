@@ -207,6 +207,8 @@ var CanvasflowPublish = function(settingsPath, host) {
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
+
+        alert('StyleID: ' + StyleID);
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;
@@ -337,14 +339,13 @@ var CanvasflowPublish = function(settingsPath, host) {
     
         var baseFile = new File(baseDirectory);
         app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
-        alert('Article was uploaded successfully');
 
-        /*if($.uploadZip(baseFile.fsName + '.zip')) {
+        if($.uploadZip(baseFile.fsName + '.zip')) {
             $.cleanUp();
             alert('Article was uploaded successfully');
         } else {
             alert("Error uploading the content, please try again")
-        }*/
+        }
     }
 
     $.getUUIDFromDocument = function(doc) {

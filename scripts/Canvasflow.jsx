@@ -1093,12 +1093,10 @@ var CanvasflowPublish = function(settingsPath, host) {
 
 var canvasflowApi = new CanvasflowApi(host);
 var canvasflowDialog = new CanvasflowDialog(canvasflowApi, settingsFilePath);
-var canvasflowPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com");
 
-var CanvasflowPlugin = function(canvasflowDialog, canvasflowPublish) {
+var CanvasflowPlugin = function(canvasflowDialog) {
     var $ = this;
     $.canvasflowDialog = canvasflowDialog;
-    $.canvasflowPublish = canvasflowPublish;
 
     $.install = function() {
         try {
@@ -1114,6 +1112,7 @@ var CanvasflowPlugin = function(canvasflowDialog, canvasflowPublish) {
         
         var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
         canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
+            var canvasflowPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com");
             canvasflowPublish.publish();
         });
     
@@ -1130,5 +1129,5 @@ var CanvasflowPlugin = function(canvasflowDialog, canvasflowPublish) {
     }
 }
 
-var canvasflowPlugin = new CanvasflowPlugin(canvasflowDialog, canvasflowPublish);
+var canvasflowPlugin = new CanvasflowPlugin(canvasflowDialog);
 canvasflowPlugin.install();
