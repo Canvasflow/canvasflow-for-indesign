@@ -572,7 +572,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
         //Add Api Key
         settingsDialog.apiKeyGroup = settingsDialog.add('group');
         settingsDialog.apiKeyGroup.orientation = 'row';
-        settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "Api Key");
+        settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "API Key");
         settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.apiKey);
         
         if(!!savedSettings.apiKey) {
@@ -582,7 +582,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             publications = $.getPublications(savedSettings.apiKey);
             settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
             settingsDialog.publicationDropDownGroup.orientation = 'row';
-            settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publications");
+            settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
             settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(publications)});
             
             if(!!savedSettings.PublicationID) {
@@ -600,7 +600,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
                 issues = $.getIssues(savedSettings.apiKey, selectedPublication.id);
                 settingsDialog.issueDropDownGroup = settingsDialog.add('group');
                 settingsDialog.issueDropDownGroup.orientation = 'row';
-                settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issues");
+                settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
                 settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)})
 
                 if(!!savedSettings.IssueID) {
@@ -614,7 +614,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             styles = $.getStyles(savedSettings.apiKey, selectedPublication.id);
             settingsDialog.styleDropDownGroup = settingsDialog.add('group');
             settingsDialog.styleDropDownGroup.orientation = 'row';
-            settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Styles");
+            settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
             settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(styles)})
 
             if(!!savedSettings.StyleID) {
@@ -1025,6 +1025,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     
         var baseFile = new File(baseDirectory);
         app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+        
         if($.uploadZip(baseFile.fsName + '.zip')) {
             $.cleanUp();
             new Folder(baseFile.fsName + '.zip').remove();
