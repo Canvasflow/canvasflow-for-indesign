@@ -5,7 +5,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     var $ = this;
     $.settingsPath = settingsPath;
     $.isInternal = internal;
-    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": ""}';
+    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true}';
 
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
@@ -69,6 +69,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     $.resetFromEndpoint = function(endpoint) {
         var settings = {
             apiKey: '',
+            previewImage: $.savedSettings.previewImage,
             PublicationID: '',
             IssueID: '',
             StyleID: '',
@@ -82,6 +83,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var PublicationID = '';
         var IssueID = '';
         var StyleID = '';
+        var previewImage = $.savedSettings.previewImage;
 
         var publications = $.getPublications(apiKey, canvasflowApi);
         
@@ -102,7 +104,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
             PublicationID: PublicationID,
             IssueID: IssueID,
             StyleID: StyleID,
-            endpoint: endpoint
+            endpoint: endpoint,
+            previewImage: previewImage
         };
 
         $.save(settings);
@@ -111,6 +114,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     $.resetFromPublication = function(apiKey, PublicationID, canvasflowApi, endpoint) {
         var IssueID = '';
         var StyleID = '';
+        var previewImage = $.savedSettings.previewImage;
     
         var publications = $.getPublications(apiKey, canvasflowApi);
         var publication = $.getItemByID(publications, PublicationID, canvasflowApi);
@@ -130,7 +134,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
             PublicationID: PublicationID,
             IssueID: IssueID,
             StyleID: StyleID,
-            endpoint: endpoint
+            endpoint: endpoint,
+            previewImage: previewImage
         };
 
         $.save(settings);
@@ -141,14 +146,19 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var file = new File($.settingsPath);
         file.encoding = 'UTF-8';
         file.open('w');
-        var content = '{"apiKey":"' + settings.apiKey + '", "PublicationID": "' + settings.PublicationID + '", "IssueID":"' + settings.IssueID + '", "StyleID": "' + settings.StyleID + '", "endpoint": "' + settings.endpoint + '"}';
+        var content = '{"apiKey":"' + settings.apiKey + '", "PublicationID": "' + settings.PublicationID + '", "IssueID":"' + settings.IssueID + '", "StyleID": "' + settings.StyleID + '", "endpoint": "' + settings.endpoint + '", "previewImage": ' + settings.previewImage +'}';
         file.write(content);
         file.close();
     }
 
     $.processPublic = function() {
         var savedSettings = $.savedSettings;
-        var endpoint = "api.cflowdev.com";
+        if(!savedSettings) {
+            savedSettings = JSON.parse($.defaultSavedSettings);
+            $.savedSettings = savedSettings;
+        }
+
+        var endpoint = 'api.canvasflow.io';
         var canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
 
         var apiKeyExist = false;
@@ -156,10 +166,10 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var settingsDialog = new Window('dialog', 'Settings');
         settingsDialog.orientation = 'column';
         settingsDialog.alignment = 'right';
-        settingsDialog.preferredSize = [200,100];
+        settingsDialog.preferredSize = [300,100];
 
         var valuesWidth = 200;
-        var labelWidth = 80;
+        var labelWidth = 150;
 
         var publications = [];
         var selectedPublication;
@@ -168,6 +178,22 @@ var CanvasflowDialog = function(settingsPath, internal) {
 
         var issues = [];
         var styles = [];
+
+        // Add Preview Image selector
+        var previewImageOptions = ['True', 'False'];
+        settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
+        settingsDialog.previewImageDropDownGroup.orientation = 'row';
+        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+        settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+        if(savedSettings.previewImage === true ) {
+            savedSettings.previewImage = true;
+            $.savedSettings.previewImage = true;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
+        } else {
+            savedSettings.previewImage = false;
+            $.savedSettings.previewImage = false;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+        }
 
         //Add Api Key
         settingsDialog.apiKeyGroup = settingsDialog.add('group');
@@ -234,6 +260,12 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
         
         settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.previewImage = true;
+            } else {
+                $.savedSettings.previewImage = false;
+            }
+
             if(!apiKeyExist) {
                 var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
                 var response = JSON.parse(reply);
@@ -296,6 +328,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var savedSettings = $.savedSettings;
         if(!savedSettings) {
             savedSettings = JSON.parse($.defaultSavedSettings);
+            $.savedSettings = savedSettings;
         }
 
         var canvasflowApi;
@@ -305,10 +338,10 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var settingsDialog = new Window('dialog', 'Settings');
         settingsDialog.orientation = 'column';
         settingsDialog.alignment = 'right';
-        settingsDialog.preferredSize = [200,100];
+        settingsDialog.preferredSize = [300,100];
 
         var valuesWidth = 200;
-        var labelWidth = 80;
+        var labelWidth = 150;
 
         var publications = [];
         var selectedPublication;
@@ -317,6 +350,22 @@ var CanvasflowDialog = function(settingsPath, internal) {
 
         var issues = [];
         var styles = [];
+
+        // Add Preview Image selector
+        var previewImageOptions = ['True', 'False'];
+        settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
+        settingsDialog.previewImageDropDownGroup.orientation = 'row';
+        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+        settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+        if(savedSettings.previewImage === true ) {
+            savedSettings.previewImage = true;
+            $.savedSettings.previewImage = true;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
+        } else {
+            savedSettings.previewImage = false;
+            $.savedSettings.previewImage = false;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+        }
 
         // Add endpoint selector
         var endpoints = [
@@ -409,8 +458,15 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
         
         settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.previewImage = true;
+            } else {
+                $.savedSettings.previewImage = false;
+            }
+
             if(!endpointExist) {
                 $.resetFromEndpoint(endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id);
+                settingsDialog.destroy();
             } else {
                 var endpoint = endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id;
                 if(savedSettings.endpoint !== endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id) {
@@ -490,6 +546,6 @@ var CanvasflowDialog = function(settingsPath, internal) {
 }
 var settingsFilePath = "~/canvaflow_settings.json";
 
-var dialog = new CanvasflowDialog(settingsFilePath, true);
+var dialog = new CanvasflowDialog(settingsFilePath, false);
 dialog.show()
 

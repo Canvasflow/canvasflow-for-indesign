@@ -362,9 +362,10 @@ if (typeof JSON !== "object") {
       
 // app.menus.item("$ID/Main").submenus.item("Canvasflow").remove();
 var apiKeySetting = 1;
+var isInternal = true;
 var canvasflowSettingsKey = "CanvasflowSettings";
-var host = "http://api.cflowdev.com/v1/index.cfm";
 var settingsFilePath = "~/canvaflow_settings.json";
+var defaultHost = 'api.canvasflow.io';
 
 var HTTPFile = function (url,port) {
     if (arguments.length == 1) {
@@ -394,65 +395,72 @@ var HTTPFile = function (url,port) {
     };
 }
 
+// http://api.canvasflow.io/v1/index.cfm?endpoint=/info&&secretkey=12345
+
 var CanvasflowApi = function (host) {
     this.host = host;
 
     CanvasflowApi.prototype.getPublications = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
+        // var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
+        var reply = new HTTPFile(this.host + "?endpoint=/publications&secretkey=" + apiKey);
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.validate = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey);
+        // var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey);
+        var reply = new HTTPFile(this.host + "?endpoint=/info&secretkey=" + apiKey);
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        // var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        var reply = new HTTPFile(this.host + "?endpoint=/issues&secretkey=" + apiKey + "&publicationId=" + PublicationID);
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        // var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        var reply = new HTTPFile(this.host + "?endpoint=/styles&secretkey=" + apiKey + "&publicationId=" + PublicationID);
         return reply.getResponse();
     };
 }
 
-var CanvasflowDialog = function(canvasflowApi, settingsPath) {
-    
+var CanvasflowDialog = function(settingsPath, internal) {
     var $ = this;
-    $.canvasflowApi = canvasflowApi;
     $.settingsPath = settingsPath;
+    $.isInternal = internal;
+    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true}';
 
     $.getSavedSettings = function() {
-        var file = new File(settingsPath);
+        var file = new File($.settingsPath);
         if(file.exists) {
             file.open('r');
             return JSON.parse(file.read());
         } else {
-            var file = new File(settingsPath);
+            var file = new File($.settingsPath);
             file.encoding = 'UTF-8';
             file.open('w');
-            var defaultContent = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": ""}';
-            file.write(defaultContent);
+            file.write($.defaultSavedSettings);
             file.close();
 
-            return JSON.parse(defaultContent);
+            $.getSavedSettings();
         }
     };
 
-    $.getPublications = function(apiKey) {
-        var reply = $.canvasflowApi.getPublications(apiKey);
+    $.savedSettings = $.getSavedSettings();
+
+    $.getPublications = function(apiKey, canvasflowApi) {
+        var reply = canvasflowApi.getPublications(apiKey);
         return JSON.parse(reply);
     };
 
-    $.getIssues = function(apiKey, PublicationID) {
-        var reply = $.canvasflowApi.getIssues(apiKey, PublicationID);
+    $.getIssues = function(apiKey, PublicationID, canvasflowApi) {
+        var reply = canvasflowApi.getIssues(apiKey, PublicationID);
         return JSON.parse(reply);
     };
 
-    $.getStyles = function(apiKey, PublicationID) {
-        var reply = $.canvasflowApi.getStyles(apiKey, PublicationID);
+    $.getStyles = function(apiKey, PublicationID, canvasflowApi) {
+        var reply = canvasflowApi.getStyles(apiKey, PublicationID);
         return JSON.parse(reply);
     };
 
@@ -482,23 +490,36 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
         return response;
     }
 
+    $.resetFromEndpoint = function(endpoint) {
+        var settings = {
+            apiKey: '',
+            previewImage: $.savedSettings.previewImage,
+            PublicationID: '',
+            IssueID: '',
+            StyleID: '',
+            endpoint: endpoint
+        };
 
-    $.resetFromApi = function(apiKey) {
+        $.save(settings);
+    }
+
+    $.resetFromApi = function(apiKey, canvasflowApi, endpoint) {
         var PublicationID = '';
         var IssueID = '';
         var StyleID = '';
+        var previewImage = $.savedSettings.previewImage;
 
-        var publications = $.getPublications(apiKey);
+        var publications = $.getPublications(apiKey, canvasflowApi);
         
         var publication = publications[0];
         PublicationID = publication.id;
         if(publication.type === 'issue') {
-            var issues = $.getIssues(apiKey, PublicationID);
+            var issues = $.getIssues(apiKey, PublicationID, canvasflowApi);
             var issue = issues[0];
             IssueID = issue.id;
         }
 
-        var styles = $.getStyles(apiKey, PublicationID);
+        var styles = $.getStyles(apiKey, PublicationID, canvasflowApi);
         var style = styles[0];
         StyleID = style.id;
 
@@ -506,26 +527,29 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             apiKey: apiKey,
             PublicationID: PublicationID,
             IssueID: IssueID,
-            StyleID: StyleID
+            StyleID: StyleID,
+            endpoint: endpoint,
+            previewImage: previewImage
         };
 
         $.save(settings);
     }
 
-    $.resetFromPublication = function(apiKey, PublicationID) {
+    $.resetFromPublication = function(apiKey, PublicationID, canvasflowApi, endpoint) {
         var IssueID = '';
         var StyleID = '';
+        var previewImage = $.savedSettings.previewImage;
     
-        var publications = $.getPublications(apiKey);
-        var publication = $.getItemByID(publications, PublicationID);
+        var publications = $.getPublications(apiKey, canvasflowApi);
+        var publication = $.getItemByID(publications, PublicationID, canvasflowApi);
         
         if(publication.type === 'issue') {
-            var issues = $.getIssues(apiKey, PublicationID);
+            var issues = $.getIssues(apiKey, PublicationID, canvasflowApi);
             var issue = issues[0];
             IssueID = issue.id;
         }
     
-        var styles = $.getStyles(apiKey, PublicationID);
+        var styles = $.getStyles(apiKey, PublicationID, canvasflowApi);
         var style = styles[0];
         StyleID = style.id;
 
@@ -533,53 +557,78 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             apiKey: apiKey,
             PublicationID: PublicationID,
             IssueID: IssueID,
-            StyleID: StyleID
+            StyleID: StyleID,
+            endpoint: endpoint,
+            previewImage: previewImage
         };
 
         $.save(settings);
     }
-    // this.getOkCallback = getOkCallback.bind(this);
 
     $.save = function(settings) {
         var file = new File($.settingsPath);
         file.encoding = 'UTF-8';
         file.open('w');
-        var content = '{"apiKey":"' + settings.apiKey + '", "PublicationID": "' + settings.PublicationID + '", "IssueID":"' + settings.IssueID + '", "StyleID": "' + settings.StyleID + '"}';
+        var content = '{"apiKey":"' + settings.apiKey + '", "PublicationID": "' + settings.PublicationID + '", "IssueID":"' + settings.IssueID + '", "StyleID": "' + settings.StyleID + '", "endpoint": "' + settings.endpoint + '", "previewImage": ' + settings.previewImage +'}';
         file.write(content);
         file.close();
     }
 
-    $.show = function() {
-        $.savedSettings = $.getSavedSettings();
+    $.processPublic = function() {
         var savedSettings = $.savedSettings;
+        if(!savedSettings) {
+            savedSettings = JSON.parse($.defaultSavedSettings);
+            $.savedSettings = savedSettings;
+        }
+
+        var endpoint = 'api.canvasflow.io';
+        var canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
 
         var apiKeyExist = false;
+        
         var settingsDialog = new Window('dialog', 'Settings');
         settingsDialog.orientation = 'column';
         settingsDialog.alignment = 'right';
-        settingsDialog.preferredSize = [200,100];
+        settingsDialog.preferredSize = [300,100];
 
         var valuesWidth = 200;
-        var labelWidth = 80;
+        var labelWidth = 150;
 
         var publications = [];
         var selectedPublication;
+        var selectedEndpoint;
         var publicationType = '';
 
         var issues = [];
         var styles = [];
+
+        // Add Preview Image selector
+        var previewImageOptions = ['True', 'False'];
+        settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
+        settingsDialog.previewImageDropDownGroup.orientation = 'row';
+        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+        settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+        if(savedSettings.previewImage === true ) {
+            savedSettings.previewImage = true;
+            $.savedSettings.previewImage = true;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
+        } else {
+            savedSettings.previewImage = false;
+            $.savedSettings.previewImage = false;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+        }
 
         //Add Api Key
         settingsDialog.apiKeyGroup = settingsDialog.add('group');
         settingsDialog.apiKeyGroup.orientation = 'row';
         settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "API Key");
         settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.apiKey);
-        
+
         if(!!savedSettings.apiKey) {
             apiKeyExist = true
 
             //Add Publication list
-            publications = $.getPublications(savedSettings.apiKey);
+            publications = $.getPublications(savedSettings.apiKey, canvasflowApi);
             settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
             settingsDialog.publicationDropDownGroup.orientation = 'row';
             settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
@@ -597,7 +646,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
 
             // Check if publication is an issue
             if(publicationType === 'issue') {
-                issues = $.getIssues(savedSettings.apiKey, selectedPublication.id);
+                issues = $.getIssues(savedSettings.apiKey, selectedPublication.id, canvasflowApi);
                 settingsDialog.issueDropDownGroup = settingsDialog.add('group');
                 settingsDialog.issueDropDownGroup.orientation = 'row';
                 settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
@@ -611,7 +660,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             }
 
             // Select styles
-            styles = $.getStyles(savedSettings.apiKey, selectedPublication.id);
+            styles = $.getStyles(savedSettings.apiKey, selectedPublication.id, canvasflowApi);
             settingsDialog.styleDropDownGroup = settingsDialog.add('group');
             settingsDialog.styleDropDownGroup.orientation = 'row';
             settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
@@ -634,12 +683,17 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
         settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
         
         settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
-            // var selectedPublication = settingsDialog.publicationDropDownGroup.dropDown.selection;
+            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.previewImage = true;
+            } else {
+                $.savedSettings.previewImage = false;
+            }
+
             if(!apiKeyExist) {
-                var reply = $.canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
+                var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
                 var response = JSON.parse(reply);
                 if(response.isValid) {
-                    $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text);
+                    $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text, canvasflowApi);
                     settingsDialog.destroy();
                 } else {
                     alert(reply.replace(/(")/gi, ''));
@@ -647,10 +701,10 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             } else {
                 // The api key was already validated
                 if(savedSettings.apiKey !== settingsDialog.apiKeyGroup.apiKey.text) {
-                    var reply = $.canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
+                    var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
                     var response = JSON.parse(reply);
                     if(response.isValid) {
-                        $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text);
+                        $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text, canvasflowApi);
                         settingsDialog.destroy();
                     } else {
                         alert(reply.replace(/(")/gi, ''));
@@ -658,7 +712,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
                 } else {
                     var PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
                     if(savedSettings.PublicationID != PublicationID) {
-                        $.resetFromPublication(savedSettings.apiKey, PublicationID);
+                        $.resetFromPublication(savedSettings.apiKey, PublicationID, canvasflowApi);
                         settingsDialog.destroy();
                     } else {
                         var StyleID = '';
@@ -678,6 +732,7 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
                         savedSettings.PublicationID = PublicationID;
                         savedSettings.StyleID = StyleID;
                         savedSettings.IssueID = IssueID;
+                        savedSettings.endpoint = selectedEndpoint.id;
 
                         $.save(savedSettings);
                         settingsDialog.destroy();
@@ -690,6 +745,226 @@ var CanvasflowDialog = function(canvasflowApi, settingsPath) {
             settingsDialog.destroy();
         }
         settingsDialog.show();
+    };
+
+    $.processInternal = function() {
+        var savedSettings = $.savedSettings;
+        if(!savedSettings) {
+            savedSettings = JSON.parse($.defaultSavedSettings);
+            $.savedSettings = savedSettings;
+        }
+
+        var canvasflowApi;
+
+        var apiKeyExist = false;
+        var endpointExist = false;
+        var settingsDialog = new Window('dialog', 'Settings');
+        settingsDialog.orientation = 'column';
+        settingsDialog.alignment = 'right';
+        settingsDialog.preferredSize = [300,100];
+
+        var valuesWidth = 200;
+        var labelWidth = 150;
+
+        var publications = [];
+        var selectedPublication;
+        var selectedEndpoint;
+        var publicationType = '';
+
+        var issues = [];
+        var styles = [];
+
+        // Add Preview Image selector
+        var previewImageOptions = ['True', 'False'];
+        settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
+        settingsDialog.previewImageDropDownGroup.orientation = 'row';
+        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+        settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+        if(savedSettings.previewImage === true ) {
+            savedSettings.previewImage = true;
+            $.savedSettings.previewImage = true;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
+        } else {
+            savedSettings.previewImage = false;
+            $.savedSettings.previewImage = false;
+            settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+        }
+
+        // Add endpoint selector
+        var endpoints = [
+            {
+                name: 'Live',
+                id: 'api.canvasflow.io'
+            },
+            {
+                name: 'Cflowdev',
+                id: 'api.cflowdev.com'
+            }
+        ];
+        settingsDialog.endpointDropDownGroup = settingsDialog.add('group');
+        settingsDialog.endpointDropDownGroup.orientation = 'row';
+        settingsDialog.endpointDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Endpoint");
+        settingsDialog.endpointDropDownGroup.dropDown = settingsDialog.endpointDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(endpoints)});  
+
+        if(!!savedSettings.endpoint) {
+            canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v1/index.cfm');
+            endpointExist = true;
+            selectedEndpoint = $.getItemByID(endpoints, savedSettings.endpoint);
+            settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
+
+            //Add Api Key
+            settingsDialog.apiKeyGroup = settingsDialog.add('group');
+            settingsDialog.apiKeyGroup.orientation = 'row';
+            settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "API Key");
+            settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.apiKey);
+            
+            if(!!savedSettings.apiKey) {
+                apiKeyExist = true
+
+                //Add Publication list
+                publications = $.getPublications(savedSettings.apiKey, canvasflowApi);
+                settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
+                settingsDialog.publicationDropDownGroup.orientation = 'row';
+                settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
+                settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(publications)});
+                
+                if(!!savedSettings.PublicationID) {
+                    selectedPublication = $.getItemByID(publications, savedSettings.PublicationID);
+                    settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID(publications, savedSettings.PublicationID);
+                } else {
+                    selectedPublication = publications[0];
+                    settingsDialog.publicationDropDownGroup.dropDown.selection = 0;
+                }
+
+                publicationType = selectedPublication.type;
+
+                // Check if publication is an issue
+                if(publicationType === 'issue') {
+                    issues = $.getIssues(savedSettings.apiKey, selectedPublication.id, canvasflowApi);
+                    settingsDialog.issueDropDownGroup = settingsDialog.add('group');
+                    settingsDialog.issueDropDownGroup.orientation = 'row';
+                    settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
+                    settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)})
+
+                    if(!!savedSettings.IssueID) {
+                        settingsDialog.issueDropDownGroup.dropDown.selection = $.getItemIndexByID(issues, savedSettings.IssueID)
+                    } else {
+                        settingsDialog.issueDropDownGroup.dropDown.selection = 0;
+                    }
+                }
+
+                // Select styles
+                styles = $.getStyles(savedSettings.apiKey, selectedPublication.id, canvasflowApi);
+                settingsDialog.styleDropDownGroup = settingsDialog.add('group');
+                settingsDialog.styleDropDownGroup.orientation = 'row';
+                settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
+                settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(styles)})
+
+                if(!!savedSettings.StyleID) {
+                    settingsDialog.styleDropDownGroup.dropDown.selection = $.getItemIndexByID(styles, savedSettings.StyleID)
+                } else {
+                    settingsDialog.styleDropDownGroup.dropDown.selection = 0;
+                }
+            } else {
+                apiKeyExist = false;
+            }
+        } else {
+            selectedEndpoint = endpoints[0];
+            settingsDialog.endpointDropDownGroup.dropDown.selection = 0;
+        }
+
+        // Panel buttons
+        settingsDialog.buttonsBarGroup = settingsDialog.add('group');
+        settingsDialog.buttonsBarGroup.orientation = 'row';
+        settingsDialog.buttonsBarGroup.alignChildren = 'bottom';    
+        settingsDialog.buttonsBarGroup.cancelBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'Cancel');
+        settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
+        
+        settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.previewImage = true;
+            } else {
+                $.savedSettings.previewImage = false;
+            }
+
+            if(!endpointExist) {
+                $.resetFromEndpoint(endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id);
+                settingsDialog.destroy();
+            } else {
+                var endpoint = endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id;
+                if(savedSettings.endpoint !== endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id) {
+                    $.resetFromEndpoint(endpoints[settingsDialog.endpointDropDownGroup.dropDown.selection.index].id);
+                    settingsDialog.destroy();
+                    return;
+                }
+
+                canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
+
+                if(!apiKeyExist) {
+                    var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
+                    var response = JSON.parse(reply);
+                    if(response.isValid) {
+                        $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text, canvasflowApi, endpoint);
+                        settingsDialog.destroy();
+                    } else {
+                        alert(reply.replace(/(")/gi, ''));
+                    }
+                } else {
+                    // The api key was already validated
+                    if(savedSettings.apiKey !== settingsDialog.apiKeyGroup.apiKey.text) {
+                        var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
+                        var response = JSON.parse(reply);
+                        if(response.isValid) {
+                            $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text, canvasflowApi, endpoint);
+                            settingsDialog.destroy();
+                        } else {
+                            alert(reply.replace(/(")/gi, ''));
+                        }
+                    } else {
+                        var PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
+                        if(savedSettings.PublicationID != PublicationID) {
+                            $.resetFromPublication(savedSettings.apiKey, PublicationID, canvasflowApi, endpoint);
+                            settingsDialog.destroy();
+                        } else {
+                            var StyleID = '';
+                            try {
+                                StyleID = styles[settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
+                            } catch(e) {
+                                StyleID = '';
+                            }
+    
+                            var IssueID = '';
+                            try {
+                                IssueID = issues[settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
+                            } catch(e) {
+                                IssueID = '';
+                            }
+                            
+                            savedSettings.PublicationID = PublicationID;
+                            savedSettings.StyleID = StyleID;
+                            savedSettings.IssueID = IssueID;
+                            savedSettings.endpoint = selectedEndpoint.id;
+    
+                            $.save(savedSettings);
+                            settingsDialog.destroy();
+                        }
+                    }
+                } 
+            }
+        }
+
+        settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
+            settingsDialog.destroy();
+        }
+        settingsDialog.show();
+    };
+
+    $.show = function() {
+        if(!!$.isInternal) {
+            $.processInternal();
+        } else {
+            $.processPublic();
+        }
     };
 }
 
@@ -795,7 +1070,7 @@ var CanvasflowPublish = function(settingsPath, host) {
         for (var i = 0; i < textFrames.length; i++) {
             var textFrame = textFrames[i];
             var position = $.getItemPosition(textFrame.geometricBounds);
-            if(!!textFrame.contents) {
+            if(!!textFrame.contents && !!textFrame.visible && !!textFrame.itemLayer.visible) {
                 data.push({
                     type: "TextFrame",
                     id: textFrame.id,
@@ -816,6 +1091,20 @@ var CanvasflowPublish = function(settingsPath, host) {
         }
     }
 
+    $.exportImageRepresentation = function(image, ext, imageDirectory, id) {
+        if(ext === 'jpg' || ext === 'jpeg') {
+            ext = 'jpeg';
+        } else {
+            ext = 'png';
+        }
+
+        var destFilePath = imageDirectory + '/' + id + '.' + ext;
+
+        image.exportFile(ext, File(destFilePath)); 
+
+        return './images/' + id + '.' + ext;
+    }
+
     $.saveImageToFile = function(item, imageDirectory) {
         var images = item.images;
         var id = item.id;
@@ -823,16 +1112,50 @@ var CanvasflowPublish = function(settingsPath, host) {
             var image = images[i];
             var linkPath = image.itemLink.filePath;
             var originalImageFile = File(linkPath);
+            
+            var ext;
+            var destFilePath;
             var fileName = originalImageFile.fsName; 
-            var ext = fileName.split('.').pop();
-    
-            var destFilePath = imageDirectory + '/' + id + '.' + ext;
-    
-            originalImageFile.copy(destFilePath);
+            ext = fileName.split('.').pop().toLowerCase();
+            if(ext === 'jpg' || ext === 'jpeg') {
+                ext = 'jpeg';
+            }
+
+            destFilePath = imageDirectory + '/' + id + '.' + ext;
+            
+            if(!!originalImageFile.exists) {
+                var originalImageSize = originalImageFile.length / 1000000; //In MB
+                
+                if(originalImageSize < 5) { 
+                    // The image is lower than 5MB
+                    if(ext === 'tif' || ext === 'psd') {
+                        ext = 'png';
+                        destFilePath = imageDirectory + '/' + id + '.' + ext;
+                    }
+
+                    originalImageFile.copy(destFilePath);
+                } else {
+                    return $.exportImageRepresentation(image, ext, imageDirectory, id);
+                }
+            } else {
+                return $.exportImageRepresentation(image, ext, imageDirectory, id);
+            }
             return './images/' + id + '.' + ext;
         }
     
-        return "";
+        return '';
+    }
+
+    $.checkIfImageExist = function(item) {
+        var images = item.images;
+        for(var i = 0; i < images.length; i++) {
+            var image = images[i];
+            var linkPath = image.itemLink.filePath;
+            var originalImageFile = File(linkPath);
+            return originalImageFile.exists;
+        }
+
+        return false;
     }
 
     $.getImageFromItem = function(items, data, baseDirectory) {
@@ -841,19 +1164,39 @@ var CanvasflowPublish = function(settingsPath, host) {
             var item = items[i];
             var images = item.images;
             if (images.length > 0) {
-                var imagePath = $.saveImageToFile(item, imageDirectory);
+                var imagePath;
                 var position = $.getItemPosition(item.geometricBounds);
-                data.push({
-                    type: "Image",
-                    id: item.id,
-                    content: imagePath,
-                    width: position.width,
-                    height: position.height,
-                    position: {
-                        x: position.x,
-                        y: position.y
+                var imageExist = $.checkIfImageExist(item);
+                if(imageExist) {
+                    imagePath = $.saveImageToFile(item, imageDirectory);
+                    data.push({
+                        type: "Image",
+                        id: item.id,
+                        content: imagePath,
+                        width: position.width,
+                        height: position.height,
+                        position: {
+                            x: position.x,
+                            y: position.y
+                        }
+                    });
+                } else {
+                    if($.savedSettings.previewImage) {
+                        imagePath = $.saveImageToFile(item, imageDirectory);
+                        
+                        data.push({
+                            type: "Image",
+                            id: item.id,
+                            content: imagePath,
+                            width: position.width,
+                            height: position.height,
+                            position: {
+                                x: position.x,
+                                y: position.y
+                            }
+                        });
                     }
-                });
+                }
             }
         }
     }
@@ -872,17 +1215,16 @@ var CanvasflowPublish = function(settingsPath, host) {
             imagePath.remove();
         }
         try {
+            app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
+            app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
             document.exportFile(ExportFormat.JPG, new File(imagePath));
-        } catch(e) {
-
-        }
+        } catch(e) {}
     }
 
     $.uploadZip = function(filepath) {
         var conn = new Socket;
     
         var reply = "";
-        var host = $.host + ":80"
     
         var f = File ( filepath);
         var filename = f.name
@@ -897,6 +1239,7 @@ var CanvasflowPublish = function(settingsPath, host) {
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
+        var host = (!!$.savedSettings.host ? $.savedSettings.host : 'api.canvasflow.io')  + ":80";
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;
@@ -962,7 +1305,8 @@ var CanvasflowPublish = function(settingsPath, host) {
             + articleIdContent
             + "--" + boundary + "--\r\n\r";
     
-            var cs = "POST /v1/index.cfm/article HTTP/1.1\r\n"
+            // var cs = "POST /v1/index.cfm/article HTTP/1.1\r\n"
+            var cs = "POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n"
             + "Content-Length: " + content.length + "\r\n"
             + "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n" 
             + "Host: "+ host + "\r\n"
@@ -980,6 +1324,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                 var data = reply.substring(reply.indexOf("{"), reply.length);
                 
                 var response = JSON.parse(data);
+                // alert(data);
                 return true;
             } else {
                 alert(reply);
@@ -1025,7 +1370,6 @@ var CanvasflowPublish = function(settingsPath, host) {
     
         var baseFile = new File(baseDirectory);
         app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
-        
         if($.uploadZip(baseFile.fsName + '.zip')) {
             $.cleanUp();
             new Folder(baseFile.fsName + '.zip').remove();
@@ -1092,12 +1436,8 @@ var CanvasflowPublish = function(settingsPath, host) {
     }
 }
 
-var canvasflowApi = new CanvasflowApi(host);
-var canvasflowDialog = new CanvasflowDialog(canvasflowApi, settingsFilePath);
-
-var CanvasflowPlugin = function(canvasflowDialog) {
+var CanvasflowPlugin = function() {
     var $ = this;
-    $.canvasflowDialog = canvasflowDialog;
 
     $.install = function() {
         try {
@@ -1108,6 +1448,7 @@ var CanvasflowPlugin = function(canvasflowDialog) {
     
         var canvasflowScriptActionSettings = app.scriptMenuActions.add("Settings");  
         canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
+            var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
             canvasflowDialog.show();
         }); 
         
@@ -1130,5 +1471,5 @@ var CanvasflowPlugin = function(canvasflowDialog) {
     }
 }
 
-var canvasflowPlugin = new CanvasflowPlugin(canvasflowDialog);
+var canvasflowPlugin = new CanvasflowPlugin();
 canvasflowPlugin.install();

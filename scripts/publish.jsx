@@ -105,7 +105,7 @@ var CanvasflowPublish = function(settingsPath, host) {
         for (var i = 0; i < textFrames.length; i++) {
             var textFrame = textFrames[i];
             var position = $.getItemPosition(textFrame.geometricBounds);
-            if(!!textFrame.contents) {
+            if(!!textFrame.contents && !!textFrame.visible && !!textFrame.itemLayer.visible) {
                 data.push({
                     type: "TextFrame",
                     id: textFrame.id,
@@ -126,6 +126,20 @@ var CanvasflowPublish = function(settingsPath, host) {
         }
     }
 
+    $.exportImageRepresentation = function(image, ext, imageDirectory, id) {
+        if(ext === 'jpg' || ext === 'jpeg') {
+            ext = 'jpeg';
+        } else {
+            ext = 'png';
+        }
+
+        var destFilePath = imageDirectory + '/' + id + '.' + ext;
+
+        image.exportFile(ext, File(destFilePath)); 
+
+        return './images/' + id + '.' + ext;
+    }
+
     $.saveImageToFile = function(item, imageDirectory) {
         var images = item.images;
         var id = item.id;
@@ -133,16 +147,50 @@ var CanvasflowPublish = function(settingsPath, host) {
             var image = images[i];
             var linkPath = image.itemLink.filePath;
             var originalImageFile = File(linkPath);
+            
+            var ext;
+            var destFilePath;
             var fileName = originalImageFile.fsName; 
-            var ext = fileName.split('.').pop();
-    
-            var destFilePath = imageDirectory + '/' + id + '.' + ext;
-    
-            originalImageFile.copy(destFilePath);
+            ext = fileName.split('.').pop().toLowerCase();
+            if(ext === 'jpg' || ext === 'jpeg') {
+                ext = 'jpeg';
+            }
+
+            destFilePath = imageDirectory + '/' + id + '.' + ext;
+            
+            if(!!originalImageFile.exists) {
+                var originalImageSize = originalImageFile.length / 1000000; //In MB
+                
+                if(originalImageSize < 5) { 
+                    // The image is lower than 5MB
+                    if(ext === 'tif' || ext === 'psd') {
+                        ext = 'png';
+                        destFilePath = imageDirectory + '/' + id + '.' + ext;
+                    }
+
+                    originalImageFile.copy(destFilePath);
+                } else {
+                    return $.exportImageRepresentation(image, ext, imageDirectory, id);
+                }
+            } else {
+                return $.exportImageRepresentation(image, ext, imageDirectory, id);
+            }
             return './images/' + id + '.' + ext;
         }
     
-        return "";
+        return '';
+    }
+
+    $.checkIfImageExist = function(item) {
+        var images = item.images;
+        for(var i = 0; i < images.length; i++) {
+            var image = images[i];
+            var linkPath = image.itemLink.filePath;
+            var originalImageFile = File(linkPath);
+            return originalImageFile.exists;
+        }
+
+        return false;
     }
 
     $.getImageFromItem = function(items, data, baseDirectory) {
@@ -151,19 +199,39 @@ var CanvasflowPublish = function(settingsPath, host) {
             var item = items[i];
             var images = item.images;
             if (images.length > 0) {
-                var imagePath = $.saveImageToFile(item, imageDirectory);
+                var imagePath;
                 var position = $.getItemPosition(item.geometricBounds);
-                data.push({
-                    type: "Image",
-                    id: item.id,
-                    content: imagePath,
-                    width: position.width,
-                    height: position.height,
-                    position: {
-                        x: position.x,
-                        y: position.y
+                var imageExist = $.checkIfImageExist(item);
+                if(imageExist) {
+                    imagePath = $.saveImageToFile(item, imageDirectory);
+                    data.push({
+                        type: "Image",
+                        id: item.id,
+                        content: imagePath,
+                        width: position.width,
+                        height: position.height,
+                        position: {
+                            x: position.x,
+                            y: position.y
+                        }
+                    });
+                } else {
+                    if($.savedSettings.previewImage) {
+                        imagePath = $.saveImageToFile(item, imageDirectory);
+                        
+                        data.push({
+                            type: "Image",
+                            id: item.id,
+                            content: imagePath,
+                            width: position.width,
+                            height: position.height,
+                            position: {
+                                x: position.x,
+                                y: position.y
+                            }
+                        });
                     }
-                });
+                }
             }
         }
     }
@@ -182,7 +250,7 @@ var CanvasflowPublish = function(settingsPath, host) {
             imagePath.remove();
         }
         try {
-            app.jpegExportPreferences.pageString = "1";  
+            app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
             app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
             document.exportFile(ExportFormat.JPG, new File(imagePath));
         } catch(e) {}
