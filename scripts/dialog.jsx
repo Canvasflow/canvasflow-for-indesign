@@ -183,8 +183,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var previewImageOptions = ['True', 'False'];
         settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
         settingsDialog.previewImageDropDownGroup.orientation = 'row';
-        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use Thumbnails');
         settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+        settingsDialog.previewImageDropDownGroup.dropDown.helpTip = 'The plugin will use ';
         if(savedSettings.previewImage === true ) {
             savedSettings.previewImage = true;
             $.savedSettings.previewImage = true;
@@ -546,6 +547,6 @@ var CanvasflowDialog = function(settingsPath, internal) {
 }
 var settingsFilePath = "~/canvaflow_settings.json";
 
-var dialog = new CanvasflowDialog(settingsFilePath, false);
+var dialog = new CanvasflowDialog(settingsFilePath, true);
 dialog.show()
 

@@ -11,6 +11,30 @@ var CanvasflowPublish = function(settingsPath, host) {
     $.host = host;
 
     $.settingsPath = settingsPath;
+    $.writeResizeScript = function(path, inputImage, outputImage) {
+        var nl = "\u000A";
+        var cmd = ""; //"#!/bin/bash" + nl;
+        cmd = cmd + "echo \"" + inputImage + "\" && ";
+        cmd = cmd + "echo \"" + outputImage + "\" && ";
+        cmd = cmd + "touch x.txt"
+
+        var file = new File(path);
+        if(file.exists) {
+            file.remove();
+        }
+
+        file.encoding = 'UTF-8';
+        file.open('w');
+        file.write(cmd);
+        file.close();
+    }
+
+    $.runResizeScript = function(path) {
+        var file = new File(path);
+        file.execute();
+        // file.remove();
+    }
+
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
         if(file.exists) {
@@ -40,6 +64,49 @@ var CanvasflowPublish = function(settingsPath, host) {
         });
 
         return uuid.substring(0, uuid.length / 2);
+    }
+
+    $.getSubstrings = function(characters) {
+        var data = [];
+        var substring = null;
+        for(var i = 0; i<characters.length; i++) {
+            var character = characters.item(i);
+            if(substring == null) {
+                substring = {
+                    content: character.contents,
+                    font: {
+                        fontFamily: character.appliedFont.fontFamily,
+                        fontSize: character.pointSize
+                    }
+                }
+                continue;
+            }
+
+            var previousFontFamily = substring.font.fontFamily;
+            var previousFontSize = substring.font.fontFamily;
+            var currentFontFamily = character.appliedFont.fontFamily;
+            var currentFontSize = character.appliedFont.fontFamily;
+            if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
+                data.push(substring);
+                substring = {
+                    content: character.contents,
+                    font: {
+                        fontFamily: character.appliedFont.fontFamily,
+                        fontSize: character.pointSize
+                    }
+                }
+
+                continue;
+            }
+
+            substring.content = substring.content + character.contents;
+        }
+
+        if(substring !== null) {
+            data.push(substring);
+        }
+
+        return data;
     }
 
     $.getParagraphs = function(paragraphs) {
@@ -72,6 +139,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                     fontFamily: paragraph.appliedFont.fontFamily,
                     fontSize: paragraph.pointSize,
                 },
+                substrings: $.getSubstrings(paragraph.characters),
                 characterStyle: characterStyle,
                 paragraphStyle: {
                     fontFamily: paragraph.appliedParagraphStyle.appliedFont.fontFamily,
@@ -100,8 +168,58 @@ var CanvasflowPublish = function(settingsPath, host) {
         }
     }
 
+    $.getFontFromParagraphs = function(textFrame) {
+        var paragraphs = textFrame.paragraphs;
+        if(!!paragraphs.count()) {
+            var paragraph = paragraphs.item(0);
+            return {
+                fontFamily: paragraph.appliedFont.fontFamily,
+                fontSize: paragraph.pointSize,
+            }
+        }
+
+        return {
+            fontFamily: textFrame.appliedObjectStyle.appliedParagraphStyle.appliedFont.fontFamily,
+            fontSize: textFrame.appliedObjectStyle.appliedParagraphStyle.pointSize
+        }
+    }
+
+    $.appendTextBoxes = function (textFrames, textBoxes) {
+        if(textBoxes.length > 0) {
+            for(var i = 0; i < textBoxes.length; i++) {
+                var textBox = textBoxes[i];
+                for(var j = 0; j < textBox.textFrames.length; j++) {
+                    textFrames.push(textBox.textFrames[j]);
+                }
+            }
+        }
+    }
+
+    $.appendGroups = function (textFrames, groups) {
+        if(groups.length > 0) {
+            for(var i = 0; i < groups.length; i++) {
+                var group = groups[i];
+                for(var j = 0; j < group.textFrames.length; j++) {
+                    textFrames.push(group.textFrames[j]);
+                }
+            }
+        }
+    }
+
     $.getTextFrames = function(page, data) {
-        var textFrames = page.textFrames;
+        var textFrames = [];
+        for(var i = 0; i < page.textFrames.length; i++) {
+            textFrames.push(page.textFrames[i]);
+        }
+
+        if(page.textBoxes.length > 0) {
+            $.appendTextBoxes(textFrames, page.textBoxes)
+        }
+
+        if(page.groups.length > 0) {
+            $.appendGroups(textFrames, page.groups)
+        }
+
         for (var i = 0; i < textFrames.length; i++) {
             var textFrame = textFrames[i];
             var position = $.getItemPosition(textFrame.geometricBounds);
@@ -112,10 +230,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                     content: textFrame.contents,
                     width: position.width,
                     height: position.height,
-                    font: {
-                        fontFamily: textFrame.appliedObjectStyle.appliedParagraphStyle.appliedFont.fontFamily,
-                        fontSize: textFrame.appliedObjectStyle.appliedParagraphStyle.pointSize
-                    },
+                    font: $.getFontFromParagraphs(textFrame),
                     paragraphs: $.getParagraphs(textFrame.paragraphs),
                     position: {
                         x: position.x,
@@ -138,6 +253,10 @@ var CanvasflowPublish = function(settingsPath, host) {
         image.exportFile(ext, File(destFilePath)); 
 
         return './images/' + id + '.' + ext;
+    }
+
+    $.imageNeedsResizing = function() {
+        
     }
 
     $.saveImageToFile = function(item, imageDirectory) {
@@ -193,6 +312,8 @@ var CanvasflowPublish = function(settingsPath, host) {
         return false;
     }
 
+    
+
     $.getImageFromItem = function(items, data, baseDirectory) {
         var imageDirectory = baseDirectory + '/images';
         for (var i = 0; i < items.length; i++) {
@@ -204,6 +325,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                 var imageExist = $.checkIfImageExist(item);
                 if(imageExist) {
                     imagePath = $.saveImageToFile(item, imageDirectory);
+                    alert(imagePath);
                     data.push({
                         type: "Image",
                         id: item.id,
@@ -218,7 +340,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                 } else {
                     if($.savedSettings.previewImage) {
                         imagePath = $.saveImageToFile(item, imageDirectory);
-                        
+                        alert(imagePath);
                         data.push({
                             type: "Image",
                             id: item.id,
@@ -230,6 +352,95 @@ var CanvasflowPublish = function(settingsPath, host) {
                                 y: position.y
                             }
                         });
+                    } else {
+                        alert('The image do not exist and preview is false');
+                    }
+                }
+            }
+        }
+    }
+
+    $.checkIfGraphicImageExist = function(graphic) {
+        var linkPath = graphic.itemLink.filePath;
+        var originalImageFile = File(linkPath);
+        return originalImageFile.exists;
+    }
+
+    $.saveGraphicToImage = function(graphic, imageDirectory) {
+        var id = graphic.id;
+
+        var linkPath = graphic.itemLink.filePath;
+        var originalImageFile = File(linkPath);
+            
+        var ext;
+        var destFilePath;
+        var fileName = originalImageFile.fsName; 
+        ext = fileName.split('.').pop().toLowerCase();
+        if(ext === 'jpg' || ext === 'jpeg') {
+            ext = 'jpeg';
+        }
+
+        destFilePath = imageDirectory + '/' + id + '.' + ext;
+            
+        if(!!originalImageFile.exists) {
+            var originalImageSize = originalImageFile.length / 1000000; //In MB
+                
+            if(originalImageSize < 5) { 
+                // The image is lower than 5MB
+                if(ext === 'tif' || ext === 'psd') {
+                    ext = 'png';
+                    destFilePath = imageDirectory + '/' + id + '.' + ext;
+                }
+
+                originalImageFile.copy(destFilePath);
+            } else {
+                return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
+            }
+        } else {
+            return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
+        }
+        return './images/' + id + '.' + ext;
+    }
+
+    $.getImageFromGraphics = function(graphics, data, baseDirectory) {
+        var imageDirectory = baseDirectory + '/images';
+        if(graphics.length > 0) {
+            for (var i = 0; i < graphics.length; i++) {
+                var graphic = graphics[i];
+                if(graphic.isValid) {
+                    var imagePath;
+                    var position = $.getItemPosition(graphic.geometricBounds);
+                    var imageExist = $.checkIfGraphicImageExist(graphic);
+                    if(imageExist) {
+                        if(graphic.visible) {
+                            imagePath = $.saveGraphicToImage(graphic, imageDirectory);
+                            data.push({
+                                type: "Image",
+                                id: graphic.id,
+                                content: imagePath,
+                                width: position.width,
+                                height: position.height,
+                                position: {
+                                    x: position.x,
+                                    y: position.y
+                                }
+                            });
+                        }
+                    } else {
+                        if($.savedSettings.previewImage && graphic.visible) {
+                            imagePath = $.saveGraphicToImage(graphic, imageDirectory);
+                            data.push({
+                                type: "Image",
+                                id: graphic.id,
+                                content: imagePath,
+                                width: position.width,
+                                height: position.height,
+                                position: {
+                                    x: position.x,
+                                    y: position.y
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -237,11 +448,24 @@ var CanvasflowPublish = function(settingsPath, host) {
     }
 
     $.getImages = function(page, data, baseDirectory) {
-        $.getImageFromItem(page.rectangles, data, baseDirectory);
+        // alert('Total of graphics ' + page.allGraphics.length);
+        $.getImageFromGraphics(page.allGraphics, data, baseDirectory);
+        /*$.getImageFromItem(page.rectangles, data, baseDirectory);
         $.getImageFromItem(page.ovals, data, baseDirectory);
         $.getImageFromItem(page.graphicLines, data, baseDirectory);
         $.getImageFromItem(page.multiStateObjects, data, baseDirectory);
         $.getImageFromItem(page.polygons, data, baseDirectory);
+        $.getImageFromItem(page.textBoxes, data, baseDirectory);*/
+    }
+
+    $.isUniquePreview = function() {
+        var name = app.activeDocument.pages.item(0).name;
+        for(var i=1; i < app.activeDocument.pages.length; i++) {
+            if(app.activeDocument.pages.item(i).name === name) {
+                return false;
+            }
+        }
+        return true
     }
 
     $.createPreview = function(document, baseDirectory) {
@@ -249,10 +473,13 @@ var CanvasflowPublish = function(settingsPath, host) {
         if(imagePath.exists) {
             imagePath.remove();
         }
-        try {
-            app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
-            app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
-            document.exportFile(ExportFormat.JPG, new File(imagePath));
+        try {                           
+            // alert(app.activeDocument.pages.item(0).name);
+            if($.isUniquePreview()) {
+                app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
+                app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
+                document.exportFile(ExportFormat.JPG, new File(imagePath));
+            }
         } catch(e) {}
     }
 
@@ -465,6 +692,8 @@ var CanvasflowPublish = function(settingsPath, host) {
             $.filePath = baseDirectory + app.activeDocument.name;
             var ext = app.activeDocument.name.split('.').pop();
             $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
+            // $.writeResizeScript($.baseDirectory + '/resize.sh', '/input/image', '/output/image');
+            $.runResizeScript('/Users/jjzcru/Desktop/test.sh');
             $.createExportFolder();
     
             $.process();
