@@ -744,8 +744,9 @@ var CanvasflowPublish = function(settingsPath, host) {
 
         // Intro
         var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
-        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 2, 50], intro, {multiline: true});
+        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 50], intro, {multiline: true});
         dialog.introGroup.orientation = 'row:top';
+        dialog.introGroup.alignment = 'left';
 
         // Publication
         var publication = $.getPublication();
