@@ -9,6 +9,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     $.filePath = '';
     $.uuid = '';
     $.host = host;
+    $.canvasflowApi = null;
 
     $.settingsPath = settingsPath;
     $.writeResizeScript = function(path, inputImage, outputImage) {
@@ -684,23 +685,125 @@ var CanvasflowPublish = function(settingsPath, host) {
         $.upload(document, data, baseDirectory);
     }
 
-    
+    $.getPublication = function() {
+        var apiKey = $.savedSettings.apiKey;
+        var PublicationID = $.savedSettings.PublicationID;
+
+        var publications = JSON.parse($.canvasflowApi.getPublications(apiKey));
+        for(var i=0; i < publications.length; i++) {
+            var publication = publications[i];
+            if(publication.id == PublicationID) {
+                return publication;
+            }
+        }
+        return null;
+    }
+
+    $.getIssue = function() {
+        var apiKey = $.savedSettings.apiKey;
+        var PublicationID = $.savedSettings.PublicationID;
+        var IssueID = $.savedSettings.IssueID;
+
+        var issues = JSON.parse($.canvasflowApi.getIssues(apiKey, PublicationID));
+        for(var i=0; i < issues.length; i++) {
+            var issue = issues[i];
+            if(issue.id == IssueID) {
+                return issue;
+            }
+        }
+        return null;
+    }
+
+    $.getStyle = function() {
+        var apiKey = $.savedSettings.apiKey;
+        var PublicationID = $.savedSettings.PublicationID;
+        var StyleID = $.savedSettings.StyleID;
+
+        var styles = JSON.parse($.canvasflowApi.getStyles(apiKey, PublicationID));
+        for(var i=0; i < styles.length; i++) {
+            var style = styles[i];
+            if(style.id == StyleID) {
+                return style;
+            }
+        }
+        return null;
+    }
+
+    $.displayConfirmDialog = function(publish) {
+        var dialog = new Window('dialog', 'Publish');
+        dialog.orientation = 'column';
+        dialog.alignment = 'right';
+        dialog.preferredSize = [300,100];
+
+        var valuesWidth = 200;
+        var labelWidth = 150;
+
+        var endpoint = $.savedSettings.endpoint;
+
+        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
+
+        // Intro
+        var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
+        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 2, 50], intro, {multiline: true});
+        dialog.introGroup.orientation = 'row:top';
+
+        // Publication
+        var publication = $.getPublication();
+        dialog.publicationGroup = dialog.add('group');
+        dialog.publicationGroup.orientation = 'row';
+        dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
+        dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], publication.name);
+
+        // Issue
+        if(publication.type === 'issue') {
+            var issue = $.getIssue();
+            dialog.issueGroup = dialog.add('group');
+            dialog.issueGroup.orientation = 'row';
+            dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
+            dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], issue.name);
+        }
+        
+        // Style
+        var style = $.getStyle();
+        dialog.styleGroup = dialog.add('group');
+        dialog.styleGroup.orientation = 'row';
+        dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
+        dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], style.name);
+
+        dialog.buttonsBarGroup = dialog.add('group');
+        dialog.buttonsBarGroup.orientation = 'row';
+        dialog.buttonsBarGroup.alignChildren = 'bottom';    
+        dialog.buttonsBarGroup.cancelBtn = dialog.buttonsBarGroup.add('button', undefined, 'Cancel');
+        dialog.buttonsBarGroup.saveBtn = dialog.buttonsBarGroup.add('button', undefined, 'OK');
+
+        dialog.buttonsBarGroup.saveBtn.onClick = function() {
+            publish();
+            dialog.destroy();
+        }
+
+        dialog.buttonsBarGroup.cancelBtn.onClick = function() {
+            dialog.destroy();
+        }
+        dialog.show();
+    }
 
     $.publish = function() {
-        if (app.documents.length != 0){	
-            var baseDirectory = app.activeDocument.filePath + '/';
-            $.filePath = baseDirectory + app.activeDocument.name;
-            var ext = app.activeDocument.name.split('.').pop();
-            $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
-            // $.writeResizeScript($.baseDirectory + '/resize.sh', '/input/image', '/output/image');
-            $.runResizeScript('/Users/jjzcru/Desktop/test.sh');
-            $.createExportFolder();
-    
-            $.process();
-        }
-        else{
-            alert ("Please open a document.");
-        }
+        $.displayConfirmDialog(function() {
+            if (app.documents.length != 0){	
+                var baseDirectory = app.activeDocument.filePath + '/';
+                $.filePath = baseDirectory + app.activeDocument.name;
+                var ext = app.activeDocument.name.split('.').pop();
+                $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
+                // $.writeResizeScript($.baseDirectory + '/resize.sh', '/input/image', '/output/image');
+                // $.runResizeScript('/Users/jjzcru/Desktop/test.sh');
+                $.createExportFolder();
+        
+                $.process();
+            }
+            else{
+                alert ("Please open a document.");
+            }
+        });
     }
 }
 
