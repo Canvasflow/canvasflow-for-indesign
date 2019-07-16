@@ -578,8 +578,6 @@ var CanvasflowPublish = function(settingsPath, host) {
     
             reply = conn.read();
             conn.close();
-
-            alert(reply);
     
             if( reply.indexOf( "200" ) > 0 ) {
                 var data = reply.substring(reply.indexOf("{"), reply.length);
