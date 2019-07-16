@@ -364,7 +364,7 @@ if (typeof JSON !== "object") {
 var apiKeySetting = 1;
 var isInternal = false;
 var canvasflowSettingsKey = "CanvasflowSettings";
-var host = "http://api.cflowdev.com/v1/index.cfm";
+var host = "http://api.cflowdev.com/v1";
 var settingsFilePath = "~/canvaflow_settings.json";
 
 var HTTPFile = function (url,port) {
@@ -399,22 +399,22 @@ var CanvasflowApi = function (host) {
     this.host = host;
 
     CanvasflowApi.prototype.getPublications = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
+        var reply = new HTTPFile(this.host + "/publications&secretkey=" + apiKey);
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.validate = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey);
+        var reply = new HTTPFile(this.host + "/info&secretkey=" + apiKey);
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        var reply = new HTTPFile(this.host + "/issues&secretkey=" + apiKey + "&publicationId=" + PublicationID);
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        var reply = new HTTPFile(this.host + "/styles&secretkey=" + apiKey + "&publicationId=" + PublicationID);
         return reply.getResponse();
     };
 }
@@ -566,7 +566,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     $.processPublic = function() {
         var savedSettings = $.savedSettings;
         var endpoint = "api.cflowdev.com";
-        var canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
+        var canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1');
 
         var apiKeyExist = false;
         
@@ -752,7 +752,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.endpointDropDownGroup.dropDown = settingsDialog.endpointDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(endpoints)});  
 
         if(!!savedSettings.endpoint) {
-            canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v1/index.cfm');
+            canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v1');
             endpointExist = true;
             selectedEndpoint = $.getItemByID(endpoints, savedSettings.endpoint);
             settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
@@ -1177,7 +1177,7 @@ var CanvasflowPublish = function(settingsPath, host) {
             + articleIdContent
             + "--" + boundary + "--\r\n\r";
     
-            var cs = "POST /v1/index.cfm/article HTTP/1.1\r\n"
+            var cs = "POST /v1/article HTTP/1.1\r\n"
             + "Content-Length: " + content.length + "\r\n"
             + "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n" 
             + "Host: "+ host + "\r\n"

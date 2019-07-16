@@ -1,6 +1,6 @@
 //@include "json2.js"
 //@include "api.js"
-var host = "http://api.cflowdev.com/v1/index.cfm";
+var host = "http://api.cflowdev.com/v2";
 var settingsFilePath = "~/canvaflow_settings.json";
 
 var CanvasflowPublish = function(settingsPath, host) {
@@ -10,6 +10,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     $.uuid = '';
     $.host = host;
     $.canvasflowApi = null;
+    $.dialog = {};
 
     $.settingsPath = settingsPath;
     $.writeResizeScript = function(path, inputImage, outputImage) {
@@ -77,7 +78,8 @@ var CanvasflowPublish = function(settingsPath, host) {
                     content: character.contents,
                     font: {
                         fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize
+                        fontSize: character.pointSize,
+                        fontStyle: character.appliedFont.fontStyleName || 'Regular'
                     }
                 }
                 continue;
@@ -85,15 +87,19 @@ var CanvasflowPublish = function(settingsPath, host) {
 
             var previousFontFamily = substring.font.fontFamily;
             var previousFontSize = substring.font.fontFamily;
+            var previousFontStyle = substring.font.fontStyle;
             var currentFontFamily = character.appliedFont.fontFamily;
             var currentFontSize = character.appliedFont.fontFamily;
-            if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
+            var currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
+            // if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
+            if(previousFontStyle !== currentFontStyle) {    
                 data.push(substring);
                 substring = {
                     content: character.contents,
                     font: {
                         fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize
+                        fontSize: character.pointSize,
+                        fontStyle: character.appliedFont.fontStyleName || 'Regular'
                     }
                 }
 
@@ -326,7 +332,6 @@ var CanvasflowPublish = function(settingsPath, host) {
                 var imageExist = $.checkIfImageExist(item);
                 if(imageExist) {
                     imagePath = $.saveImageToFile(item, imageDirectory);
-                    alert(imagePath);
                     data.push({
                         type: "Image",
                         id: item.id,
@@ -341,7 +346,6 @@ var CanvasflowPublish = function(settingsPath, host) {
                 } else {
                     if($.savedSettings.previewImage) {
                         imagePath = $.saveImageToFile(item, imageDirectory);
-                        alert(imagePath);
                         data.push({
                             type: "Image",
                             id: item.id,
@@ -449,14 +453,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     }
 
     $.getImages = function(page, data, baseDirectory) {
-        // alert('Total of graphics ' + page.allGraphics.length);
         $.getImageFromGraphics(page.allGraphics, data, baseDirectory);
-        /*$.getImageFromItem(page.rectangles, data, baseDirectory);
-        $.getImageFromItem(page.ovals, data, baseDirectory);
-        $.getImageFromItem(page.graphicLines, data, baseDirectory);
-        $.getImageFromItem(page.multiStateObjects, data, baseDirectory);
-        $.getImageFromItem(page.polygons, data, baseDirectory);
-        $.getImageFromItem(page.textBoxes, data, baseDirectory);*/
     }
 
     $.isUniquePreview = function() {
@@ -475,7 +472,6 @@ var CanvasflowPublish = function(settingsPath, host) {
             imagePath.remove();
         }
         try {                           
-            // alert(app.activeDocument.pages.item(0).name);
             if($.isUniquePreview()) {
                 app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
                 app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
@@ -503,8 +499,6 @@ var CanvasflowPublish = function(settingsPath, host) {
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
-
-        alert('StyleID: ' + StyleID);
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;
@@ -571,7 +565,7 @@ var CanvasflowPublish = function(settingsPath, host) {
             + articleIdContent
             + "--" + boundary + "--\r\n\r";
     
-            var cs = "POST /v1/index.cfm/article HTTP/1.1\r\n"
+            var cs = "POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n"
             + "Content-Length: " + content.length + "\r\n"
             + "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n" 
             + "Host: "+ host + "\r\n"
@@ -590,7 +584,7 @@ var CanvasflowPublish = function(settingsPath, host) {
             if( reply.indexOf( "200" ) > 0 ) {
                 var data = reply.substring(reply.indexOf("{"), reply.length);
                 
-                var response = JSON.parse(data);
+                // var response = JSON.parse(data);
                 return true;
             } else {
                 return false;
@@ -617,10 +611,10 @@ var CanvasflowPublish = function(settingsPath, host) {
         }
         imagesFolder.remove();
     
-        new Folder(baseDirectory).remove()
+        new Folder(baseDirectory).remove();
     }
 
-    $.upload = function(document, data, baseDirectory) {
+    $.buildZipFile = function(document, data, baseDirectory) {
         var output = baseDirectory + '/data.json'; 
         var dataFile = new File(output);
         if(dataFile.exists) {
@@ -630,19 +624,16 @@ var CanvasflowPublish = function(settingsPath, host) {
         dataFile.open('w');
         dataFile.write(JSON.stringify(data));
         dataFile.close();
-    
+
         $.createPreview(document, baseDirectory);
-    
+        if (app.dialogs.length > 0) {
+            app.dialogs.everyItem().destroy();
+        }
+
         var baseFile = new File(baseDirectory);
         app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
-        alert('Article was uploaded successfully');
 
-        /*if($.uploadZip(baseFile.fsName + '.zip')) {
-            $.cleanUp();
-            alert('Article was uploaded successfully');
-        } else {
-            alert("Error uploading the content, please try again")
-        }*/
+        return baseFile.fsName + '.zip';
     }
 
     $.getUUIDFromDocument = function(doc) {
@@ -663,17 +654,24 @@ var CanvasflowPublish = function(settingsPath, host) {
         return uuid;
     }
 
-    $.process = function() {
-        var baseDirectory = $.baseDirectory;
+    $.build = function() {
+        var baseDirectory = app.activeDocument.filePath + '/';
+        $.filePath = baseDirectory + app.activeDocument.name;
+        var ext = app.activeDocument.name.split('.').pop();
+        $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
+        // $.writeResizeScript($.baseDirectory + '/resize.sh', '/input/image', '/output/image');
+        // $.runResizeScript('/Users/jjzcru/Desktop/test.sh');
+        $.createExportFolder();
+        
+        baseDirectory = $.baseDirectory;
         var filePath = $.filePath;
-
+            
         var templateFile = new File(filePath);
         templateFile.open("r");
-
-        var document = app.open(templateFile);
+            
+        var document = app.activeDocument;
+            
         $.uuid = $.getDocumentID(document);
-        // alert($.uuid);
-        
         var data = [];
 
         for (var i = 0; i < document.pages.length; i++) {
@@ -682,7 +680,7 @@ var CanvasflowPublish = function(settingsPath, host) {
             $.getImages(page, data, baseDirectory);
         }
 
-        $.upload(document, data, baseDirectory);
+        return $.buildZipFile(document, data, baseDirectory);
     }
 
     $.getPublication = function() {
@@ -729,8 +727,9 @@ var CanvasflowPublish = function(settingsPath, host) {
         return null;
     }
 
-    $.displayConfirmDialog = function(publish) {
-        var dialog = new Window('dialog', 'Publish');
+    $.displayConfirmDialog = function(onPublish, onCancel) {
+        
+        var dialog = new Window('dialog', 'Publish', undefined, {closeButton: false});
         dialog.orientation = 'column';
         dialog.alignment = 'right';
         dialog.preferredSize = [300,100];
@@ -740,7 +739,7 @@ var CanvasflowPublish = function(settingsPath, host) {
 
         var endpoint = $.savedSettings.endpoint;
 
-        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
+        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         // Intro
         var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
@@ -778,33 +777,60 @@ var CanvasflowPublish = function(settingsPath, host) {
         dialog.buttonsBarGroup.saveBtn = dialog.buttonsBarGroup.add('button', undefined, 'OK');
 
         dialog.buttonsBarGroup.saveBtn.onClick = function() {
-            publish();
-            dialog.destroy();
+            try {
+                dialog.active = false;
+                dialog.hide();
+                dialog.close(0);
+                onPublish();
+            }catch(e) {
+                alert('Error: ' + e.message);
+            }
         }
 
         dialog.buttonsBarGroup.cancelBtn.onClick = function() {
-            dialog.destroy();
+            dialog.close(0);
+            onCancel();
         }
-        dialog.show();
+        
+        $.dialogSUI = dialog.show();
+        return;
     }
 
     $.publish = function() {
-        $.displayConfirmDialog(function() {
-            if (app.documents.length != 0){	
-                var baseDirectory = app.activeDocument.filePath + '/';
-                $.filePath = baseDirectory + app.activeDocument.name;
-                var ext = app.activeDocument.name.split('.').pop();
-                $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
-                // $.writeResizeScript($.baseDirectory + '/resize.sh', '/input/image', '/output/image');
-                // $.runResizeScript('/Users/jjzcru/Desktop/test.sh');
-                $.createExportFolder();
-        
-                $.process();
+        if (app.documents.length != 0){
+            var zipFilePath = '';
+            try {
+                zipFilePath = $.build();
+            } catch(e) {
+                alert(e.message);
+                return;
             }
-            else{
-                alert ("Please open a document.");
+
+            var onPublish = function() {
+                try {
+                    if($.uploadZip(zipFilePath)) {
+                        $.cleanUp();
+                        new File(zipFilePath).remove()
+                        alert('Article was uploaded successfully');
+                    } else {
+                        throw new Error('Error uploading the content, please try again');
+                    }
+                } catch(e) {
+                    alert(e.message);
+                }
             }
-        });
+            
+            var onCancel = function() {
+                $.cleanUp();
+                new File(zipFilePath).remove();
+            }
+            
+            // onPublish();
+            $.displayConfirmDialog(onPublish, onCancel);
+        }
+        else{
+            alert ("Please open a document.");
+        }
     }
 }
 

@@ -159,7 +159,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         }
 
         var endpoint = 'api.canvasflow.io';
-        var canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
+        var canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         var apiKeyExist = false;
         
@@ -385,7 +385,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.endpointDropDownGroup.dropDown = settingsDialog.endpointDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(endpoints)});  
 
         if(!!savedSettings.endpoint) {
-            canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v1/index.cfm');
+            canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v2');
             endpointExist = true;
             selectedEndpoint = $.getItemByID(endpoints, savedSettings.endpoint);
             settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
@@ -476,11 +476,12 @@ var CanvasflowDialog = function(settingsPath, internal) {
                     return;
                 }
 
-                canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1/index.cfm');
+                canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
                 if(!apiKeyExist) {
                     var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
                     var response = JSON.parse(reply);
+                    alert(response.isValid);
                     if(response.isValid) {
                         $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text, canvasflowApi, endpoint);
                         settingsDialog.destroy();
