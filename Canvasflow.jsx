@@ -1033,15 +1033,21 @@ var CanvasflowPublish = function(settingsPath, host) {
     $.getSubstrings = function(characters) {
         var data = [];
         var substring = null;
+        var fontStyle = 'Regular'; 
         for(var i = 0; i<characters.length; i++) {
             var character = characters.item(i);
             if(substring == null) {
+                try {
+                    fontStyle = character.appliedFont.fontStyleName || 'Regular';
+                } catch(e) {}
                 substring = {
                     content: character.contents,
                     font: {
                         fontFamily: character.appliedFont.fontFamily,
                         fontSize: character.pointSize,
-                        fontStyle: character.appliedFont.fontStyleName || 'Regular'
+                        fontStyle: fontStyle
+
+                        // fontStyle: character.appliedFont.fontStyleName || 'Regular'
                     }
                 }
                 continue;
@@ -1052,8 +1058,12 @@ var CanvasflowPublish = function(settingsPath, host) {
             var previousFontStyle = substring.font.fontStyle;
             var currentFontFamily = character.appliedFont.fontFamily;
             var currentFontSize = character.appliedFont.fontFamily;
-            var currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
-            // if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
+            var currentFontStyle = 'Regular';
+            try {
+                currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
+            } catch(e) {}
+
+           // if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
             if(previousFontStyle !== currentFontStyle) {    
                 data.push(substring);
                 substring = {
@@ -1061,14 +1071,21 @@ var CanvasflowPublish = function(settingsPath, host) {
                     font: {
                         fontFamily: character.appliedFont.fontFamily,
                         fontSize: character.pointSize,
-                        fontStyle: character.appliedFont.fontStyleName || 'Regular'
+                        fontStyle: currentFontStyle
                     }
                 }
 
                 continue;
             }
 
-            substring.content = substring.content + character.contents;
+            var content = character.contents;
+            if(content === SpecialCharacters.SINGLE_RIGHT_QUOTE) {
+                content = '\u2019';
+            } else if(content === SpecialCharacters.ARABIC_COMMA) {
+                content = '\u2019';
+            }
+
+            substring.content = substring.content + content;
         }
 
         if(substring !== null) {

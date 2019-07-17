@@ -1,6 +1,6 @@
 //@include "json2.js"
 //@include "api.js"
-var host = "http://api.cflowdev.com/v2";
+var host = "http://api.cflowdev.com/v1";
 var settingsFilePath = "~/canvaflow_settings.json";
 
 var CanvasflowPublish = function(settingsPath, host) {
@@ -737,7 +737,7 @@ var CanvasflowPublish = function(settingsPath, host) {
 
         var endpoint = $.savedSettings.endpoint;
 
-        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
+        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1');
 
         // Intro
         var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
