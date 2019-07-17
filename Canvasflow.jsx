@@ -1082,8 +1082,88 @@ var CanvasflowPublish = function(settingsPath, host) {
             if(content === SpecialCharacters.SINGLE_RIGHT_QUOTE) {
                 content = '\u2019';
             } else if(content === SpecialCharacters.ARABIC_COMMA) {
-                content = '\u2019';
-            }
+                content = '\u060C';
+            } else if(content === SpecialCharacters.ARABIC_KASHIDA) {
+                content = '\u0640';
+            } else if(content === SpecialCharacters.ARABIC_QUESTION_MARK) {
+                content = '\u061F';
+            } else if(content === SpecialCharacters.ARABIC_SEMICOLON) {
+                content = '\u061B';
+            } else if(content === SpecialCharacters.BULLET_CHARACTER) {
+                content = '\u2022';
+            } else if(content === SpecialCharacters.COPYRIGHT_SYMBOL) {
+                content = '\u00A9';
+            } else if(content === SpecialCharacters.DEGREE_SYMBOL) {
+                content = '\u00B0';
+            } else if(content === SpecialCharacters.DISCRETIONARY_HYPHEN) {
+                content = '\u00AD';
+            } else if(content === SpecialCharacters.DOTTED_CIRCLE) {
+                content = '\u25CC';
+            } else if(content === SpecialCharacters.DOUBLE_LEFT_QUOTE) {
+                content = '\u201C';
+            } else if(content === SpecialCharacters.DOUBLE_RIGHT_QUOTE) {
+                content = '\u201D';
+            } else if(content === SpecialCharacters.DOUBLE_STRAIGHT_QUOTE) {
+                content = '\u0022';
+            } else if(content === SpecialCharacters.ELLIPSIS_CHARACTER) {
+                content = '\u2026';
+            } else if(content === SpecialCharacters.EM_DASH) {
+                content = '\u2014';
+            } else if(content === SpecialCharacters.EM_SPACE) {
+                content = '\u2003';
+            } else if(content === SpecialCharacters.EN_DASH) {
+                content = '\u2013';
+            } else if(content === SpecialCharacters.EN_SPACE) {
+                content = '\u0020';
+            } else if(content === SpecialCharacters.HEBREW_GERESH) {
+                content = '\u05F3';
+            } else if(content === SpecialCharacters.HEBREW_GERSHAYIM) {
+                content = '\u05F4';
+            } else if(content === SpecialCharacters.HEBREW_MAQAF) {
+                content = '\u05BE';
+            } else if(content === SpecialCharacters.LEFT_TO_RIGHT_EMBEDDING) {
+                content = '\u202A';
+            } else if(content === SpecialCharacters.LEFT_TO_RIGHT_MARK) {
+                content = '\u200E';
+            } else if(content === SpecialCharacters.LEFT_TO_RIGHT_OVERRIDE) {
+                content = '\u202D';
+            } else if(content === SpecialCharacters.NONBREAKING_HYPHEN) {
+                content = '\u2011';
+            } else if(content === SpecialCharacters.NONBREAKING_SPACE) {
+                content = '\u00A0';
+            } else if(content === SpecialCharacters.PARAGRAPH_SYMBOL) {
+                content = '\u2761';
+            } else if(content === SpecialCharacters.POP_DIRECTIONAL_FORMATTING) {
+                content = '\u202C';
+            } else if(content === SpecialCharacters.PREVIOUS_PAGE_NUMBER) {
+                content = '\u2397';
+            } else if(content === SpecialCharacters.PUNCTUATION_SPACE) {
+                content = '\u2008';
+            } else if(content === SpecialCharacters.REGISTERED_TRADEMARK) {
+                content = '\u00AE';
+            } else if(content === SpecialCharacters.RIGHT_TO_LEFT_EMBEDDING) {
+                content = '\u202B';
+            } else if(content === SpecialCharacters.RIGHT_TO_LEFT_MARK) {
+                content = '\u200F';
+            } else if(content === SpecialCharacters.RIGHT_TO_LEFT_OVERRIDE) {
+                content = '\u202E';
+            } else if(content === SpecialCharacters.SECTION_MARKER) {
+                content = '\u00A7';
+            } else if(content === SpecialCharacters.SECTION_SYMBOL) {
+                content = '\u00A7';
+            } else if(content === SpecialCharacters.SINGLE_LEFT_QUOTE) {
+                content = '\u2018';
+            } else if(content === SpecialCharacters.SINGLE_STRAIGHT_QUOTE) {
+                content = '\u0027';
+            } else if(content === SpecialCharacters.SIXTH_SPACE) {
+                content = '\u2159';
+            } else if(content === SpecialCharacters.TRADEMARK_SYMBOL) {
+                content = '\u2122';
+            } else if(content === SpecialCharacters.ZERO_WIDTH_JOINER) {
+                content = '\u200D';
+            } else if(content === SpecialCharacters.ZERO_WIDTH_NONJOINER) {
+                content = '\u200C';
+            }  
 
             substring.content = substring.content + content;
         }
