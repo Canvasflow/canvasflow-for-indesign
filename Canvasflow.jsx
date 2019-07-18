@@ -1034,51 +1034,10 @@ var CanvasflowPublish = function(settingsPath, host) {
         var data = [];
         var substring = null;
         var fontStyle = 'Regular'; 
+        var content;
         for(var i = 0; i<characters.length; i++) {
             var character = characters.item(i);
-            if(substring == null) {
-                try {
-                    fontStyle = character.appliedFont.fontStyleName || 'Regular';
-                } catch(e) {}
-                substring = {
-                    content: character.contents,
-                    font: {
-                        fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize,
-                        fontStyle: fontStyle
-
-                        // fontStyle: character.appliedFont.fontStyleName || 'Regular'
-                    }
-                }
-                continue;
-            }
-
-            var previousFontFamily = substring.font.fontFamily;
-            var previousFontSize = substring.font.fontFamily;
-            var previousFontStyle = substring.font.fontStyle;
-            var currentFontFamily = character.appliedFont.fontFamily;
-            var currentFontSize = character.appliedFont.fontFamily;
-            var currentFontStyle = 'Regular';
-            try {
-                currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
-            } catch(e) {}
-
-           // if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
-            if(previousFontStyle !== currentFontStyle) {    
-                data.push(substring);
-                substring = {
-                    content: character.contents,
-                    font: {
-                        fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize,
-                        fontStyle: currentFontStyle
-                    }
-                }
-
-                continue;
-            }
-
-            var content = character.contents;
+            content = character.contents;
             if(content === SpecialCharacters.SINGLE_RIGHT_QUOTE) {
                 content = '\u2019';
             } else if(content === SpecialCharacters.ARABIC_COMMA) {
@@ -1099,7 +1058,7 @@ var CanvasflowPublish = function(settingsPath, host) {
                 content = '\u00AD';
             } else if(content === SpecialCharacters.DOTTED_CIRCLE) {
                 content = '\u25CC';
-            } else if(content === SpecialCharacters.DOUBLE_LEFT_QUOTE) {
+            } else if(content == SpecialCharacters.DOUBLE_LEFT_QUOTE) {
                 content = '\u201C';
             } else if(content === SpecialCharacters.DOUBLE_RIGHT_QUOTE) {
                 content = '\u201D';
@@ -1163,8 +1122,50 @@ var CanvasflowPublish = function(settingsPath, host) {
                 content = '\u200D';
             } else if(content === SpecialCharacters.ZERO_WIDTH_NONJOINER) {
                 content = '\u200C';
-            }  
+            } 
 
+            if(substring == null) {
+                try {
+                    fontStyle = character.appliedFont.fontStyleName || 'Regular';
+                } catch(e) {}
+                substring = {
+                    content: content,
+                    font: {
+                        fontFamily: character.appliedFont.fontFamily,
+                        fontSize: character.pointSize,
+                        fontStyle: fontStyle
+
+                        // fontStyle: character.appliedFont.fontStyleName || 'Regular'
+                    }
+                }
+                continue;
+            }
+
+            var previousFontFamily = substring.font.fontFamily;
+            var previousFontSize = substring.font.fontFamily;
+            var previousFontStyle = substring.font.fontStyle;
+            var currentFontFamily = character.appliedFont.fontFamily;
+            var currentFontSize = character.appliedFont.fontFamily;
+            var currentFontStyle = 'Regular';
+            try {
+                currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
+            } catch(e) {}
+
+           // if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
+            if(previousFontStyle !== currentFontStyle) {    
+                data.push(substring);
+                substring = {
+                    content: character.contents,
+                    font: {
+                        fontFamily: character.appliedFont.fontFamily,
+                        fontSize: character.pointSize,
+                        fontStyle: currentFontStyle
+                    }
+                }
+
+                continue;
+            }
+            
             substring.content = substring.content + content;
         }
 
