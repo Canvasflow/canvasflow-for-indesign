@@ -201,6 +201,8 @@ var CanvasflowPublish = function(settingsPath, host) {
                 content = '\u200D';
             } else if(content === SpecialCharacters.ZERO_WIDTH_NONJOINER) {
                 content = '\u200C';
+            } else if(content === SpecialCharacters.FORCED_LINE_BREAK) {
+                content = '\u000A';
             }  
 
             substring.content = substring.content + content;
