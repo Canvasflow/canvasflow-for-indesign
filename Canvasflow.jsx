@@ -1730,15 +1730,21 @@ var CanvasflowPublish = function(settingsPath, host) {
         var document = app.activeDocument;
             
         $.uuid = $.getDocumentID(document);
-        var data = [];
+        var response = {
+            pages: []
+        };
 
         for (var i = 0; i < document.pages.length; i++) {
             var page = document.pages[i];
-            $.getTextFrames(page, data);
-            $.getImages(page, data, baseDirectory);
+            var pageData = {
+                items: []
+            };
+            $.getTextFrames(page, pageData.items);
+            $.getImages(page, pageData.items, baseDirectory);
+            response.pages.push(pageData);
         }
 
-        return $.buildZipFile(document, data, baseDirectory);
+        return $.buildZipFile(document, response, baseDirectory);
     }
 
     $.getPublication = function() {
