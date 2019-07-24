@@ -11,6 +11,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     $.host = host;
     $.canvasflowApi = null;
     $.dialog = {};
+    $.pagesRange = null;
 
     $.settingsPath = settingsPath;
     $.writeResizeScript = function(path, inputImage, outputImage) {
@@ -680,7 +681,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     
             if( reply.indexOf( "200" ) > 0 ) {
                 var data = reply.substring(reply.indexOf("{"), reply.length);
-                
+                alert(reply);
                 // var response = JSON.parse(data);
                 return true;
             } else {
@@ -769,12 +770,56 @@ var CanvasflowPublish = function(settingsPath, host) {
         var document = app.activeDocument;
             
         $.uuid = $.getDocumentID(document);
-        var data = [];
+        var response = {
+            pages: []
+        };
 
-        for (var i = 0; i < document.pages.length; i++) {
+        var pages = $.savedSettings.pages;
+        var initialPageIndex = 0;
+        var lastPageIndex = document.pages.length;
+        var totalOfPages = document.pages.length;
+
+        if(!!pages) {
+            var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
+            if(results === null) {
+                throw new Error('The range for pages has an invalid syntax');
+            }
+
+            var lowerRange = parseInt(results[1]);
+            var higherRange = parseInt(results[3]);
+
+            if(!lowerRange) {
+                throw new Error('The lower range should be bigger than 0');
+            }
+
+            if(!higherRange) {
+                throw new Error('The higher range should be bigger than 0');
+            }
+
+            if(lowerRange > higherRange) {
+                throw new Error('The lower range should be smaller than the higher range');
+            }
+
+            if(lowerRange > totalOfPages) {
+                throw new Error('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+            }
+
+            initialPageIndex = lowerRange - 1;
+            lastPageIndex = higherRange;
+            
+            if (higherRange > totalOfPages) {
+                lastPageIndex = totalOfPages
+            }
+        }
+
+        for (var i = initialPageIndex; i < lastPageIndex; i++) {
             var page = document.pages[i];
-            $.getTextFrames(page, data);
-            $.getImages(page, data, baseDirectory);
+            var pageData = {
+                items: []
+            };
+            $.getTextFrames(page, pageData.items);
+            $.getImages(page, pageData.items, baseDirectory);
+            response.pages.push(pageData);
         }
 
         return $.buildZipFile(document, data, baseDirectory);
@@ -836,7 +881,7 @@ var CanvasflowPublish = function(settingsPath, host) {
 
         var endpoint = $.savedSettings.endpoint;
 
-        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1');
+        $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         // Intro
         var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
