@@ -1690,7 +1690,7 @@ var CanvasflowPublish = function(settingsPath, host) {
     
             if( reply.indexOf( "200" ) > 0 ) {
                 var data = reply.substring(reply.indexOf("{"), reply.length);
-                
+                alert(reply);
                 // var response = JSON.parse(data);
                 return true;
             } else {
@@ -1819,9 +1819,18 @@ var CanvasflowPublish = function(settingsPath, host) {
             }
         }
 
+        // This set the document to pixels
+        app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
+        app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
+
         for (var i = initialPageIndex; i < lastPageIndex; i++) {
             var page = document.pages[i];
+            var position = $.getItemPosition(page.bounds);
             var pageData = {
+                x: position.x,
+                y: position.y,
+                width: position.width,
+                height: position.height,
                 items: []
             };
             $.getTextFrames(page, pageData.items);
