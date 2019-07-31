@@ -748,9 +748,14 @@ var CanvasflowBuild = function(settingsPath) {
             var textFrame = textFrames[i];
             var position = $.getItemPosition(textFrame.geometricBounds);
             if(!!textFrame.contents && !!textFrame.visible && !!textFrame.itemLayer.visible) {
+                var next = null;
+                try {
+                    next = textFrame.nextTextFrame.id;
+                } catch(e) {}
                 data.push({
                     type: "TextFrame",
                     id: textFrame.id,
+                    next: next,
                     content: textFrame.contents,
                     width: position.width,
                     height: position.height,
