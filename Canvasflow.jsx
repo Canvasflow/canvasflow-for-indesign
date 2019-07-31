@@ -453,6 +453,17 @@ var CanvasflowBuild = function(settingsPath) {
         return '';
     }
 
+    $.getUUID = function(){
+        var dt = new Date().getTime();
+        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = (dt + Math.random()*16)%16 | 0;
+            dt = Math.floor(dt/16);
+            return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+        });
+
+        return uuid.substring(0, uuid.length / 2);
+    }
+
     $.getDocumentID = function(doc) {
         var uuid = $.getUUIDFromDocument(doc);
         if(!uuid) {
@@ -771,7 +782,7 @@ var CanvasflowBuild = function(settingsPath) {
 
         image.exportFile(ext, File(destFilePath)); 
 
-        return './images/' + id + '.' + ext;
+        return '' + id + '.' + ext;
     }
 
     $.saveGraphicToImage = function(graphic, imageDirectory) {
@@ -807,7 +818,7 @@ var CanvasflowBuild = function(settingsPath) {
         } else {
             return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
         }
-        return './images/' + id + '.' + ext;
+        return '' + id + '.' + ext;
     }
 
     $.getImageFromGraphics = function(graphics, data, baseDirectory) {
