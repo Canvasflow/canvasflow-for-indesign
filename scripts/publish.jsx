@@ -274,6 +274,10 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
         if (app.documents.length != 0){
             var zipFilePath = '';
             try {
+                var baseDirectory = app.activeDocument.filePath + '/';
+                $.filePath = baseDirectory + app.activeDocument.name;
+                var ext = app.activeDocument.name.split('.').pop();
+                $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
             } catch(e) {
                 alert(e.message);
