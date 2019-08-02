@@ -475,19 +475,25 @@ var CanvasflowBuild = function(settingsPath) {
     }
 
     $.getItemPosition = function(bounds) {
-        var width = bounds[3] - bounds[1];
-        var offsetX = bounds[1];
-        var x = (width / 2) + offsetX;
-    
-        var height = bounds[2] - bounds[0];
-        var offsetY = bounds[0];
-        var y = (height / 2) + offsetY;
-    
+        var xi = bounds[1];
+        var yi = bounds[0];
+        var xf = bounds[3];
+        var yf = bounds[2];
+
+        var width = xf - xi;
+        var height = yf - yi;
+
         return {
             width: width,
             height: height,
-            x: x,
-            y: y
+            /*bounds: {
+                xi: xi,
+                xf: xf,
+                yi: yi,
+                yf: yf
+            },*/    
+            x: xi,
+            y: yi
         }
     }
 
@@ -768,10 +774,7 @@ var CanvasflowBuild = function(settingsPath) {
                     height: position.height,
                     font: $.getFontFromParagraphs(textFrame),
                     paragraphs: $.getParagraphs(textFrame.paragraphs, textFrame.id),
-                    position: {
-                        x: position.x,
-                        y: position.y
-                    }
+                    position: position
                 });
             }
         }
@@ -851,10 +854,7 @@ var CanvasflowBuild = function(settingsPath) {
                                 content: imagePath,
                                 width: position.width,
                                 height: position.height,
-                                position: {
-                                    x: position.x,
-                                    y: position.y
-                                }
+                                position: position
                             });
                         }
                     } else {
@@ -866,10 +866,7 @@ var CanvasflowBuild = function(settingsPath) {
                                 content: imagePath,
                                 width: position.width,
                                 height: position.height,
-                                position: {
-                                    x: position.x,
-                                    y: position.y
-                                }
+                                position: position
                             });
                         }
                     }
