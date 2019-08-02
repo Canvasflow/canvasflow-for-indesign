@@ -565,6 +565,7 @@ var CanvasflowBuild = function(settingsPath) {
             var page = document.pages[i];
             var position = $.getItemPosition(page.bounds);
             var pageData = {
+                id: page.id,
                 x: position.x,
                 y: position.y,
                 width: position.width,
