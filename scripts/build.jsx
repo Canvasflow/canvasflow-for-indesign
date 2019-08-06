@@ -336,6 +336,7 @@ var CanvasflowBuild = function(settingsPath) {
             if(!!textFrame.contents && !!textFrame.visible && !!textFrame.itemLayer.visible) {
                 var next;
                 var previous;
+                var StoryID;
                 try {
                     next = textFrame.nextTextFrame.id;
                 } catch(e) {}
@@ -344,9 +345,14 @@ var CanvasflowBuild = function(settingsPath) {
                     previous = textFrame.previousTextFrame.id;
                 } catch(e) {}
 
+                try {
+                    StoryID = textFrame.parentStory.id;
+                } catch(e) {}
+
                 data.push({
                     type: "TextFrame",
                     id: textFrame.id,
+                    storyId: StoryID,
                     next: next,
                     previous: previous,
                     content: textFrame.contents,
