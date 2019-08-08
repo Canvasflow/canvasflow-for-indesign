@@ -365,7 +365,45 @@ var apiKeySetting = 1;
 var isInternal = true;
 var canvasflowSettingsKey = "CanvasflowSettings";
 var settingsFilePath = "~/canvaflow_settings.json";
+
 var defaultHost = 'api.canvasflow.io';
+var logFilePath = "~/canvaflow_debug_log.log";
+var logger;
+var isDebugEnable = true;
+
+var CanvasflowLogger = function(logFilePath, enable) {
+    var $ = this;
+    $.logFilePath = logFilePath;
+    $.enable = enable;
+
+    $.createFile = function() {
+        var file = new File($.logFilePath);
+        if(file.exists) {
+            file.open('r');
+            file.remove();
+        }
+
+        if($.enable) {
+            var file = new File($.logFilePath);
+            file.encoding = 'UTF-8';
+            file.open('w');
+            file.write('');
+            file.close();
+        }
+    }
+
+    $.log = function(ms, name) {
+        if($.enable) {
+            var file = new File($.logFilePath);
+            file.encoding = 'UTF-8';
+            file.open('a');
+            file.write(ms + ' - ' + name + '\n');
+            file.close();
+        }
+    }
+
+    $.createFile();
+}
 
 var HTTPFile = function (url,port) {
     if (arguments.length == 1) {
@@ -922,6 +960,7 @@ var CanvasflowBuild = function(settingsPath) {
     }
 
     $.build = function() {
+        var buildStartTime = (new Date()).getTime();
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
@@ -995,12 +1034,21 @@ var CanvasflowBuild = function(settingsPath) {
                 height: position.height,
                 items: []
             };
+            var buildTextStartTime = (new Date()).getTime();
             $.getTextFrames(page, pageData.items);
+            logger.log((new Date()).getTime() - buildTextStartTime, 'Building Text Page ' + i);
+
+            var buildImageStartTime = (new Date()).getTime();
             $.getImages(page, pageData.items, baseDirectory);
+            logger.log((new Date()).getTime() - buildImageStartTime, 'Building Image Page ' + i);
+
             response.pages.push(pageData);
         }
 
-        return $.buildZipFile(document, response, baseDirectory);
+        var buildZipFileResponse = $.buildZipFile(document, response, baseDirectory);
+
+        logger.log((new Date()).getTime() - buildStartTime, 'Building');
+        return buildZipFileResponse;
     }
 }
 
@@ -1880,11 +1928,14 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
 
             var onPublish = function() {
                 try {
+                    var publishStartTime = (new Date()).getTime();
                     if($.uploadZip(zipFilePath)) {
                         $.cleanUp();
                         new File(zipFilePath).remove()
                         alert('Article was uploaded successfully');
+                        logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
                     } else {
+                        logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
                         throw new Error('Error uploading the content, please try again');
                     }
                 } catch(e) {
@@ -1942,5 +1993,6 @@ var CanvasflowPlugin = function() {
     }
 }
 
+logger = new CanvasflowLogger(logFilePath, isDebugEnable);
 var canvasflowPlugin = new CanvasflowPlugin();
 canvasflowPlugin.install();
