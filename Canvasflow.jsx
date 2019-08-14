@@ -462,6 +462,7 @@ var CanvasflowBuild = function(settingsPath) {
     var $ = this;
 
     $.settingsPath = settingsPath;
+    $.uuid = '';
 
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
@@ -1655,6 +1656,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     $.canvasflowApi = null;
     $.dialog = {};
     $.pagesRange = null;
+    $.cfBuild = cfBuild;
 
     $.settingsPath = settingsPath;
 
@@ -1734,6 +1736,8 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             + "\r\n"
             + "indesign" + "\r\n"
             + "\r\n";
+
+            $.uuid = $.cfBuild.uuid || '';
     
             var articleIdContent = "--" + boundary + "\r\n"
             + "Content-Disposition: form-data; name=\"articleId\"\r\n"
