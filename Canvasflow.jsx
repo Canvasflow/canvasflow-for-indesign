@@ -365,11 +365,17 @@ var apiKeySetting = 1;
 var isInternal = true;
 var canvasflowSettingsKey = "CanvasflowSettings";
 var settingsFilePath = "~/canvaflow_settings.json";
+var commandFilePath = "~/canvasflow_runner.command";
 
 var defaultHost = 'api.canvasflow.io';
 var logFilePath = "~/canvaflow_debug_log.log";
 var logger;
 var isDebugEnable = true;
+
+setTimeout = function(func, time) {
+    $.sleep(time);
+    func();
+};
 
 var CanvasflowLogger = function(logFilePath, enable) {
     var $ = this;
@@ -458,11 +464,14 @@ var CanvasflowApi = function (host) {
     };
 }
 
-var CanvasflowBuild = function(settingsPath) {
+var CanvasflowBuild = function(settingsPath, commandFilePath) {
     var $ = this;
 
     $.settingsPath = settingsPath;
-    $.uuid = '';
+    $.commandFilePath = commandFilePath || '';
+    $.imagesToResize = [];
+    $.imagesToConvert = [];
+    $.imageSizeCap = 5 * 1000000; // 5Mb
 
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
@@ -831,18 +840,17 @@ var CanvasflowBuild = function(settingsPath) {
         return originalImageFile.exists;
     }
 
-    $.exportImageRepresentation = function(image, ext, imageDirectory, id) {
-        if(ext === 'jpg' || ext === 'jpeg') {
-            ext = 'jpeg';
-        } else {
-            ext = 'png';
+    $.exportImageRepresentation = function(image, imageDirectory, id) {
+        var destFilePath = imageDirectory + '/' + id + '.jpg';
+        destFilePath = destFilePath.replace(/%20/gi, ' ');
+
+        try{
+            image.exportFile(ExportFormat.JPG, new File(destFilePath)); 
+        } catch(e) {
+            alert('I failed trying to export this image: ' + destFilePath);
         }
-
-        var destFilePath = imageDirectory + '/' + id + '.' + ext;
-
-        image.exportFile(ext, File(destFilePath)); 
-
-        return '' + id + '.' + ext;
+        
+        return '' + id + '.jpg';
     }
 
     $.saveGraphicToImage = function(graphic, imageDirectory) {
@@ -854,30 +862,66 @@ var CanvasflowBuild = function(settingsPath) {
         var ext;
         var destFilePath;
         var fileName = originalImageFile.fsName; 
+        
         ext = fileName.split('.').pop().toLowerCase();
         if(ext === 'jpg' || ext === 'jpeg') {
-            ext = 'jpeg';
+            ext = 'jpg';
         }
 
         destFilePath = imageDirectory + '/' + id + '.' + ext;
-            
-        if(!!originalImageFile.exists) {
-            var originalImageSize = originalImageFile.length / 1000000; //In MB
-                
-            if(originalImageSize < 5) { 
-                // The image is lower than 5MB
-                if(ext === 'tif' || ext === 'psd') {
-                    ext = 'png';
-                    destFilePath = imageDirectory + '/' + id + '.' + ext;
-                }
+        destFilePath = destFilePath.replace(/%20/gi, ' ');
 
-                originalImageFile.copy(destFilePath);
-            } else {
-                return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
-            }
-        } else {
-            return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
+        switch(ext) {
+            case 'jpg':
+            case 'jpeg':
+            case 'tiff':
+            case 'tif':       
+            case 'png':
+            case 'gif':
+            case 'jp2':
+            case 'pict':
+            case 'bmp':
+            case 'qtif':
+            case 'psd':
+            case 'sgi':
+            case 'tga':        
+                break;
+            default:
+                return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
+
+        if(!originalImageFile.exists) {
+            return $.exportImageRepresentation(graphic, imageDirectory, id);
+        }
+
+        var originalImageSize = originalImageFile.length;
+
+        var targetExt;
+        switch(ext) {
+            case 'jpg':
+            case 'jpeg':    
+            case 'png':
+            case 'gif':     
+                targetExt = ext;   
+            default:
+                targetExt = 'jpg';
+        }
+
+        destFilePath = imageDirectory + '/' + id + '.' + targetExt;
+        destFilePath = destFilePath.replace(/%20/gi, ' ');
+        originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
+
+        if(originalImageSize >= $.imageSizeCap) {
+            $.imagesToResize.push(File(destFilePath).fsName);
+            return '' + id + '.' + targetExt;
+        }
+        
+        if(targetExt !== ext) {
+            $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
+        }
+
+        ext = targetExt;
+               
         return '' + id + '.' + ext;
     }
 
@@ -938,6 +982,76 @@ var CanvasflowBuild = function(settingsPath) {
         } catch(e) {}
     }
 
+
+    $.resizeImages = function(imageFiles) {
+        var dataFile = new File($.commandFilePath);
+        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
+    
+        var files = [];
+        for(var i = 0; i < imageFiles.length; i++) {
+            files.push('"' + imageFiles[i] + '"');
+        }
+        dataFile.encoding = 'UTF-8';
+        dataFile.open('w');
+        dataFile.lineFeed = 'Unix';
+        
+        dataFile.writeln('clear');
+        dataFile.writeln('files=( ' + files.join(' ') + ' )');
+        dataFile.writeln('for file in "${files[@]}"');
+        dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\text="${file#*.}"');
+        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
+        dataFile.writeln('\t\tfilename="${filename%.*}"');
+        dataFile.writeln('\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"');
+        dataFile.writeln('\t\tif [ "$image_width" -gt "2048" ]; then');
+        dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
+        dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
+        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
+        dataFile.writeln('\t\t\teval $resize_command');
+        dataFile.writeln('\t\tfi');
+        dataFile.writeln('\t\tif [ $ext != "jpeg" ]; then');
+        dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
+        dataFile.writeln('\t\t\teval $remove_command');
+        dataFile.writeln('\t\tfi');
+        dataFile.writeln('done');
+        // dataFile.writeln(closeTerminalCommand);
+    
+        dataFile.execute();
+        dataFile.close();
+    }
+
+    $.convertImages = function(imageFiles) {
+        var dataFile = new File($.commandFilePath);
+        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
+
+        var files = [];
+        for(var i = 0; i < imageFiles.length; i++) {
+            files.push('"' + imageFiles[i] + '"');
+        }
+        dataFile.encoding = 'UTF-8';
+        dataFile.open('w');
+        dataFile.lineFeed = 'Unix';
+        
+        dataFile.writeln('clear');
+        dataFile.writeln('files=( ' + files.join(' ') + ' )');
+        dataFile.writeln('for file in "${files[@]}"');
+        dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\text="${file#*.}"');
+        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
+        dataFile.writeln('\t\tfilename="${filename%.*}"');
+        dataFile.writeln('\t\tparent_filename="$(dirname "${file})")"');
+        dataFile.writeln('\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
+        dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\""');
+        dataFile.writeln('\t\teval $convert_command');
+        dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
+        dataFile.writeln('\t\teval $remove_command');
+        dataFile.writeln('done');
+        // dataFile.writeln(closeTerminalCommand);
+
+        dataFile.execute();
+        dataFile.close();
+    }
+
     $.buildZipFile = function(document, data, baseDirectory) {
         var output = baseDirectory + '/data.json'; 
         var dataFile = new File(output);
@@ -955,13 +1069,25 @@ var CanvasflowBuild = function(settingsPath) {
         }
 
         var baseFile = new File(baseDirectory);
-        app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+        if(!!$.imagesToResize.length) {
+            $.resizeImages($.imagesToResize);
+        }
+        if(!!$.imagesToConvert.length) {
+            $.convertImages($.imagesToConvert);
+        }
+
+        setTimeout(function() {
+            try {
+                app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }, 15000);
 
         return baseFile.fsName + '.zip';
     }
 
     $.build = function() {
-        var buildStartTime = (new Date()).getTime();
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
@@ -1035,21 +1161,12 @@ var CanvasflowBuild = function(settingsPath) {
                 height: position.height,
                 items: []
             };
-            var buildTextStartTime = (new Date()).getTime();
             $.getTextFrames(page, pageData.items);
-            logger.log((new Date()).getTime() - buildTextStartTime, 'Building Text Page ' + i);
-
-            var buildImageStartTime = (new Date()).getTime();
             $.getImages(page, pageData.items, baseDirectory);
-            logger.log((new Date()).getTime() - buildImageStartTime, 'Building Image Page ' + i);
-
             response.pages.push(pageData);
         }
 
-        var buildZipFileResponse = $.buildZipFile(document, response, baseDirectory);
-
-        logger.log((new Date()).getTime() - buildStartTime, 'Building');
-        return buildZipFileResponse;
+        return $.buildZipFile(document, response, baseDirectory);
     }
 }
 
@@ -1776,6 +1893,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
                 // var response = JSON.parse(data);
                 return true;
             } else {
+                alert(reply);
                 return false;
             }
         } else {
@@ -1926,7 +2044,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
             } catch(e) {
-                alert(e.message);
+                alert('Error: ' + e.message);
                 return;
             }
 
@@ -1943,7 +2061,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
                         throw new Error('Error uploading the content, please try again');
                     }
                 } catch(e) {
-                    alert(e.message);
+                    alert('Error: ' + e.message);
                 }
             }
             
@@ -1979,7 +2097,7 @@ var CanvasflowPlugin = function() {
         
         var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
         canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
-            var canvasflowBuild = new CanvasflowBuild(settingsFilePath);
+            var canvasflowBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
             var canvasflowPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", canvasflowBuild);
             canvasflowPublish.publish();
         });
