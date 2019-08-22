@@ -1,9 +1,13 @@
 //@include "json2.js"
 
-var CanvasflowBuild = function(settingsPath) {
+var CanvasflowBuild = function(settingsPath, commandFilePath) {
     var $ = this;
 
     $.settingsPath = settingsPath;
+    $.commandFilePath = commandFilePath || '';
+    $.imagesToResize = [];
+    $.imagesToConvert = [];
+    $.imageSizeCap = 5 * 1000000; // 5Mb
 
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
@@ -372,18 +376,17 @@ var CanvasflowBuild = function(settingsPath) {
         return originalImageFile.exists;
     }
 
-    $.exportImageRepresentation = function(image, ext, imageDirectory, id) {
-        if(ext === 'jpg' || ext === 'jpeg') {
-            ext = 'jpeg';
-        } else {
-            ext = 'png';
+    $.exportImageRepresentation = function(image, imageDirectory, id) {
+        var destFilePath = imageDirectory + '/' + id + '.jpg';
+        destFilePath = destFilePath.replace(/%20/gi, ' ');
+
+        try{
+            image.exportFile(ExportFormat.JPG, new File(destFilePath)); 
+        } catch(e) {
+            alert('I failed trying to export this image: ' + destFilePath);
         }
-
-        var destFilePath = imageDirectory + '/' + id + '.' + ext;
-
-        image.exportFile(ext, File(destFilePath)); 
-
-        return '' + id + '.' + ext;
+        
+        return '' + id + '.jpg';
     }
 
     $.saveGraphicToImage = function(graphic, imageDirectory) {
@@ -395,30 +398,66 @@ var CanvasflowBuild = function(settingsPath) {
         var ext;
         var destFilePath;
         var fileName = originalImageFile.fsName; 
+        
         ext = fileName.split('.').pop().toLowerCase();
         if(ext === 'jpg' || ext === 'jpeg') {
-            ext = 'jpeg';
+            ext = 'jpg';
         }
 
         destFilePath = imageDirectory + '/' + id + '.' + ext;
-            
-        if(!!originalImageFile.exists) {
-            var originalImageSize = originalImageFile.length / 1000000; //In MB
-                
-            if(originalImageSize < 5) { 
-                // The image is lower than 5MB
-                if(ext === 'tif' || ext === 'psd') {
-                    ext = 'png';
-                    destFilePath = imageDirectory + '/' + id + '.' + ext;
-                }
+        destFilePath = destFilePath.replace(/%20/gi, ' ');
 
-                originalImageFile.copy(destFilePath);
-            } else {
-                return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
-            }
-        } else {
-            return $.exportImageRepresentation(graphic, ext, imageDirectory, id);
+        switch(ext) {
+            case 'jpg':
+            case 'jpeg':
+            case 'tiff':
+            case 'tif':       
+            case 'png':
+            case 'gif':
+            case 'jp2':
+            case 'pict':
+            case 'bmp':
+            case 'qtif':
+            case 'psd':
+            case 'sgi':
+            case 'tga':        
+                break;
+            default:
+                return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
+
+        if(!originalImageFile.exists) {
+            return $.exportImageRepresentation(graphic, imageDirectory, id);
+        }
+
+        var originalImageSize = originalImageFile.length;
+
+        var targetExt;
+        switch(ext) {
+            case 'jpg':
+            case 'jpeg':    
+            case 'png':
+            case 'gif':     
+                targetExt = ext;   
+            default:
+                targetExt = 'jpg';
+        }
+
+        destFilePath = imageDirectory + '/' + id + '.' + targetExt;
+        destFilePath = destFilePath.replace(/%20/gi, ' ');
+        originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
+
+        if(originalImageSize >= $.imageSizeCap) {
+            $.imagesToResize.push(File(destFilePath).fsName);
+            return '' + id + '.' + targetExt;
+        }
+        
+        if(targetExt !== ext) {
+            $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
+        }
+
+        ext = targetExt;
+               
         return '' + id + '.' + ext;
     }
 
@@ -479,6 +518,76 @@ var CanvasflowBuild = function(settingsPath) {
         } catch(e) {}
     }
 
+
+    $.resizeImages = function(imageFiles) {
+        var dataFile = new File($.commandFilePath);
+        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
+    
+        var files = [];
+        for(var i = 0; i < imageFiles.length; i++) {
+            files.push('"' + imageFiles[i] + '"');
+        }
+        dataFile.encoding = 'UTF-8';
+        dataFile.open('w');
+        dataFile.lineFeed = 'Unix';
+        
+        dataFile.writeln('clear');
+        dataFile.writeln('files=( ' + files.join(' ') + ' )');
+        dataFile.writeln('for file in "${files[@]}"');
+        dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\text="${file#*.}"');
+        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
+        dataFile.writeln('\t\tfilename="${filename%.*}"');
+        dataFile.writeln('\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"');
+        dataFile.writeln('\t\tif [ "$image_width" -gt "2048" ]; then');
+        dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
+        dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
+        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
+        dataFile.writeln('\t\t\teval $resize_command');
+        dataFile.writeln('\t\tfi');
+        dataFile.writeln('\t\tif [ $ext != "jpeg" ]; then');
+        dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
+        dataFile.writeln('\t\t\teval $remove_command');
+        dataFile.writeln('\t\tfi');
+        dataFile.writeln('done');
+        dataFile.writeln(closeTerminalCommand);
+    
+        dataFile.execute();
+        dataFile.close();
+    }
+
+    $.convertImages = function(imageFiles) {
+        var dataFile = new File($.commandFilePath);
+        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
+
+        var files = [];
+        for(var i = 0; i < imageFiles.length; i++) {
+            files.push('"' + imageFiles[i] + '"');
+        }
+        dataFile.encoding = 'UTF-8';
+        dataFile.open('w');
+        dataFile.lineFeed = 'Unix';
+        
+        dataFile.writeln('clear');
+        dataFile.writeln('files=( ' + files.join(' ') + ' )');
+        dataFile.writeln('for file in "${files[@]}"');
+        dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\text="${file#*.}"');
+        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
+        dataFile.writeln('\t\tfilename="${filename%.*}"');
+        dataFile.writeln('\t\tparent_filename="$(dirname "${file})")"');
+        dataFile.writeln('\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
+        dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\""');
+        dataFile.writeln('\t\teval $convert_command');
+        dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
+        dataFile.writeln('\t\teval $remove_command');
+        dataFile.writeln('done');
+        dataFile.writeln(closeTerminalCommand);
+
+        dataFile.execute();
+        dataFile.close();
+    }
+
     $.buildZipFile = function(document, data, baseDirectory) {
         var output = baseDirectory + '/data.json'; 
         var dataFile = new File(output);
@@ -496,6 +605,12 @@ var CanvasflowBuild = function(settingsPath) {
         }
 
         var baseFile = new File(baseDirectory);
+        if(!!$.imagesToResize.length) {
+            $.resizeImages($.imagesToResize);
+        }
+        if(!!$.imagesToConvert.length) {
+            $.convertImages($.imagesToConvert);
+        }
         app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
 
         return baseFile.fsName + '.zip';
@@ -585,5 +700,6 @@ var CanvasflowBuild = function(settingsPath) {
 }
 
 var settingsFilePath = "~/canvaflow_settings.json";
-var cfBuild = new CanvasflowBuild(settingsFilePath);
+var commandFilePath = "~/resize.command";
+var cfBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
 cfBuild.build();
