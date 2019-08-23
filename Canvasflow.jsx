@@ -1058,6 +1058,16 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.close();
     }
 
+    $.createPackage = function(baseFile) {
+        try {
+            app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+        } catch(e) {
+            setTimeout(function() {
+                $.createPackage(baseFile);
+            }, 1000);
+        }
+    }
+
     $.buildZipFile = function(document, data, baseDirectory) {
         var output = baseDirectory + '/data.json'; 
         var dataFile = new File(output);
@@ -1083,12 +1093,13 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         }
 
         setTimeout(function() {
-            try {
+            $.createPackage(baseFile);
+            /*try {
                 app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
             } catch(e) {
                 alert('Error: ' + e.message);
-            }
-        }, 15000);
+            }*/
+        }, 1000);
 
         return baseFile.fsName + '.zip';
     }
