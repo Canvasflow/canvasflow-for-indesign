@@ -1003,8 +1003,14 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         
         dataFile.writeln('clear');
         dataFile.writeln('files=( ' + files.join(' ') + ' )');
+        dataFile.writeln('total_of_images=${#files[@]}');
+        dataFile.writeln('processed_images=0');
+        dataFile.writeln("CYAN='\033[1;36m'");
+        dataFile.writeln("NC='\033[0m'");
         dataFile.writeln('for file in "${files[@]}"');
         dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
+        dataFile.writeln('\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC}"');
         dataFile.writeln('\t\text="${file#*.}"');
         dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
         dataFile.writeln('\t\tfilename="${filename%.*}"');
@@ -1013,7 +1019,8 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
         dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
         dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
-        dataFile.writeln('\t\t\teval $resize_command');
+        dataFile.writeln('\t\t\teval $resize_command > /dev/null 2>&1');
+        dataFile.writeln('\t\t\tclear');
         dataFile.writeln('\t\tfi');
         dataFile.writeln('\t\tif [ $ext != "jpeg" ]; then');
         dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
@@ -1040,15 +1047,22 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         
         dataFile.writeln('clear');
         dataFile.writeln('files=( ' + files.join(' ') + ' )');
+        dataFile.writeln('total_of_images=${#files[@]}');
+        dataFile.writeln('processed_images=0');
+        dataFile.writeln("CYAN='\033[1;36m'");
+        dataFile.writeln("NC='\033[0m'");
         dataFile.writeln('for file in "${files[@]}"');
         dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
+        dataFile.writeln('\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC}"');
         dataFile.writeln('\t\text="${file#*.}"');
         dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
         dataFile.writeln('\t\tfilename="${filename%.*}"');
         dataFile.writeln('\t\tparent_filename="$(dirname "${file})")"');
         dataFile.writeln('\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
         dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""');
-        dataFile.writeln('\t\teval $convert_command');
+        dataFile.writeln('\t\teval $convert_command > /dev/null 2>&1');
+        dataFile.writeln('\t\tclear');
         dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
         dataFile.writeln('\t\teval $remove_command');
         dataFile.writeln('done');
