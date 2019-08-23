@@ -1001,16 +1001,30 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
         
+        dataFile.writeln("CYAN='\033[1;36m'");
+        dataFile.writeln("NC='\033[0m'");
+        dataFile.writeln("GREEN='\033[1;32m'");
+        dataFile.writeln("YELLOW='\033[0;33m'");
+        dataFile.writeln("RED='\033[0;31m'");
+        
         dataFile.writeln('clear');
         dataFile.writeln('files=( ' + files.join(' ') + ' )');
         dataFile.writeln('total_of_images=${#files[@]}');
         dataFile.writeln('processed_images=0');
-        dataFile.writeln("CYAN='\033[1;36m'");
-        dataFile.writeln("NC='\033[0m'");
         dataFile.writeln('for file in "${files[@]}"');
         dataFile.writeln('\tdo :');
         dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
-        dataFile.writeln('\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC}"');
+
+        dataFile.writeln('\t\tpercentage=$(($((processed_images * 100))/total_of_images))');
+        dataFile.writeln('\t\tif ((percentage < 25)); then');
+        dataFile.writeln('\t\t\tpercentage="${RED}${percentage}%${NC}"');
+        dataFile.writeln('\t\telif ((percentage >= 25)) && ((percentage < 75)); then');
+        dataFile.writeln('\t\t\tpercentage="${YELLOW}${percentage}%${NC}"');
+        dataFile.writeln('\t\telse');
+        dataFile.writeln('\t\t\tpercentage="${GREEN}${percentage}%${NC}"');
+        dataFile.writeln('\t\tfi');
+        
+        dataFile.writeln('\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"');
         dataFile.writeln('\t\text="${file#*.}"');
         dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
         dataFile.writeln('\t\tfilename="${filename%.*}"');
@@ -1044,17 +1058,31 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.encoding = 'UTF-8';
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
+
+        dataFile.writeln("CYAN='\033[1;36m'");
+        dataFile.writeln("NC='\033[0m'");
+        dataFile.writeln("GREEN='\033[1;32m'");
+        dataFile.writeln("YELLOW='\033[0;33m'");
+        dataFile.writeln("RED='\033[0;31m'");
         
         dataFile.writeln('clear');
         dataFile.writeln('files=( ' + files.join(' ') + ' )');
         dataFile.writeln('total_of_images=${#files[@]}');
         dataFile.writeln('processed_images=0');
-        dataFile.writeln("CYAN='\033[1;36m'");
-        dataFile.writeln("NC='\033[0m'");
         dataFile.writeln('for file in "${files[@]}"');
         dataFile.writeln('\tdo :');
         dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
-        dataFile.writeln('\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC}"');
+
+        dataFile.writeln('\t\tpercentage=$(($((processed_images * 100))/total_of_images))');
+        dataFile.writeln('\t\tif ((percentage < 25)); then');
+        dataFile.writeln('\t\t\tpercentage="${RED}${percentage}%${NC}"');
+        dataFile.writeln('\t\telif ((percentage >= 25)) && ((percentage < 75)); then');
+        dataFile.writeln('\t\t\tpercentage="${YELLOW}${percentage}%${NC}"');
+        dataFile.writeln('\t\telse');
+        dataFile.writeln('\t\t\tpercentage="${GREEN}${percentage}%${NC}"');
+        dataFile.writeln('\t\tfi');
+
+        dataFile.writeln('\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"');
         dataFile.writeln('\t\text="${file#*.}"');
         dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
         dataFile.writeln('\t\tfilename="${filename%.*}"');
