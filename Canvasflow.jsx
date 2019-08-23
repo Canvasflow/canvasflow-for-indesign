@@ -1012,7 +1012,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.writeln('\t\tif [ "$image_width" -gt "2048" ]; then');
         dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
         dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
-        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
+        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
         dataFile.writeln('\t\t\teval $resize_command');
         dataFile.writeln('\t\tfi');
         dataFile.writeln('\t\tif [ $ext != "jpeg" ]; then');
@@ -1047,7 +1047,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.writeln('\t\tfilename="${filename%.*}"');
         dataFile.writeln('\t\tparent_filename="$(dirname "${file})")"');
         dataFile.writeln('\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
-        dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\""');
+        dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""');
         dataFile.writeln('\t\teval $convert_command');
         dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
         dataFile.writeln('\t\teval $remove_command');
