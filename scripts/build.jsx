@@ -468,7 +468,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
                 var graphic = graphics[i];
                 if(graphic.isValid) {
                     var imagePath;
-                    var position = $.getItemPosition(graphic.geometricBounds);
+                    var position = $.getItemPosition(graphic.parent.visibleBounds);
                     var imageExist = $.checkIfGraphicImageExist(graphic);
                     if(imageExist) {
                         if(graphic.visible) {
