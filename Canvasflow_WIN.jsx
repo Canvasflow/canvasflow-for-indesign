@@ -434,14 +434,21 @@ var HTTPFile = function (url,port) {
             this.reply = this.conn.read(9999999999);
             this.conn.close();
         } else {
-            this.reply = "";
+            this.reply = null;
         }
-        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4).toString();
+        if(this.reply === null) return null
+        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);
     };
 }
 
 var CanvasflowApi = function (host) {
     this.host = host;
+
+    CanvasflowApi.prototype.getHealth = function() {
+        var reply = new HTTPFile(this.host + "/health");
+        // var reply = new HTTPFile(this.host + "?endpoint=/publications&secretkey=" + apiKey);
+        return reply.getResponse();
+    };
 
     CanvasflowApi.prototype.getPublications = function(apiKey) {
         var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
@@ -1417,7 +1424,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var styles = [];
 
         // Add Preview Image selector
-        var previewImageOptions = ['True', 'False'];
+        var previewImageOptions = ['Yes', 'No'];
         settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
         settingsDialog.previewImageDropDownGroup.orientation = 'row';
         settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use Thumbnails');
@@ -1625,6 +1632,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
 
         if(!!savedSettings.endpoint) {
             canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v2');
+            if(canvasflowApi.getHealth() === null) {
+                throw new Error('Canvasflow Service not currently available');
+            }
             endpointExist = true;
             selectedEndpoint = $.getItemByID(endpoints, savedSettings.endpoint);
             settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
@@ -1671,7 +1681,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 }
 
                 // Add Preview Image selector
-                var previewImageOptions = ['True', 'False'];
+                var previewImageOptions = ['Yes', 'No'];
                 settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
                 settingsDialog.previewImageDropDownGroup.orientation = 'row';
                 settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
@@ -1855,15 +1865,19 @@ var CanvasflowDialog = function(settingsPath, internal) {
     };
 
     $.show = function() {
-        if(!!$.isInternal) {
-            $.processInternal()
-        } else {
-            $.processPublic();
+        try {
+            if(!!$.isInternal) {
+                $.processInternal();
+            } else {
+                $.processPublic();
+            }
+        } catch(e) {
+            alert(e.message);
         }
     };
 }
 
-var CanvasflowPublish = function(settingsPath, host, cfBuild) {
+var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';
@@ -2140,6 +2154,10 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     }
 
     $.publish = function() {
+        if(canvasflowApi.getHealth() === null) {
+            throw new Error('Canvasflow Service not currently available');
+        }
+
         if (app.documents.length != 0){
             var zipFilePath = '';
             try {
@@ -2207,8 +2225,13 @@ var CanvasflowPlugin = function() {
         var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
         canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
             var canvasflowBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
-            var canvasflowPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", canvasflowBuild);
-            canvasflowPublish.publish();
+            var canvasflowApi = new CanvasflowApi('http://api.cflowdev.com/v2');
+            var canvasflowPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", canvasflowBuild, canvasflowApi);
+            try {
+                canvasflowPublish.publish();
+            } catch(e) {
+                alert(e.message);
+            }
         });
     
         var canvasflowScriptMenu = null;

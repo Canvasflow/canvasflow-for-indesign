@@ -21,8 +21,9 @@ var HTTPFile = function (url,port) {
             this.reply = this.conn.read(9999999999);
             this.conn.close();
         } else {
-            this.reply = "";
+            this.reply = null;
         }
-        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);;
+        if(this.reply === null) return null
+        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);
     };
 }

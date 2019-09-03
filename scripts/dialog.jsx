@@ -201,7 +201,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var styles = [];
 
         // Add Preview Image selector
-        var previewImageOptions = ['True', 'False'];
+        var previewImageOptions = ['Yes', 'No'];
         settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
         settingsDialog.previewImageDropDownGroup.orientation = 'row';
         settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use Thumbnails');
@@ -409,6 +409,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
 
         if(!!savedSettings.endpoint) {
             canvasflowApi = new CanvasflowApi('http://' + savedSettings.endpoint + '/v2');
+            if(canvasflowApi.getHealth() === null) {
+                throw new Error('Canvasflow Service not currently available');
+            }
             endpointExist = true;
             selectedEndpoint = $.getItemByID(endpoints, savedSettings.endpoint);
             settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
@@ -455,7 +458,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 }
 
                 // Add Preview Image selector
-                var previewImageOptions = ['True', 'False'];
+                var previewImageOptions = ['Yes', 'No'];
                 settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
                 settingsDialog.previewImageDropDownGroup.orientation = 'row';
                 settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
@@ -639,10 +642,14 @@ var CanvasflowDialog = function(settingsPath, internal) {
     };
 
     $.show = function() {
-        if(!!$.isInternal) {
-            $.processInternal()
-        } else {
-            $.processPublic();
+        try {
+            if(!!$.isInternal) {
+                $.processInternal();
+            } else {
+                $.processPublic();
+            }
+        } catch(e) {
+            alert(e.message);
         }
     };
 }

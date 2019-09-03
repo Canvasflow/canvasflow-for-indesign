@@ -2,6 +2,12 @@
 var CanvasflowApi = function (host) {
     this.host = host;
 
+    CanvasflowApi.prototype.getHealth = function() {
+        var reply = new HTTPFile(this.host + "/health");
+        // var reply = new HTTPFile(this.host + "?endpoint=/publications&secretkey=" + apiKey);
+        return reply.getResponse();
+    };
+
     CanvasflowApi.prototype.getPublications = function(apiKey) {
         var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
         // var reply = new HTTPFile(this.host + "?endpoint=/publications&secretkey=" + apiKey);
