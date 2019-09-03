@@ -364,11 +364,11 @@ if (typeof JSON !== "object") {
 var apiKeySetting = 1;
 var isInternal = true;
 var canvasflowSettingsKey = "CanvasflowSettings";
-var settingsFilePath = "~/canvaflow_settings.json";
+var settingsFilePath = "~/canvasflow_settings.json";
 var commandFilePath = "~/canvasflow_runner.command";
 
 var defaultHost = 'api.canvasflow.io';
-var logFilePath = "~/canvaflow_debug_log.log";
+var logFilePath = "~/canvasflow_debug_log.log";
 var logger;
 var isDebugEnable = true;
 
@@ -880,6 +880,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         switch(ext) {
             case 'jpg':
             case 'jpeg':
+            case 'eps':
             case 'tiff':
             case 'tif':       
             case 'png':
@@ -925,10 +926,8 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         if(targetExt !== ext) {
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
-
-        ext = targetExt;
                
-        return '' + id + '.' + ext;
+        return '' + id + '.' + targetExt;
     }
 
     $.getImageFromGraphics = function(graphics, data, baseDirectory) {
@@ -1013,34 +1012,50 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.writeln('processed_images=0');
         dataFile.writeln('for file in "${files[@]}"');
         dataFile.writeln('\tdo :');
+        dataFile.writeln('\t\text="${file#*.}"');
         dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
 
         dataFile.writeln('\t\tpercentage=$(($((processed_images * 100))/total_of_images))');
-        dataFile.writeln('\t\tif ((percentage < 25)); then');
-        dataFile.writeln('\t\t\tpercentage="${RED}${percentage}%${NC}"');
-        dataFile.writeln('\t\telif ((percentage >= 25)) && ((percentage < 75)); then');
+        dataFile.writeln('\t\tif ((percentage < 100)); then');
         dataFile.writeln('\t\t\tpercentage="${YELLOW}${percentage}%${NC}"');
         dataFile.writeln('\t\telse');
         dataFile.writeln('\t\t\tpercentage="${GREEN}${percentage}%${NC}"');
         dataFile.writeln('\t\tfi');
+
+        dataFile.writeln('\t\tif [ $ext == "eps" ]; then');
+        dataFile.writeln('\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""');
+        dataFile.writeln('\t\t\teval $transform_to_pdf');
+        dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
+        dataFile.writeln('\t\t\teval $remove_command');
+        dataFile.writeln('\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"');
+        dataFile.writeln('\t\t\text="pdf"');
+        dataFile.writeln('\t\tfi');
         
+        dataFile.writeln('\t\tclear');
         dataFile.writeln('\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"');
-        dataFile.writeln('\t\text="${file#*.}"');
         dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
         dataFile.writeln('\t\tfilename="${filename%.*}"');
         dataFile.writeln('\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"');
         dataFile.writeln('\t\tif [ "$image_width" -gt "2048" ]; then');
         dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
         dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
-        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
+        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
         dataFile.writeln('\t\t\teval $resize_command > /dev/null 2>&1');
-        dataFile.writeln('\t\t\tclear');
+        dataFile.writeln('\t\telse');
+        dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
+        dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
+        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
+        dataFile.writeln('\t\t\teval $resize_command > /dev/null 2>&1');
         dataFile.writeln('\t\tfi');
-        dataFile.writeln('\t\tif [ $ext != "jpeg" ]; then');
+        
+        dataFile.writeln('\t\tif [ $ext != "jpeg" ] && [ $ext != "jpg" ]; then');
         dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
         dataFile.writeln('\t\t\teval $remove_command');
         dataFile.writeln('\t\tfi');
+        
         dataFile.writeln('done');
+        dataFile.writeln('rm -f canvasflow_resizing.lock');
+        
         // dataFile.writeln(closeTerminalCommand);
     
         dataFile.execute();
@@ -1074,12 +1089,19 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
 
         dataFile.writeln('\t\tpercentage=$(($((processed_images * 100))/total_of_images))');
-        dataFile.writeln('\t\tif ((percentage < 25)); then');
-        dataFile.writeln('\t\t\tpercentage="${RED}${percentage}%${NC}"');
-        dataFile.writeln('\t\telif ((percentage >= 25)) && ((percentage < 75)); then');
+        dataFile.writeln('\t\tif ((percentage < 100)); then');
         dataFile.writeln('\t\t\tpercentage="${YELLOW}${percentage}%${NC}"');
         dataFile.writeln('\t\telse');
         dataFile.writeln('\t\t\tpercentage="${GREEN}${percentage}%${NC}"');
+        dataFile.writeln('\t\tfi');
+
+        dataFile.writeln('\t\tif [ $ext == "eps" ]; then');
+        dataFile.writeln('\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"');
+        dataFile.writeln('\t\t\teval $transform_to_pdf');
+        dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
+        dataFile.writeln('\t\t\teval $remove_command');
+        dataFile.writeln('\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"');
+        dataFile.writeln('\t\t\text="pdf"');
         dataFile.writeln('\t\tfi');
 
         dataFile.writeln('\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"');
@@ -1094,6 +1116,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
         dataFile.writeln('\t\teval $remove_command');
         dataFile.writeln('done');
+        dataFile.writeln("rm -f canvasflow_convert.lock");
         // dataFile.writeln(closeTerminalCommand);
 
         dataFile.execute();
@@ -1102,7 +1125,16 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
 
     $.createPackage = function(baseFile) {
         try {
-            app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+            var resizingLockFile = new File('~/canvasflow_resizing.lock')
+            var convertLockFile = new File('~/canvasflow_convert.lock')
+            if(!resizingLockFile.exists && !convertLockFile.exists) {
+                app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+                return;
+            }
+
+            setTimeout(function() {
+                $.createPackage(baseFile);
+            }, 1000);
         } catch(e) {
             setTimeout(function() {
                 $.createPackage(baseFile);
@@ -1127,21 +1159,23 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         }
 
         var baseFile = new File(baseDirectory);
-        if(!!$.imagesToResize.length) {
+
+        if(!!$.imagesToResize.length) { 
+            var lockFile = new File('~/canvasflow_resizing.lock')
+            lockFile.encoding = 'UTF-8';
+            lockFile.open('w');
+            lockFile.close();
             $.resizeImages($.imagesToResize);
         }
         if(!!$.imagesToConvert.length) {
+            var lockFile = new File('~/canvasflow_convert.lock')
+            lockFile.encoding = 'UTF-8';
+            lockFile.open('w');
+            lockFile.close();
             $.convertImages($.imagesToConvert);
         }
 
-        setTimeout(function() {
-            $.createPackage(baseFile);
-            /*try {
-                app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
-            } catch(e) {
-                alert('Error: ' + e.message);
-            }*/
-        }, 1000);
+        $.createPackage(baseFile);
 
         return baseFile.fsName + '.zip';
     }
@@ -1753,7 +1787,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                     return;
                 }
 
-                canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v1');
+                canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
                 if(!apiKeyExist) {
                     var reply = canvasflowApi.validate(settingsDialog.apiKeyGroup.apiKey.text);
@@ -2025,7 +2059,6 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     }
 
     $.displayConfirmDialog = function(onPublish, onCancel) {
-        
         var dialog = new Window('dialog', 'Publish', undefined, {closeButton: false});
         dialog.orientation = 'column';
         dialog.alignment = 'right';
@@ -2088,9 +2121,8 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             dialog.close(0);
             onCancel();
         }
-        
-        $.dialogSUI = dialog.show();
-        return;
+    
+        dialog.show();
     }
 
     $.publish = function() {
@@ -2130,7 +2162,11 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             }
             
             // onPublish();
-            $.displayConfirmDialog(onPublish, onCancel);
+            try {
+                $.displayConfirmDialog(onPublish, onCancel);
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
         }
         else{
             alert ("Please open a document.");
