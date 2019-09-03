@@ -1267,7 +1267,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     var $ = this;
     $.settingsPath = settingsPath;
     $.isInternal = internal;
-    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true, "pages": ""}';
+    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true, "pages": "", "creationMode": "document"}';
 
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
@@ -1329,6 +1329,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
     }
 
     $.resetFromEndpoint = function(endpoint) {
+        var pages = $.savedSettings.pages || '';
+        var creationMode = $.savedSettings.creationMode || 'document';
         var settings = {
             apiKey: '',
             previewImage: $.savedSettings.previewImage,
@@ -1336,7 +1338,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
             IssueID: '',
             StyleID: '',
             endpoint: endpoint,
-            pages: ''
+            pages: pages,
+            creationMode: creationMode
         };
 
         $.save(settings);
@@ -1348,6 +1351,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var StyleID = '';
         var previewImage = $.savedSettings.previewImage;
         var pages = $.savedSettings.pages || '';
+        var creationMode = $.savedSettings.creationMode || 'document';
         
 
         var publications = $.getPublications(apiKey, canvasflowApi);
@@ -1371,7 +1375,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
             StyleID: StyleID,
             endpoint: endpoint,
             previewImage: previewImage,
-            pages: pages
+            pages: pages,
+            creationMode: creationMode
         };
 
         $.save(settings);
@@ -1381,7 +1386,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var IssueID = '';
         var StyleID = '';
         var previewImage = $.savedSettings.previewImage;
-        var pages = $.savedSettings.pages;
+        var pages = $.savedSettings.pages || '';
+        var creationMode = $.savedSettings.creationMode || 'document';
     
         var publications = $.getPublications(apiKey, canvasflowApi);
         var publication = $.getItemByID(publications, PublicationID, canvasflowApi);
@@ -1403,7 +1409,8 @@ var CanvasflowDialog = function(settingsPath, internal) {
             StyleID: StyleID,
             endpoint: endpoint,
             previewImage: previewImage,
-            pages: pages
+            pages: pages,
+            creationMode: creationMode
         };
 
         $.save(settings);
@@ -1420,8 +1427,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
         '", "StyleID": "' + settings.StyleID + 
         '", "endpoint": "' + settings.endpoint + 
         '", "previewImage": ' + settings.previewImage +
-        ', "pages": "' + (settings.pages || '') + 
-        '"}';
+        ', "pages": "' + (settings.pages || '') + '"' + 
+        ', "creationMode": "' + (settings.creationMode || 'document') + '"' +
+        '}';
         file.write(content);
         file.close();
     }
@@ -1462,13 +1470,25 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
         settingsDialog.previewImageDropDownGroup.dropDown.helpTip = 'The plugin will use ';
         if(savedSettings.previewImage === true ) {
-            savedSettings.previewImage = true;
             $.savedSettings.previewImage = true;
             settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
         } else {
-            savedSettings.previewImage = false;
             $.savedSettings.previewImage = false;
             settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+        }
+
+        // Add Article Creation Mode 
+        var creationModeOptions = ['Document', 'Page'];
+        settingsDialog.creationModeDropDownGroup = settingsDialog.add('group');
+        settingsDialog.creationModeDropDownGroup.orientation = 'row';
+        settingsDialog.creationModeDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation Mode');
+        settingsDialog.creationModeDropDownGroup.dropDown = settingsDialog.creationModeDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:creationModeOptions});
+        if(savedSettings.creationMode === 'document' ) {
+            $.savedSettings.creationMode = 'document';
+            settingsDialog.creationModeDropDownGroup.dropDown.selection = 0;
+        } else {
+            $.savedSettings.creationMode = 'page';
+            settingsDialog.creationModeDropDownGroup.dropDown.selection = 1;
         }
 
         //Add Api Key
@@ -1540,6 +1560,12 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 $.savedSettings.previewImage = true;
             } else {
                 $.savedSettings.previewImage = false;
+            }
+
+            if(settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.creationMode = 'document';
+            } else {
+                $.savedSettings.creationMode = 'page';
             }
 
             if(!apiKeyExist) {
@@ -1634,13 +1660,25 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
         settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
         if(savedSettings.previewImage === true ) {
-            savedSettings.previewImage = true;
             $.savedSettings.previewImage = true;
             settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
         } else {
-            savedSettings.previewImage = false;
             $.savedSettings.previewImage = false;
             settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+        }
+
+        // Add Article Creation Mode 
+        var creationModeOptions = ['Document', 'Page'];
+        settingsDialog.creationModeDropDownGroup = settingsDialog.add('group');
+        settingsDialog.creationModeDropDownGroup.orientation = 'row';
+        settingsDialog.creationModeDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation Mode');
+        settingsDialog.creationModeDropDownGroup.dropDown = settingsDialog.creationModeDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:creationModeOptions});
+        if(savedSettings.creationMode === 'document' ) {
+            $.savedSettings.creationMode = 'document';
+            settingsDialog.creationModeDropDownGroup.dropDown.selection = 0;
+        } else {
+            $.savedSettings.creationMode = 'page';
+            settingsDialog.creationModeDropDownGroup.dropDown.selection = 1;
         }
 
         // Add endpoint selector
@@ -1746,7 +1784,21 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 $.savedSettings.previewImage = false;
             }
 
-            var pages = settingsDialog.pagesGroup.pages.text;;
+            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.previewImage = true;
+            } else {
+                $.savedSettings.previewImage = false;
+            }
+
+            if(settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 0) {
+                $.savedSettings.creationMode = 'document';
+                savedSettings.creationMode = 'document';
+            } else {
+                $.savedSettings.creationMode = 'page';
+                savedSettings.creationMode = 'page';
+            }
+
+            var pages = settingsDialog.pagesGroup.pages.text;
             
             if(!!pages.length) {
                 var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
@@ -1898,6 +1950,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
+        var creationMode = $.savedSettings.creationMode;
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;
@@ -1915,6 +1968,12 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             + "Content-Disposition: form-data; name=\"secretKey\"\r\n"
             + "\r\n"
             + apiKey + "\r\n"
+            + "\r\n";
+
+            var creationModeContent = "--" + boundary + "\r\n"
+            + "Content-Disposition: form-data; name=\"creationMode\"\r\n"
+            + "\r\n"
+            + creationMode + "\r\n"
             + "\r\n";
 
             var articleNameContent = "--" + boundary + "\r\n"
@@ -1958,6 +2017,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     
             var content = fileContent
             + apiKeyContent
+            + creationModeContent
             + articleNameContent
             + contentType
             + PublicationIDContent
