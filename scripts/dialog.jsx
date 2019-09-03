@@ -391,42 +391,14 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var issues = [];
         var styles = [];
 
-        // Add Preview Image selector
-        var previewImageOptions = ['True', 'False'];
-        settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
-        settingsDialog.previewImageDropDownGroup.orientation = 'row';
-        settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
-        settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
-        if(savedSettings.previewImage === true ) {
-            $.savedSettings.previewImage = true;
-            settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
-        } else {
-            $.savedSettings.previewImage = false;
-            settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
-        }
-
-        // Add Article Creation Mode 
-        var creationModeOptions = ['Document', 'Page'];
-        settingsDialog.creationModeDropDownGroup = settingsDialog.add('group');
-        settingsDialog.creationModeDropDownGroup.orientation = 'row';
-        settingsDialog.creationModeDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation Mode');
-        settingsDialog.creationModeDropDownGroup.dropDown = settingsDialog.creationModeDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:creationModeOptions});
-        if(savedSettings.creationMode === 'document' ) {
-            $.savedSettings.creationMode = 'document';
-            settingsDialog.creationModeDropDownGroup.dropDown.selection = 0;
-        } else {
-            $.savedSettings.creationMode = 'page';
-            settingsDialog.creationModeDropDownGroup.dropDown.selection = 1;
-        }
-
         // Add endpoint selector
         var endpoints = [
             {
-                name: 'Live',
+                name: 'Production',
                 id: 'api.canvasflow.io'
             },
             {
-                name: 'Cflowdev',
+                name: 'Development',
                 id: 'api.cflowdev.com'
             }
         ];
@@ -482,6 +454,34 @@ var CanvasflowDialog = function(settingsPath, internal) {
                     }
                 }
 
+                // Add Preview Image selector
+                var previewImageOptions = ['True', 'False'];
+                settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
+                settingsDialog.previewImageDropDownGroup.orientation = 'row';
+                settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+                settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+                if(savedSettings.previewImage === true ) {
+                    $.savedSettings.previewImage = true;
+                    settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
+                } else {
+                    $.savedSettings.previewImage = false;
+                    settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+                }
+
+                // Add Article Creation Mode 
+                var creationModeOptions = ['Document', 'Page'];
+                settingsDialog.creationModeDropDownGroup = settingsDialog.add('group');
+                settingsDialog.creationModeDropDownGroup.orientation = 'row';
+                settingsDialog.creationModeDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation');
+                settingsDialog.creationModeDropDownGroup.dropDown = settingsDialog.creationModeDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:creationModeOptions});
+                if(savedSettings.creationMode === 'document' ) {
+                    $.savedSettings.creationMode = 'document';
+                    settingsDialog.creationModeDropDownGroup.dropDown.selection = 0;
+                } else {
+                    $.savedSettings.creationMode = 'page';
+                    settingsDialog.creationModeDropDownGroup.dropDown.selection = 1;
+                }
+
                 // Select styles
                 styles = $.getStyles(savedSettings.apiKey, selectedPublication.id, canvasflowApi);
                 settingsDialog.styleDropDownGroup = settingsDialog.add('group');
@@ -494,6 +494,12 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 } else {
                     settingsDialog.styleDropDownGroup.dropDown.selection = 0;
                 }
+
+                // Add Range selector
+                settingsDialog.pagesGroup = settingsDialog.add('group');
+                settingsDialog.pagesGroup.orientation = 'row';
+                settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], "Pages");
+                settingsDialog.pagesGroup.pages = settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.pages);
             } else {
                 apiKeyExist = false;
             }
@@ -501,12 +507,6 @@ var CanvasflowDialog = function(settingsPath, internal) {
             selectedEndpoint = endpoints[0];
             settingsDialog.endpointDropDownGroup.dropDown.selection = 0;
         }
-
-        // Add Range selector
-        settingsDialog.pagesGroup = settingsDialog.add('group');
-        settingsDialog.pagesGroup.orientation = 'row';
-        settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], "Pages");
-        settingsDialog.pagesGroup.pages = settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.pages);
 
         // Panel buttons
         settingsDialog.buttonsBarGroup = settingsDialog.add('group');
@@ -516,27 +516,27 @@ var CanvasflowDialog = function(settingsPath, internal) {
         settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
         
         settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
-            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
-                $.savedSettings.previewImage = true;
-            } else {
-                $.savedSettings.previewImage = false;
+            $.savedSettings.previewImage = true;
+            if(!!settingsDialog.previewImageDropDownGroup) {
+                if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 1) {
+                    $.savedSettings.previewImage = false;
+                }
             }
 
-            if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
-                $.savedSettings.previewImage = true;
-            } else {
-                $.savedSettings.previewImage = false;
+            $.savedSettings.creationMode = 'document';
+            savedSettings.creationMode = 'document';
+
+            if(!!settingsDialog.creationModeDropDownGroup) {
+                if(settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 1) {
+                    $.savedSettings.creationMode = 'page';
+                    savedSettings.creationMode = 'page';
+                }
             }
 
-            if(settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 0) {
-                $.savedSettings.creationMode = 'document';
-                savedSettings.creationMode = 'document';
-            } else {
-                $.savedSettings.creationMode = 'page';
-                savedSettings.creationMode = 'page';
+            var pages = '';
+            if(!!settingsDialog.pagesGroup) {
+                pages = settingsDialog.pagesGroup.pages.text;
             }
-
-            var pages = settingsDialog.pagesGroup.pages.text;
             
             if(!!pages.length) {
                 var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
@@ -646,7 +646,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         }
     };
 }
-var settingsFilePath = "~/canvaflow_settings.json";
+var settingsFilePath = "~/canvasflow_settings.json";
 
 var dialog = new CanvasflowDialog(settingsFilePath, true);
 dialog.show()
