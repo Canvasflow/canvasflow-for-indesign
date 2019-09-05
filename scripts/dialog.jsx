@@ -12,15 +12,15 @@ var CanvasflowDialog = function(settingsPath, internal) {
         if(file.exists) {
             file.open('r');
             return JSON.parse(file.read());
-        } else {
-            var file = new File($.settingsPath);
-            file.encoding = 'UTF-8';
-            file.open('w');
-            file.write($.defaultSavedSettings);
-            file.close();
-
-            $.getSavedSettings();
         }
+
+        var file = new File($.settingsPath);
+        file.encoding = 'UTF-8';
+        file.open('w');
+        file.write($.defaultSavedSettings);
+        file.close();
+
+        return $.defaultSavedSettings;
     };
 
     $.savedSettings = $.getSavedSettings();

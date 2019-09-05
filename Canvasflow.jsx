@@ -445,28 +445,33 @@ var CanvasflowApi = function (host) {
     this.host = host;
 
     CanvasflowApi.prototype.getHealth = function() {
-        var reply = new HTTPFile(this.host + "/health");
+        var reply = new HTTPFile(this.host + "/health?qid=" + Date.now());
         // var reply = new HTTPFile(this.host + "?endpoint=/publications&secretkey=" + apiKey);
+        reply.getResponse()
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getPublications = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey);
+        var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey + "&qid=" + Date.now());
+        reply.getResponse()
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.validate = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey);
+        var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey + "&qid=" + Date.now());
+        reply.getResponse()
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID + "&qid=" + Date.now());
+        reply.getResponse()
         return reply.getResponse();
     };
 
     CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID);
+        var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID + "&qid=" + Date.now());
+        reply.getResponse()
         return reply.getResponse();
     };
 }
@@ -1281,15 +1286,15 @@ var CanvasflowDialog = function(settingsPath, internal) {
         if(file.exists) {
             file.open('r');
             return JSON.parse(file.read());
-        } else {
-            var file = new File($.settingsPath);
-            file.encoding = 'UTF-8';
-            file.open('w');
-            file.write($.defaultSavedSettings);
-            file.close();
-
-            $.getSavedSettings();
         }
+
+        var file = new File($.settingsPath);
+        file.encoding = 'UTF-8';
+        file.open('w');
+        file.write($.defaultSavedSettings);
+        file.close();
+
+        return $.defaultSavedSettings;
     };
 
     $.savedSettings = $.getSavedSettings();
@@ -1340,7 +1345,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var creationMode = $.savedSettings.creationMode || 'document';
         var settings = {
             apiKey: '',
-            previewImage: $.savedSettings.previewImage,
+            previewImage: $.savedSettings.previewImage || true,
             PublicationID: '',
             IssueID: '',
             StyleID: '',
@@ -1356,10 +1361,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
         var PublicationID = '';
         var IssueID = '';
         var StyleID = '';
-        var previewImage = $.savedSettings.previewImage;
+        var previewImage = $.savedSettings.previewImage || true;
         var pages = $.savedSettings.pages || '';
         var creationMode = $.savedSettings.creationMode || 'document';
-        
 
         var publications = $.getPublications(apiKey, canvasflowApi);
         
@@ -1392,7 +1396,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     $.resetFromPublication = function(apiKey, PublicationID, canvasflowApi, endpoint) {
         var IssueID = '';
         var StyleID = '';
-        var previewImage = $.savedSettings.previewImage;
+        var previewImage = $.savedSettings.previewImage || true;
         var pages = $.savedSettings.pages || '';
         var creationMode = $.savedSettings.creationMode || 'document';
     
@@ -1581,6 +1585,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 if(response.isValid) {
                     $.resetFromApi(settingsDialog.apiKeyGroup.apiKey.text, canvasflowApi);
                     settingsDialog.destroy();
+                    return;
                 } else {
                     alert(reply.replace(/(")/gi, ''));
                 }
@@ -2270,10 +2275,18 @@ var CanvasflowPlugin = function() {
         
         var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
         canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
-            var canvasflowBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
-            var canvasflowApi = new CanvasflowApi('http://api.cflowdev.com/v2');
-            var canvasflowPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", canvasflowBuild, canvasflowApi);
+            var settingsFile = new File(settingsFilePath);
+            if(!settingsFile.exists) {
+                alert('Settings file do not exist');
+                return ;
+            }
             try {
+                settingsFile.open('r');
+                var settings = JSON.parse(settingsFile.read());
+
+                var canvasflowBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
+                var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
+                var canvasflowPublish = new CanvasflowPublish(settingsFilePath, settings.endpoint, canvasflowBuild, canvasflowApi);
                 canvasflowPublish.publish();
             } catch(e) {
                 alert(e.message);
