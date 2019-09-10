@@ -12,6 +12,22 @@ Error.prototype.toJson = function() {
     })
 }
 
+Error.prototype.toLog = function(logPath) {
+    if (typeof this.stack === "undefined" || this.stack === null) {
+        this.stack = "placeholder";
+        // The previous line is needed because the next line may indirectly call this method.
+        this.stack = $.stack;
+    }
+
+    var file = new File(logPath);
+    file.encoding = 'UTF-8';
+    file.open('w');
+    file.writeln('line: ' + this.line);
+    file.writeln('message: ' + this.message);
+    file.writeln('stack: ' + this.stack);
+    file.close();
+}
+
 try {
     throw new Error("Houston, we have a problem.");
 }
@@ -25,5 +41,6 @@ function logError(e) {
     file.open('w');
     file.write(e.toJson());
     file.close();
+    e.toLog("~/canvasflow_error.log")
     alert(e.toJson())
 }
