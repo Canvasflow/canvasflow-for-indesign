@@ -1,5 +1,27 @@
 #targetengine "session"  
 
+Error.prototype.toJson = function() {
+    if (typeof this.stack === "undefined" || this.stack === null) {
+        this.stack = "placeholder";
+        // The previous line is needed because the next line may indirectly call this method.
+        this.stack = $.stack;
+    }
+    return JSON.stringify({
+        line: this.line,
+        message: this.message,
+        stack: this.stack
+    })
+}
+
+function logError(e) {
+    var file = new File("~/canvasflow_error_log.json");
+    file.encoding = 'UTF-8';
+    file.open('w');
+    file.write(e.toJson());
+    file.close();
+    alert(e.toJson())
+}
+
 if (typeof JSON !== "object") {
     JSON = {};
 }
@@ -2192,7 +2214,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
                 dialog.close(0);
                 onPublish();
             }catch(e) {
-                alert('Error: ' + e.message);
+                logError(e);
             }
         }
 
@@ -2218,7 +2240,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
             } catch(e) {
-                alert('Error: ' + e.message);
+                logError(e);
                 return;
             }
 
@@ -2235,7 +2257,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
                         throw new Error('Error uploading the content, please try again');
                     }
                 } catch(e) {
-                    alert('Error: ' + e.message);
+                    logError(e);
                 }
             }
             
@@ -2248,7 +2270,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
             try {
                 $.displayConfirmDialog(onPublish, onCancel);
             } catch(e) {
-                alert('Error: ' + e.message);
+                logError(e);
             }
         }
         else{
@@ -2289,7 +2311,7 @@ var CanvasflowPlugin = function() {
                 var canvasflowPublish = new CanvasflowPublish(settingsFilePath, settings.endpoint, canvasflowBuild, canvasflowApi);
                 canvasflowPublish.publish();
             } catch(e) {
-                alert(e.message);
+                logError(e);
             }
         });
     
