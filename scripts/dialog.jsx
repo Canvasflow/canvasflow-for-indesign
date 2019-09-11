@@ -1,10 +1,11 @@
 //@include "json2.js"
 //@include "api.js"
 
-var CanvasflowDialog = function(settingsPath, internal) {
+
+
+var CanvasflowSettings = function(settingsPath){
     var $ = this;
     $.settingsPath = settingsPath;
-    $.isInternal = internal;
     $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true, "pages": "", "creationMode": "document"}';
 
     $.getSavedSettings = function() {
@@ -23,7 +24,31 @@ var CanvasflowDialog = function(settingsPath, internal) {
         return $.defaultSavedSettings;
     };
 
-    $.savedSettings = $.getSavedSettings();
+    $.save = function(settings) {
+        var file = new File($.settingsPath);
+        file.encoding = 'UTF-8';
+        file.open('w');
+        var content = '{"apiKey":"' + settings.apiKey + 
+        '", "PublicationID": "' + settings.PublicationID + 
+        '", "IssueID":"' + settings.IssueID + 
+        '", "StyleID": "' + settings.StyleID + 
+        '", "endpoint": "' + settings.endpoint + 
+        '", "previewImage": ' + settings.previewImage +
+        ', "pages": "' + (settings.pages || '') + '"' + 
+        ', "creationMode": "' + (settings.creationMode || 'document') + '"' +
+        '}';
+        file.write(content);
+        file.close();
+    }
+
+}
+
+var CanvasflowDialog = function(canvasflowSettings, internal) {
+    var $ = this;
+    $.canvasflowSettings = canvasflowSettings;
+    $.isInternal = internal;
+    
+    $.savedSettings = $.canvasflowSettings.getSavedSettings();
 
     $.getPublications = function(apiKey, canvasflowApi) {
         var reply = canvasflowApi.getPublications(apiKey);
@@ -74,13 +99,12 @@ var CanvasflowDialog = function(settingsPath, internal) {
             previewImage: $.savedSettings.previewImage || false,
             PublicationID: '',
             IssueID: '',
-            StyleID: '',
             endpoint: endpoint,
             pages: pages,
             creationMode: creationMode
         };
 
-        $.save(settings);
+        $.canvasflowSettings.save(settings);
     }
 
     $.resetFromApi = function(apiKey, canvasflowApi, endpoint) {
@@ -125,7 +149,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
             creationMode: creationMode
         };
 
-        $.save(settings);
+        $.canvasflowSettings.save(settings);
     }
 
     $.resetFromPublication = function(apiKey, PublicationID, canvasflowApi, endpoint) {
@@ -172,27 +196,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
             creationMode: creationMode
         };
 
-        $.save(settings);
+        $.canvasflowSettings.save(settings);
     }
     // this.getOkCallback = getOkCallback.bind(this);
-
-    $.save = function(settings) {
-        var file = new File($.settingsPath);
-        file.encoding = 'UTF-8';
-        file.open('w');
-        var content = '{"apiKey":"' + settings.apiKey + 
-        '", "PublicationID": "' + settings.PublicationID + 
-        '", "IssueID":"' + settings.IssueID + 
-        '", "StyleID": "' + settings.StyleID + 
-        '", "endpoint": "' + settings.endpoint + 
-        '", "previewImage": ' + settings.previewImage +
-        ', "pages": "' + (settings.pages || '') + '"' + 
-        ', "creationMode": "' + (settings.creationMode || 'document') + '"' +
-        '}';
-        file.write(content);
-        file.close();
-    }
-
     $.processPublic = function() {
         var savedSettings = $.savedSettings;
         if(!savedSettings) {
@@ -382,7 +388,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                         savedSettings.IssueID = IssueID;
                         savedSettings.endpoint = selectedEndpoint.id;
 
-                        $.save(savedSettings);
+                        $.canvasflowSettings.save(savedSettings);
                         settingsDialog.destroy();
                     }
                 }
@@ -690,7 +696,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                             savedSettings.IssueID = IssueID;
                             savedSettings.endpoint = selectedEndpoint.id;
     
-                            $.save(savedSettings);
+                            $.canvasflowSettings.save(savedSettings);
                             settingsDialog.destroy();
                         }
                     }
@@ -717,7 +723,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
     };
 }
 var settingsFilePath = "~/canvasflow_settings.json";
-
-var dialog = new CanvasflowDialog(settingsFilePath, true);
+var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
+var dialog = new CanvasflowDialog(canvasflowSettings, true);
 dialog.show()
 

@@ -910,6 +910,28 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         return '' + id + '.jpg';
     }
 
+    $.isSupportedExtension = function(ext) {
+        switch(ext) {
+            case 'jpg':
+            case 'jpeg':
+            case 'eps':
+            case 'tiff':
+            case 'tif':       
+            case 'png':
+            case 'gif':
+            case 'jp2':
+            case 'pict':
+            case 'bmp':
+            case 'qtif':
+            case 'psd':
+            case 'sgi':
+            case 'tga':        
+                return false;
+            default:
+                return true;
+        }
+    }
+
     $.saveGraphicToImage = function(graphic, imageDirectory) {
         var id = graphic.id;
 
@@ -928,27 +950,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         destFilePath = imageDirectory + '/' + id + '.' + ext;
         destFilePath = destFilePath.replace(/%20/gi, ' ');
 
-        switch(ext) {
-            case 'jpg':
-            case 'jpeg':
-            case 'eps':
-            case 'tiff':
-            case 'tif':       
-            case 'png':
-            case 'gif':
-            case 'jp2':
-            case 'pict':
-            case 'bmp':
-            case 'qtif':
-            case 'psd':
-            case 'sgi':
-            case 'tga':        
-                break;
-            default:
-                return $.exportImageRepresentation(graphic, imageDirectory, id);
-        }
-
-        if(!originalImageFile.exists) {
+        if($.isNotSupportedExtension(ext) || !originalImageFile.exists) {
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
