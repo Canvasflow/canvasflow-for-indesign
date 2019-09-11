@@ -515,23 +515,15 @@ var CanvasflowApi = function (host) {
     };
 }
 
-var CanvasflowBuild = function(settingsPath, commandFilePath) {
+var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
     var $ = this;
 
-    $.settingsPath = settingsPath;
     $.commandFilePath = commandFilePath || '';
     $.imagesToResize = [];
     $.imagesToConvert = [];
     $.imageSizeCap = 5 * 1000000; // 5Mb
 
-    $.getSavedSettings = function() {
-        var file = new File($.settingsPath);
-        if(file.exists) {
-            file.open('r');
-            return JSON.parse(file.read());
-        }
-    };
-    $.savedSettings = $.getSavedSettings();
+    $.savedSettings = canvasflowSettings.getSavedSettings();
 
     $.createExportFolder = function() {
         var f = new Folder($.baseDirectory);
@@ -2042,7 +2034,7 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
     };
 }
 
-var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
+var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';
@@ -2053,16 +2045,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild, canvasflowApi) {
     $.pagesRange = null;
     $.cfBuild = cfBuild;
 
-    $.settingsPath = settingsPath;
-
-    $.getSavedSettings = function() {
-        var file = new File($.settingsPath);
-        if(file.exists) {
-            file.open('r');
-            return JSON.parse(file.read());
-        }
-    };
-    $.savedSettings = $.getSavedSettings();
+    $.savedSettings = canvasflowSettings.getSavedSettings();
 
     $.uploadZip = function(filepath) {
         var conn = new Socket;
@@ -2414,9 +2397,10 @@ var CanvasflowPlugin = function() {
                     return;
                 }
 
-                var canvasflowBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
+                var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
+                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, commandFilePath);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
-                var canvasflowPublish = new CanvasflowPublish(settingsFilePath, settings.endpoint, canvasflowBuild, canvasflowApi);
+                var canvasflowPublish = new CanvasflowPublish(canvasflowSettings, settings.endpoint, canvasflowBuild, canvasflowApi);
                 canvasflowPublish.publish();
             } catch(e) {
                 logError(e);
