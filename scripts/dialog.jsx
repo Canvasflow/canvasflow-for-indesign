@@ -1,8 +1,6 @@
 //@include "json2.js"
 //@include "api.js"
 
-
-
 var CanvasflowSettings = function(settingsPath){
     var $ = this;
     $.settingsPath = settingsPath;
@@ -40,7 +38,6 @@ var CanvasflowSettings = function(settingsPath){
         file.write(content);
         file.close();
     }
-
 }
 
 var CanvasflowDialog = function(canvasflowSettings, internal) {
@@ -565,7 +562,6 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
                 } else {
                     settingsDialog.styleDropDownGroup.dropDown.selection = 0;
                 }
-                
 
                 // Add Range selector
                 settingsDialog.pagesGroup = settingsDialog.add('group');

@@ -910,7 +910,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         return '' + id + '.jpg';
     }
 
-    $.isSupportedExtension = function(ext) {
+    $.isNotSupportedExtension = function(ext) {
         switch(ext) {
             case 'jpg':
             case 'jpeg':
@@ -1119,51 +1119,50 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
     }
 
     $.getConverImagesScriptContent = function() {
-        dataFile.writeln("CYAN='\033[1;36m'");
-        dataFile.writeln("NC='\033[0m'");
-        dataFile.writeln("GREEN='\033[1;32m'");
-        dataFile.writeln("YELLOW='\033[0;33m'");
-        dataFile.writeln("RED='\033[0;31m'");
-        
-        dataFile.writeln('clear');
-        dataFile.writeln('files=( ' + files.join(' ') + ' )');
-        dataFile.writeln('total_of_images=${#files[@]}');
-        dataFile.writeln('processed_images=0');
-        dataFile.writeln('for file in "${files[@]}"');
-        dataFile.writeln('\tdo :');
-        dataFile.writeln('\t\tprocessed_images=$((processed_images+1))');
-
-        dataFile.writeln('\t\tpercentage=$(($((processed_images * 100))/total_of_images))');
-        dataFile.writeln('\t\tif ((percentage < 100)); then');
-        dataFile.writeln('\t\t\tpercentage="${YELLOW}${percentage}%${NC}"');
-        dataFile.writeln('\t\telse');
-        dataFile.writeln('\t\t\tpercentage="${GREEN}${percentage}%${NC}"');
-        dataFile.writeln('\t\tfi');
-
-        dataFile.writeln('\t\tif [ $ext == "eps" ]; then');
-        dataFile.writeln('\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"');
-        dataFile.writeln('\t\t\teval $transform_to_pdf');
-        dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
-        dataFile.writeln('\t\t\teval $remove_command');
-        dataFile.writeln('\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"');
-        dataFile.writeln('\t\t\text="pdf"');
-        dataFile.writeln('\t\tfi');
-
-        dataFile.writeln('\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"');
-        dataFile.writeln('\t\text="${file#*.}"');
-        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
-        dataFile.writeln('\t\tfilename="${filename%.*}"');
-        dataFile.writeln('\t\tparent_filename="$(dirname "${file})")"');
-        dataFile.writeln('\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
-        dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""');
-        dataFile.writeln('\t\teval $convert_command > /dev/null 2>&1');
-        dataFile.writeln('\t\tclear');
-        dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
-        dataFile.writeln('\t\teval $remove_command');
-        dataFile.writeln('done');
-        dataFile.writeln("rm -f canvasflow_convert.lock");
         return [
-            ''
+            "CYAN='\033[1;36m'",
+            "NC='\033[0m'",
+            "GREEN='\033[1;32m'",
+            "YELLOW='\033[0;33m'",
+            "RED='\033[0;31m'",
+
+            'clear',
+            'files=( ' + files.join(' ') + ' )',
+            'total_of_images=${#files[@]}',
+            'processed_images=0',
+            'for file in "${files[@]}"',
+            '\tdo :',
+            '\t\tprocessed_images=$((processed_images+1))',
+
+            '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
+            '\t\tif ((percentage < 100)); then',
+            '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
+            '\t\telse',
+            '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
+            '\t\tfi',
+
+            '\t\tif [ $ext == "eps" ]; then',
+            '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
+            '\t\t\teval $transform_to_pdf',
+            '\t\t\tremove_command="rm \\\"${file}\\\""',
+            '\t\t\teval $remove_command',
+            '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
+            '\t\t\text="pdf"',
+            '\t\tfi',
+
+            '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
+            '\t\text="${file#*.}"',
+            '\t\tfilename=$(basename -- \"$file\")',
+            '\t\tfilename="${filename%.*}"',
+            '\t\tparent_filename="$(dirname "${file})")"',
+            '\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+            '\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""',
+            '\t\teval $convert_command > /dev/null 2>&1',
+            '\t\tclear',
+            '\t\tremove_command="rm \\\"${file}\\\""',
+            '\t\teval $remove_command',
+            'done',
+            'rm -f canvasflow_convert.lock'
         ]
     }
 
@@ -1325,10 +1324,9 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
     }
 }
 
-var CanvasflowDialog = function(settingsPath, internal) {
+var CanvasflowSettings = function(settingsPath){
     var $ = this;
     $.settingsPath = settingsPath;
-    $.isInternal = internal;
     $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true, "pages": "", "creationMode": "document"}';
 
     $.getSavedSettings = function() {
@@ -1347,7 +1345,30 @@ var CanvasflowDialog = function(settingsPath, internal) {
         return $.defaultSavedSettings;
     };
 
-    $.savedSettings = $.getSavedSettings();
+    $.save = function(settings) {
+        var file = new File($.settingsPath);
+        file.encoding = 'UTF-8';
+        file.open('w');
+        var content = '{"apiKey":"' + settings.apiKey + 
+        '", "PublicationID": "' + settings.PublicationID + 
+        '", "IssueID":"' + settings.IssueID + 
+        '", "StyleID": "' + settings.StyleID + 
+        '", "endpoint": "' + settings.endpoint + 
+        '", "previewImage": ' + settings.previewImage +
+        ', "pages": "' + (settings.pages || '') + '"' + 
+        ', "creationMode": "' + (settings.creationMode || 'document') + '"' +
+        '}';
+        file.write(content);
+        file.close();
+    }
+}
+
+var CanvasflowDialog = function(canvasflowSettings, internal) {
+    var $ = this;
+    $.canvasflowSettings = canvasflowSettings;
+    $.isInternal = internal;
+    
+    $.savedSettings = $.canvasflowSettings.getSavedSettings();
 
     $.getPublications = function(apiKey, canvasflowApi) {
         var reply = canvasflowApi.getPublications(apiKey);
@@ -1398,13 +1419,12 @@ var CanvasflowDialog = function(settingsPath, internal) {
             previewImage: $.savedSettings.previewImage || false,
             PublicationID: '',
             IssueID: '',
-            StyleID: '',
             endpoint: endpoint,
             pages: pages,
             creationMode: creationMode
         };
 
-        $.save(settings);
+        $.canvasflowSettings.save(settings);
     }
 
     $.resetFromApi = function(apiKey, canvasflowApi, endpoint) {
@@ -1449,7 +1469,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
             creationMode: creationMode
         };
 
-        $.save(settings);
+        $.canvasflowSettings.save(settings);
     }
 
     $.resetFromPublication = function(apiKey, PublicationID, canvasflowApi, endpoint) {
@@ -1496,27 +1516,9 @@ var CanvasflowDialog = function(settingsPath, internal) {
             creationMode: creationMode
         };
 
-        $.save(settings);
+        $.canvasflowSettings.save(settings);
     }
     // this.getOkCallback = getOkCallback.bind(this);
-
-    $.save = function(settings) {
-        var file = new File($.settingsPath);
-        file.encoding = 'UTF-8';
-        file.open('w');
-        var content = '{"apiKey":"' + settings.apiKey + 
-        '", "PublicationID": "' + settings.PublicationID + 
-        '", "IssueID":"' + settings.IssueID + 
-        '", "StyleID": "' + settings.StyleID + 
-        '", "endpoint": "' + settings.endpoint + 
-        '", "previewImage": ' + settings.previewImage +
-        ', "pages": "' + (settings.pages || '') + '"' + 
-        ', "creationMode": "' + (settings.creationMode || 'document') + '"' +
-        '}';
-        file.write(content);
-        file.close();
-    }
-
     $.processPublic = function() {
         var savedSettings = $.savedSettings;
         if(!savedSettings) {
@@ -1706,7 +1708,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                         savedSettings.IssueID = IssueID;
                         savedSettings.endpoint = selectedEndpoint.id;
 
-                        $.save(savedSettings);
+                        $.canvasflowSettings.save(savedSettings);
                         settingsDialog.destroy();
                     }
                 }
@@ -1883,7 +1885,6 @@ var CanvasflowDialog = function(settingsPath, internal) {
                 } else {
                     settingsDialog.styleDropDownGroup.dropDown.selection = 0;
                 }
-                
 
                 // Add Range selector
                 settingsDialog.pagesGroup = settingsDialog.add('group');
@@ -2014,7 +2015,7 @@ var CanvasflowDialog = function(settingsPath, internal) {
                             savedSettings.IssueID = IssueID;
                             savedSettings.endpoint = selectedEndpoint.id;
     
-                            $.save(savedSettings);
+                            $.canvasflowSettings.save(savedSettings);
                             settingsDialog.destroy();
                         }
                     }
@@ -2382,7 +2383,8 @@ var CanvasflowPlugin = function() {
     
         var canvasflowScriptActionSettings = app.scriptMenuActions.add("Settings");  
         canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
-            var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
+            var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
+            var canvasflowDialog = new CanvasflowDialog(canvasflowSettings, isInternal);
             canvasflowDialog.show();
         }); 
         
@@ -2390,12 +2392,27 @@ var CanvasflowPlugin = function() {
         canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
             var settingsFile = new File(settingsFilePath);
             if(!settingsFile.exists) {
-                alert('Settings file do not exist');
+                alert('Please open Settings first and register the api key');
                 return ;
             }
             try {
                 settingsFile.open('r');
                 var settings = JSON.parse(settingsFile.read());
+
+                if(!settings.endpoint) {
+                    alert('Please select an endpoint')
+                    return;
+                }
+
+                if(!settings.apiKey) {
+                    alert('Please register the api key in Settings')
+                    return;
+                }
+
+                if(!settings.PublicationID) {
+                    alert('Please select a publication in Settings')
+                    return;
+                }
 
                 var canvasflowBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
