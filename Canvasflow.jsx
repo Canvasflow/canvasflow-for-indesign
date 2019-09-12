@@ -1038,7 +1038,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
             dataFile.writeln(line);
         }
     }
-    $.getResizeImagesScriptContent = function() {
+    $.getResizeImagesScriptContent = function(files) {
         return [
             "CYAN='\033[1;36m'",
             "NC='\033[0m'",
@@ -1104,13 +1104,13 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
 
-        $.writeToFileScript(dataFile, $.getResizeImagesScriptContent());
+        $.writeToFileScript(dataFile, $.getResizeImagesScriptContent(files));
     
         dataFile.execute();
         dataFile.close();
     }
 
-    $.getConverImagesScriptContent = function() {
+    $.getConvertImagesScriptContent = function(files) {
         return [
             "CYAN='\033[1;36m'",
             "NC='\033[0m'",
@@ -1170,7 +1170,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
 
-        $.writeToFileScript(dataFile, $.getResizeImagesScriptContent());
+        $.writeToFileScript(dataFile, $.getConvertImagesScriptContent(files));
 
         dataFile.execute();
         dataFile.close();
