@@ -1050,7 +1050,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     }
     $.getResizeImagesScriptContent = function(files) {
         var lines = [];
-        if($.os = 'dos') {
+        if($.os === 'dos') {
             lines.push(
                 '@echo off',
                 'setlocal enabledelayedexpansion'
@@ -1168,7 +1168,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
     $.getConvertImagesScriptContent = function(files) {
         var lines = [];
-        if($.os = 'dos') {
+        if($.os === 'dos') {
             lines.push(
                 '@echo off',
                 'setlocal enabledelayedexpansion'
