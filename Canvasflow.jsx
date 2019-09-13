@@ -403,8 +403,17 @@ if (typeof JSON !== "object") {
 var apiKeySetting = 1;
 var isInternal = true;
 var canvasflowSettingsKey = "CanvasflowSettings";
+
+var os = 'unix';
+if(/^Win(.)*/gm.test($.os)) {
+    os = 'dos';
+}
+
 var settingsFilePath = "~/canvasflow_settings.json";
 var commandFilePath = "~/canvasflow_runner.command";
+if(os === 'dos') {
+    commandFilePath = "~/canvasflow_runner.bat";
+}
 
 var defaultHost = 'api.canvasflow.io';
 var logFilePath = "~/canvasflow_debug_log.log";
@@ -515,10 +524,11 @@ var CanvasflowApi = function (host) {
     };
 }
 
-var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
+var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     var $ = this;
 
     $.commandFilePath = commandFilePath || '';
+    $.os = os;
     $.imagesToResize = [];
     $.imagesToConvert = [];
     $.imageSizeCap = 5 * 1000000; // 5Mb
@@ -1039,66 +1049,112 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
         }
     }
     $.getResizeImagesScriptContent = function(files) {
-        return [
-            "CYAN='\033[1;36m'",
-            "NC='\033[0m'",
-            "GREEN='\033[1;32m'",
-            "YELLOW='\033[0;33m'",
-            "RED='\033[0;31m'",
-            'clear',
-            'files=( ' + files.join(' ') + ' )',
-            'total_of_images=${#files[@]}',
-            'processed_images=0',
-            'for file in "${files[@]}"',
-            '\tdo :',
-            '\t\text="${file#*.}"',
-            '\t\tprocessed_images=$((processed_images+1))',
-            '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
-            '\t\tif ((percentage < 100)); then',
-            '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
-            '\t\telse',
-            '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
-            '\t\tfi',
-            '\t\tif [ $ext == "eps" ]; then',
-            '\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""',
-            '\t\t\teval $transform_to_pdf',
-            '\t\t\tremove_command="rm \\\"${file}\\\""',
-            '\t\t\teval $remove_command',
-            '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
-            '\t\t\text="pdf"',
-            '\t\tfi',
-            '\t\tclear',
-            '\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
-            '\t\tfilename=$(basename -- \"$file\")',
-            '\t\tfilename="${filename%.*}"',
-            '\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"',
-            '\t\tif [ "$image_width" -gt "2048" ]; then',
-            '\t\t\tparent_filename="$(dirname "${file})")"',
-            '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
-            '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
-            '\t\t\teval $resize_command > /dev/null 2>&1',
-            '\t\telse',
-            '\t\t\tparent_filename="$(dirname "${file})")"',
-            '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
-            '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
-            '\t\t\teval $resize_command > /dev/null 2>&1',
-            '\t\tfi',
-            '\t\tif [ $ext != "jpeg" ] && [ $ext != "jpg" ]; then',
-            '\t\t\tremove_command="rm \\\"${file}\\\""',
-            '\t\t\teval $remove_command',
-            '\t\tfi',
-            'done',
-            'rm -f canvasflow_resizing.lock'
-        ];
+        var lines = [];
+        if($.os === 'dos') {
+            lines.push(
+                '@echo off',
+                'setlocal enabledelayedexpansion'
+            )
+            for(var i = 0; i < files.length; i++) {
+                lines.push('set Files['+i+']="'+files[i]+'"')
+            }
+            lines.push(
+                'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
+                '\tset original_image=!Files[%%n]!',
+                '\tset ext=""',
+                '\tset parent_dir=""',
+                '\tset filename=""',
+                '\tfor %%i in (!original_image!) do set ext=%%~xi',
+                '\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
+                '\tfor %%f in (!original_image!) do set filename=%%~nf',
+
+                '\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
+
+                '\tset image_width=""',
+                '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
+
+                '\tset target_filename="!parent_dir!!filename!.jpg"',
+                '\tif !image_width! gtr 2048 (',
+                '\t\tmagick convert -colorspace sRGB -geometry 2048x !original_image! -quality 50 !target_filename!',
+                '\t) else (',
+                '\t\tmagick convert -colorspace sRGB !original_image! -quality 50 !target_filename!',
+                '\t)',
+
+                '\tif "!ext!" neq ".jpg" (',
+                '\t\tdel "!parent_dir!!filename!!ext!"',
+                '\t)',
+
+                ')',
+            
+                'del %userprofile%\\canvasflow_resizing.lock'
+            )
+        } else {
+            lines = [
+                "CYAN='\033[1;36m'",
+                "NC='\033[0m'",
+                "GREEN='\033[1;32m'",
+                "YELLOW='\033[0;33m'",
+                "RED='\033[0;31m'",
+                'clear',
+                'files=( ' + files.join(' ') + ' )',
+                'total_of_images=${#files[@]}',
+                'processed_images=0',
+                'for file in "${files[@]}"',
+                '\tdo :',
+                '\t\text="${file#*.}"',
+                '\t\tprocessed_images=$((processed_images+1))',
+                '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
+                '\t\tif ((percentage < 100)); then',
+                '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
+                '\t\telse',
+                '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
+                '\t\tfi',
+                '\t\tif [ $ext == "eps" ]; then',
+                '\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""',
+                '\t\t\teval $transform_to_pdf',
+                '\t\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\t\teval $remove_command',
+                '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
+                '\t\t\text="pdf"',
+                '\t\tfi',
+                '\t\tclear',
+                '\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
+                '\t\tfilename=$(basename -- \"$file\")',
+                '\t\tfilename="${filename%.*}"',
+                '\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"',
+                '\t\tif [ "$image_width" -gt "2048" ]; then',
+                '\t\t\tparent_filename="$(dirname "${file})")"',
+                '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+                '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
+                '\t\t\teval $resize_command > /dev/null 2>&1',
+                '\t\telse',
+                '\t\t\tparent_filename="$(dirname "${file})")"',
+                '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+                '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
+                '\t\t\teval $resize_command > /dev/null 2>&1',
+                '\t\tfi',
+                '\t\tif [ $ext != "jpeg" ] && [ $ext != "jpg" ]; then',
+                '\t\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\t\teval $remove_command',
+                '\t\tfi',
+                'done',
+                'rm -f canvasflow_resizing.lock'
+            ];
+        }
+
+        return lines;
     }
 
     $.resizeImages = function(imageFiles) {
         var dataFile = new File($.commandFilePath);
-        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
     
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
-            files.push('"' + imageFiles[i] + '"');
+            if($.os === 'dos') {
+                files.push(imageFiles[i]);
+            } else {
+                files.push('"' + imageFiles[i] + '"');
+            }
         }
         dataFile.encoding = 'UTF-8';
         dataFile.open('w');
@@ -1111,60 +1167,103 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath) {
     }
 
     $.getConvertImagesScriptContent = function(files) {
-        return [
-            "CYAN='\033[1;36m'",
-            "NC='\033[0m'",
-            "GREEN='\033[1;32m'",
-            "YELLOW='\033[0;33m'",
-            "RED='\033[0;31m'",
+        var lines = [];
+        if($.os === 'dos') {
+            lines.push(
+                '@echo off',
+                'setlocal enabledelayedexpansion'
+            )
+            for(var i = 0; i < files.length; i++) {
+                lines.push('set Files['+i+']="'+files[i]+'"')
+            }
+            lines.push(
+                'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
+                '\tset original_image=!Files[%%n]!',
+                '\tset ext=""',
+                '\tset parent_dir=""',
+                '\tset filename=""',
 
-            'clear',
-            'files=( ' + files.join(' ') + ' )',
-            'total_of_images=${#files[@]}',
-            'processed_images=0',
-            'for file in "${files[@]}"',
-            '\tdo :',
-            '\t\tprocessed_images=$((processed_images+1))',
+                '\tfor %%i in (!original_image!) do set ext=%%~xi',
+                '\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
+                '\tfor %%f in (!original_image!) do set filename=%%~nf',
 
-            '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
-            '\t\tif ((percentage < 100)); then',
-            '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
-            '\t\telse',
-            '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
-            '\t\tfi',
+                '\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
 
-            '\t\tif [ $ext == "eps" ]; then',
-            '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
-            '\t\t\teval $transform_to_pdf',
-            '\t\t\tremove_command="rm \\\"${file}\\\""',
-            '\t\t\teval $remove_command',
-            '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
-            '\t\t\text="pdf"',
-            '\t\tfi',
+                '\tset image_width=""',
+                '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
 
-            '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
-            '\t\text="${file#*.}"',
-            '\t\tfilename=$(basename -- \"$file\")',
-            '\t\tfilename="${filename%.*}"',
-            '\t\tparent_filename="$(dirname "${file})")"',
-            '\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
-            '\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""',
-            '\t\teval $convert_command > /dev/null 2>&1',
-            '\t\tclear',
-            '\t\tremove_command="rm \\\"${file}\\\""',
-            '\t\teval $remove_command',
-            'done',
-            'rm -f canvasflow_convert.lock'
-        ]
+                '\tset target_filename="!parent_dir!!filename!.jpg"',
+                '\tmagick convert -colorspace sRGB !original_image! !target_filename!',
+
+                '\tif "!ext!" neq ".jpg" (',
+                '\t\tdel "!parent_dir!!filename!!ext!"',
+                '\t)',
+
+                ')',
+            
+                'del %userprofile%\\canvasflow_convert.lock'
+            )
+        } else {
+            lines = [
+                "CYAN='\033[1;36m'",
+                "NC='\033[0m'",
+                "GREEN='\033[1;32m'",
+                "YELLOW='\033[0;33m'",
+                "RED='\033[0;31m'",
+    
+                'clear',
+                'files=( ' + files.join(' ') + ' )',
+                'total_of_images=${#files[@]}',
+                'processed_images=0',
+                'for file in "${files[@]}"',
+                '\tdo :',
+                '\t\tprocessed_images=$((processed_images+1))',
+    
+                '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
+                '\t\tif ((percentage < 100)); then',
+                '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
+                '\t\telse',
+                '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
+                '\t\tfi',
+    
+                '\t\tif [ $ext == "eps" ]; then',
+                '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
+                '\t\t\teval $transform_to_pdf',
+                '\t\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\t\teval $remove_command',
+                '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
+                '\t\t\text="pdf"',
+                '\t\tfi',
+    
+                '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
+                '\t\text="${file#*.}"',
+                '\t\tfilename=$(basename -- \"$file\")',
+                '\t\tfilename="${filename%.*}"',
+                '\t\tparent_filename="$(dirname "${file})")"',
+                '\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+                '\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""',
+                '\t\teval $convert_command > /dev/null 2>&1',
+                '\t\tclear',
+                '\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\teval $remove_command',
+                'done',
+                'rm -f canvasflow_convert.lock'
+            ]
+        }
+
+        return lines;
     }
 
     $.convertImages = function(imageFiles) {
         var dataFile = new File($.commandFilePath);
-        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
 
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
-            files.push('"' + imageFiles[i] + '"');
+            if($.os === 'dos') {
+                files.push(imageFiles[i]);
+            } else {
+                files.push('"' + imageFiles[i] + '"');
+            }
         }
         dataFile.encoding = 'UTF-8';
         dataFile.open('w');
@@ -2398,7 +2497,7 @@ var CanvasflowPlugin = function() {
                 }
 
                 var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, commandFilePath);
+                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, commandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
                 var canvasflowPublish = new CanvasflowPublish(canvasflowSettings, settings.endpoint, canvasflowBuild, canvasflowApi);
                 canvasflowPublish.publish();
