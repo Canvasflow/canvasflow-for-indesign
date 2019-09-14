@@ -1,22 +1,16 @@
 //@include "json2.js"
+//@include "timeout.js"
 
-var CanvasflowBuild = function(settingsPath, commandFilePath) {
+var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     var $ = this;
 
-    $.settingsPath = settingsPath;
     $.commandFilePath = commandFilePath || '';
+    $.os = os;
     $.imagesToResize = [];
     $.imagesToConvert = [];
     $.imageSizeCap = 5 * 1000000; // 5Mb
 
-    $.getSavedSettings = function() {
-        var file = new File($.settingsPath);
-        if(file.exists) {
-            file.open('r');
-            return JSON.parse(file.read());
-        }
-    };
-    $.savedSettings = $.getSavedSettings();
+    $.savedSettings = canvasflowSettings.getSavedSettings();
 
     $.createExportFolder = function() {
         var f = new Folder($.baseDirectory);
@@ -51,7 +45,13 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
     $.getDocumentID = function(doc) {
         var uuid = $.getUUIDFromDocument(doc);
         if(!uuid) {
-            uuid = $.getUUID();
+            var dt = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = (dt + Math.random()*16)%16 | 0;
+                dt = Math.floor(dt/16);
+                return (c=='x' ? r :(r&0x3|0x8)).toString(16);
+            });
+            uuid = uuid.substring(0, uuid.length / 2);
             doc.insertLabel("CANVASFLOW-ID", uuid);
         }
 
@@ -75,7 +75,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
                 xf: xf,
                 yi: yi,
                 yf: yf
-            },*/    
+            },*/
             x: xi,
             y: yi
         }
@@ -119,6 +119,98 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         }
     }
 
+    $.getRealCharacter = function(content) {
+        if(content == SpecialCharacters.SINGLE_RIGHT_QUOTE) {
+            content = '\u2019';
+        } else if(content == SpecialCharacters.ARABIC_COMMA) {
+            content = '\u060C';
+        } else if(content == SpecialCharacters.ARABIC_KASHIDA) {
+            content = '\u0640';
+        } else if(content == SpecialCharacters.ARABIC_QUESTION_MARK) {
+            content = '\u061F';
+        } else if(content == SpecialCharacters.ARABIC_SEMICOLON) {
+            content = '\u061B';
+        } else if(content == SpecialCharacters.BULLET_CHARACTER) {
+            content = '\u2022';
+        } else if(content == SpecialCharacters.COPYRIGHT_SYMBOL) {
+            content = '\u00A9';
+        } else if(content == SpecialCharacters.DEGREE_SYMBOL) {
+            content = '\u00B0';
+        } else if(content == SpecialCharacters.DISCRETIONARY_HYPHEN) {
+            content = '\u00AD';
+        } else if(content == SpecialCharacters.DOTTED_CIRCLE) {
+            content = '\u25CC';
+        } else if(content == SpecialCharacters.DOUBLE_LEFT_QUOTE) {
+            content = '\u201C';
+        } else if(content == SpecialCharacters.DOUBLE_RIGHT_QUOTE) {
+            content = '\u201D';
+        } else if(content == SpecialCharacters.DOUBLE_STRAIGHT_QUOTE) {
+            content = '\u0022';
+        } else if(content == SpecialCharacters.ELLIPSIS_CHARACTER) {
+            content = '\u2026';
+        } else if(content == SpecialCharacters.EM_DASH) {
+            content = '\u2014';
+        } else if(content == SpecialCharacters.EM_SPACE) {
+            content = '\u2003';
+        } else if(content == SpecialCharacters.EN_DASH) {
+            content = '\u2013';
+        } else if(content == SpecialCharacters.EN_SPACE) {
+            content = '\u0020';
+        } else if(content == SpecialCharacters.HEBREW_GERESH) {
+            content = '\u05F3';
+        } else if(content == SpecialCharacters.HEBREW_GERSHAYIM) {
+            content = '\u05F4';
+        } else if(content == SpecialCharacters.HEBREW_MAQAF) {
+            content = '\u05BE';
+        } else if(content == SpecialCharacters.LEFT_TO_RIGHT_EMBEDDING) {
+            content = '\u202A';
+        } else if(content == SpecialCharacters.LEFT_TO_RIGHT_MARK) {
+            content = '\u200E';
+        } else if(content == SpecialCharacters.LEFT_TO_RIGHT_OVERRIDE) {
+            content = '\u202D';
+        } else if(content == SpecialCharacters.NONBREAKING_HYPHEN) {
+            content = '\u2011';
+        } else if(content == SpecialCharacters.NONBREAKING_SPACE) {
+            content = '\u00A0';
+        } else if(content == SpecialCharacters.PARAGRAPH_SYMBOL) {
+            content = '\u2761';
+        } else if(content == SpecialCharacters.POP_DIRECTIONAL_FORMATTING) {
+            content = '\u202C';
+        } else if(content == SpecialCharacters.PREVIOUS_PAGE_NUMBER) {
+            content = '\u2397';
+        } else if(content == SpecialCharacters.PUNCTUATION_SPACE) {
+            content = '\u2008';
+        } else if(content == SpecialCharacters.REGISTERED_TRADEMARK) {
+            content = '\u00AE';
+        } else if(content == SpecialCharacters.RIGHT_TO_LEFT_EMBEDDING) {
+            content = '\u202B';
+        } else if(content == SpecialCharacters.RIGHT_TO_LEFT_MARK) {
+            content = '\u200F';
+        } else if(content == SpecialCharacters.RIGHT_TO_LEFT_OVERRIDE) {
+            content = '\u202E';
+        } else if(content == SpecialCharacters.SECTION_MARKER) {
+            content = '\u00A7';
+        } else if(content == SpecialCharacters.SECTION_SYMBOL) {
+            content = '\u00A7';
+        } else if(content == SpecialCharacters.SINGLE_LEFT_QUOTE) {
+            content = '\u2018';
+        } else if(content == SpecialCharacters.SINGLE_STRAIGHT_QUOTE) {
+            content = '\u0027';
+        } else if(content == SpecialCharacters.SIXTH_SPACE) {
+            content = '\u2159';
+        } else if(content == SpecialCharacters.TRADEMARK_SYMBOL) {
+            content = '\u2122';
+        } else if(content == SpecialCharacters.ZERO_WIDTH_JOINER) {
+            content = '\u200D';
+        } else if(content == SpecialCharacters.ZERO_WIDTH_NONJOINER) {
+            content = '\u200C';
+        } else if(content == SpecialCharacters.FORCED_LINE_BREAK) {
+            content = '\u000A';
+        }
+
+        return content
+    }
+
     $.getSubstrings = function(characters, textFrameID) {
         var data = [];
         var substring = null;
@@ -142,29 +234,24 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
                 try {
                     fontStyle = character.appliedFont.fontStyleName || 'Regular';
                 } catch(e) {}
+                
                 substring = {
                     content: character.contents,
                     font: {
                         fontFamily: character.appliedFont.fontFamily,
                         fontSize: character.pointSize,
                         fontStyle: fontStyle
-                        // fontStyle: character.appliedFont.fontStyleName || 'Regular'
                     }
                 }
                 continue;
             }
 
-            var previousFontFamily = substring.font.fontFamily;
-            var previousFontSize = substring.font.fontFamily;
             var previousFontStyle = substring.font.fontStyle;
-            var currentFontFamily = character.appliedFont.fontFamily;
-            var currentFontSize = character.appliedFont.fontFamily;
             var currentFontStyle = 'Regular';
             try {
                 currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
             } catch(e) {}
 
-           // if((previousFontFamily !== currentFontFamily) || (previousFontSize !== currentFontSize)) {
             if(previousFontStyle !== currentFontStyle) {    
                 data.push(substring);
                 substring = {
@@ -179,94 +266,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
                 continue;
             }
 
-            var content = character.contents;
-            if(content == SpecialCharacters.SINGLE_RIGHT_QUOTE) {
-                content = '\u2019';
-            } else if(content == SpecialCharacters.ARABIC_COMMA) {
-                content = '\u060C';
-            } else if(content == SpecialCharacters.ARABIC_KASHIDA) {
-                content = '\u0640';
-            } else if(content == SpecialCharacters.ARABIC_QUESTION_MARK) {
-                content = '\u061F';
-            } else if(content == SpecialCharacters.ARABIC_SEMICOLON) {
-                content = '\u061B';
-            } else if(content == SpecialCharacters.BULLET_CHARACTER) {
-                content = '\u2022';
-            } else if(content == SpecialCharacters.COPYRIGHT_SYMBOL) {
-                content = '\u00A9';
-            } else if(content == SpecialCharacters.DEGREE_SYMBOL) {
-                content = '\u00B0';
-            } else if(content == SpecialCharacters.DISCRETIONARY_HYPHEN) {
-                content = '\u00AD';
-            } else if(content == SpecialCharacters.DOTTED_CIRCLE) {
-                content = '\u25CC';
-            } else if(content == SpecialCharacters.DOUBLE_LEFT_QUOTE) {
-                content = '\u201C';
-            } else if(content == SpecialCharacters.DOUBLE_RIGHT_QUOTE) {
-                content = '\u201D';
-            } else if(content == SpecialCharacters.DOUBLE_STRAIGHT_QUOTE) {
-                content = '\u0022';
-            } else if(content == SpecialCharacters.ELLIPSIS_CHARACTER) {
-                content = '\u2026';
-            } else if(content == SpecialCharacters.EM_DASH) {
-                content = '\u2014';
-            } else if(content == SpecialCharacters.EM_SPACE) {
-                content = '\u2003';
-            } else if(content == SpecialCharacters.EN_DASH) {
-                content = '\u2013';
-            } else if(content == SpecialCharacters.EN_SPACE) {
-                content = '\u0020';
-            } else if(content == SpecialCharacters.HEBREW_GERESH) {
-                content = '\u05F3';
-            } else if(content == SpecialCharacters.HEBREW_GERSHAYIM) {
-                content = '\u05F4';
-            } else if(content == SpecialCharacters.HEBREW_MAQAF) {
-                content = '\u05BE';
-            } else if(content == SpecialCharacters.LEFT_TO_RIGHT_EMBEDDING) {
-                content = '\u202A';
-            } else if(content == SpecialCharacters.LEFT_TO_RIGHT_MARK) {
-                content = '\u200E';
-            } else if(content == SpecialCharacters.LEFT_TO_RIGHT_OVERRIDE) {
-                content = '\u202D';
-            } else if(content == SpecialCharacters.NONBREAKING_HYPHEN) {
-                content = '\u2011';
-            } else if(content == SpecialCharacters.NONBREAKING_SPACE) {
-                content = '\u00A0';
-            } else if(content == SpecialCharacters.PARAGRAPH_SYMBOL) {
-                content = '\u2761';
-            } else if(content == SpecialCharacters.POP_DIRECTIONAL_FORMATTING) {
-                content = '\u202C';
-            } else if(content == SpecialCharacters.PREVIOUS_PAGE_NUMBER) {
-                content = '\u2397';
-            } else if(content == SpecialCharacters.PUNCTUATION_SPACE) {
-                content = '\u2008';
-            } else if(content == SpecialCharacters.REGISTERED_TRADEMARK) {
-                content = '\u00AE';
-            } else if(content == SpecialCharacters.RIGHT_TO_LEFT_EMBEDDING) {
-                content = '\u202B';
-            } else if(content == SpecialCharacters.RIGHT_TO_LEFT_MARK) {
-                content = '\u200F';
-            } else if(content == SpecialCharacters.RIGHT_TO_LEFT_OVERRIDE) {
-                content = '\u202E';
-            } else if(content == SpecialCharacters.SECTION_MARKER) {
-                content = '\u00A7';
-            } else if(content == SpecialCharacters.SECTION_SYMBOL) {
-                content = '\u00A7';
-            } else if(content == SpecialCharacters.SINGLE_LEFT_QUOTE) {
-                content = '\u2018';
-            } else if(content == SpecialCharacters.SINGLE_STRAIGHT_QUOTE) {
-                content = '\u0027';
-            } else if(content == SpecialCharacters.SIXTH_SPACE) {
-                content = '\u2159';
-            } else if(content == SpecialCharacters.TRADEMARK_SYMBOL) {
-                content = '\u2122';
-            } else if(content == SpecialCharacters.ZERO_WIDTH_JOINER) {
-                content = '\u200D';
-            } else if(content == SpecialCharacters.ZERO_WIDTH_NONJOINER) {
-                content = '\u200C';
-            } else if(content == SpecialCharacters.FORCED_LINE_BREAK) {
-                content = '\u000A';
-            }
+            var content = $.getRealCharacter(character.contents);
 
             substring.content = substring.content + content;
         }
@@ -389,6 +389,28 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         return '' + id + '.jpg';
     }
 
+    $.isNotSupportedExtension = function(ext) {
+        switch(ext) {
+            case 'jpg':
+            case 'jpeg':
+            case 'eps':
+            case 'tiff':
+            case 'tif':       
+            case 'png':
+            case 'gif':
+            case 'jp2':
+            case 'pict':
+            case 'bmp':
+            case 'qtif':
+            case 'psd':
+            case 'sgi':
+            case 'tga':        
+                return false;
+            default:
+                return true;
+        }
+    }
+
     $.saveGraphicToImage = function(graphic, imageDirectory) {
         var id = graphic.id;
 
@@ -407,26 +429,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         destFilePath = imageDirectory + '/' + id + '.' + ext;
         destFilePath = destFilePath.replace(/%20/gi, ' ');
 
-        switch(ext) {
-            case 'jpg':
-            case 'jpeg':
-            case 'tiff':
-            case 'tif':       
-            case 'png':
-            case 'gif':
-            case 'jp2':
-            case 'pict':
-            case 'bmp':
-            case 'qtif':
-            case 'psd':
-            case 'sgi':
-            case 'tga':        
-                break;
-            default:
-                return $.exportImageRepresentation(graphic, imageDirectory, id);
-        }
-
-        if(!originalImageFile.exists) {
+        if($.isNotSupportedExtension(ext) || !originalImageFile.exists) {
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
@@ -448,17 +451,15 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
 
         if(originalImageSize >= $.imageSizeCap) {
-            $.imagesToResize.push(File(destFilePath).fsName);
+            $.imagesToResize.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
             return '' + id + '.' + targetExt;
         }
         
         if(targetExt !== ext) {
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
-
-        ext = targetExt;
                
-        return '' + id + '.' + ext;
+        return '' + id + '.' + targetExt;
     }
 
     $.getImageFromGraphics = function(graphics, data, baseDirectory) {
@@ -468,7 +469,7 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
                 var graphic = graphics[i];
                 if(graphic.isValid) {
                     var imagePath;
-                    var position = $.getItemPosition(graphic.parent.visibleBounds);
+                    var position = $.getItemPosition(graphic.parent.geometricBounds);
                     var imageExist = $.checkIfGraphicImageExist(graphic);
                     if(imageExist) {
                         if(graphic.visible) {
@@ -518,71 +519,234 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         } catch(e) {}
     }
 
+    $.writeToFileScript = function(dataFile, lines) {
+        for(var i=0; i < lines.length; i++) {
+            var line = lines[i];
+            dataFile.writeln(line);
+        }
+    }
+    $.getResizeImagesScriptContent = function(files) {
+        var lines = [];
+        if($.os === 'dos') {
+            lines.push(
+                '@echo off',
+                'setlocal enabledelayedexpansion'
+            )
+            for(var i = 0; i < files.length; i++) {
+                lines.push('set Files['+i+']="'+files[i]+'"')
+            }
+            lines.push(
+                'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
+                '\tset original_image=!Files[%%n]!',
+                '\tset ext=""',
+                '\tset parent_dir=""',
+                '\tset filename=""',
+                '\tfor %%i in (!original_image!) do set ext=%%~xi',
+                '\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
+                '\tfor %%f in (!original_image!) do set filename=%%~nf',
+
+                '\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
+
+                '\tset image_width=""',
+                '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
+
+                '\tset target_filename="!parent_dir!!filename!.jpg"',
+                '\tif !image_width! gtr 2048 (',
+                '\t\tmagick convert -colorspace sRGB -geometry 2048x !original_image! -quality 50 !target_filename!',
+                '\t) else (',
+                '\t\tmagick convert -colorspace sRGB !original_image! -quality 50 !target_filename!',
+                '\t)',
+
+                '\tif "!ext!" neq ".jpg" (',
+                '\t\tdel "!parent_dir!!filename!!ext!"',
+                '\t)',
+
+                ')',
+            
+                'del %userprofile%\\canvasflow_resizing.lock'
+            )
+        } else {
+            lines = [
+                "CYAN='\033[1;36m'",
+                "NC='\033[0m'",
+                "GREEN='\033[1;32m'",
+                "YELLOW='\033[0;33m'",
+                "RED='\033[0;31m'",
+                'clear',
+                'files=( ' + files.join(' ') + ' )',
+                'total_of_images=${#files[@]}',
+                'processed_images=0',
+                'for file in "${files[@]}"',
+                '\tdo :',
+                '\t\text="${file#*.}"',
+                '\t\tprocessed_images=$((processed_images+1))',
+                '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
+                '\t\tif ((percentage < 100)); then',
+                '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
+                '\t\telse',
+                '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
+                '\t\tfi',
+                '\t\tif [ $ext == "eps" ]; then',
+                '\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""',
+                '\t\t\teval $transform_to_pdf',
+                '\t\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\t\teval $remove_command',
+                '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
+                '\t\t\text="pdf"',
+                '\t\tfi',
+                '\t\tclear',
+                '\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
+                '\t\tfilename=$(basename -- \"$file\")',
+                '\t\tfilename="${filename%.*}"',
+                '\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"',
+                '\t\tif [ "$image_width" -gt "2048" ]; then',
+                '\t\t\tparent_filename="$(dirname "${file})")"',
+                '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+                '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
+                '\t\t\teval $resize_command > /dev/null 2>&1',
+                '\t\telse',
+                '\t\t\tparent_filename="$(dirname "${file})")"',
+                '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+                '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
+                '\t\t\teval $resize_command > /dev/null 2>&1',
+                '\t\tfi',
+                '\t\tif [ $ext != "jpeg" ] && [ $ext != "jpg" ]; then',
+                '\t\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\t\teval $remove_command',
+                '\t\tfi',
+                'done',
+                'rm -f canvasflow_resizing.lock'
+            ];
+        }
+
+        return lines;
+    }
 
     $.resizeImages = function(imageFiles) {
         var dataFile = new File($.commandFilePath);
-        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
     
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
-            files.push('"' + imageFiles[i] + '"');
+            if($.os === 'dos') {
+                files.push(imageFiles[i]);
+            } else {
+                files.push('"' + imageFiles[i] + '"');
+            }
         }
         dataFile.encoding = 'UTF-8';
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
-        
-        dataFile.writeln('clear');
-        dataFile.writeln('files=( ' + files.join(' ') + ' )');
-        dataFile.writeln('for file in "${files[@]}"');
-        dataFile.writeln('\tdo :');
-        dataFile.writeln('\t\text="${file#*.}"');
-        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
-        dataFile.writeln('\t\tfilename="${filename%.*}"');
-        dataFile.writeln('\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"');
-        dataFile.writeln('\t\tif [ "$image_width" -gt "2048" ]; then');
-        dataFile.writeln('\t\t\tparent_filename="$(dirname "${file})")"');
-        dataFile.writeln('\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
-        dataFile.writeln('\t\t\tresize_command="sips -s formatOptions 1 --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ');
-        dataFile.writeln('\t\t\teval $resize_command');
-        dataFile.writeln('\t\tfi');
-        dataFile.writeln('\t\tif [ $ext != "jpeg" ]; then');
-        dataFile.writeln('\t\t\tremove_command="rm \\\"${file}\\\""');
-        dataFile.writeln('\t\t\teval $remove_command');
-        dataFile.writeln('\t\tfi');
-        dataFile.writeln('done');
-        dataFile.writeln(closeTerminalCommand);
+
+        $.writeToFileScript(dataFile, $.getResizeImagesScriptContent(files));
     
         dataFile.execute();
         dataFile.close();
     }
 
+    $.getConvertImagesScriptContent = function(files) {
+        var lines = [];
+        if($.os === 'dos') {
+            lines.push(
+                '@echo off',
+                'setlocal enabledelayedexpansion'
+            )
+            for(var i = 0; i < files.length; i++) {
+                lines.push('set Files['+i+']="'+files[i]+'"')
+            }
+            lines.push(
+                'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
+                '\tset original_image=!Files[%%n]!',
+                '\tset ext=""',
+                '\tset parent_dir=""',
+                '\tset filename=""',
+
+                '\tfor %%i in (!original_image!) do set ext=%%~xi',
+                '\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
+                '\tfor %%f in (!original_image!) do set filename=%%~nf',
+
+                '\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
+
+                '\tset image_width=""',
+                '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
+
+                '\tset target_filename="!parent_dir!!filename!.jpg"',
+                '\tmagick convert -colorspace sRGB !original_image! !target_filename!',
+
+                '\tif "!ext!" neq ".jpg" (',
+                '\t\tdel "!parent_dir!!filename!!ext!"',
+                '\t)',
+
+                ')',
+            
+                'del %userprofile%\\canvasflow_convert.lock'
+            )
+        } else {
+            lines = [
+                "CYAN='\033[1;36m'",
+                "NC='\033[0m'",
+                "GREEN='\033[1;32m'",
+                "YELLOW='\033[0;33m'",
+                "RED='\033[0;31m'",
+    
+                'clear',
+                'files=( ' + files.join(' ') + ' )',
+                'total_of_images=${#files[@]}',
+                'processed_images=0',
+                'for file in "${files[@]}"',
+                '\tdo :',
+                '\t\tprocessed_images=$((processed_images+1))',
+    
+                '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
+                '\t\tif ((percentage < 100)); then',
+                '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
+                '\t\telse',
+                '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
+                '\t\tfi',
+    
+                '\t\tif [ $ext == "eps" ]; then',
+                '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
+                '\t\t\teval $transform_to_pdf',
+                '\t\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\t\teval $remove_command',
+                '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
+                '\t\t\text="pdf"',
+                '\t\tfi',
+    
+                '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
+                '\t\text="${file#*.}"',
+                '\t\tfilename=$(basename -- \"$file\")',
+                '\t\tfilename="${filename%.*}"',
+                '\t\tparent_filename="$(dirname "${file})")"',
+                '\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
+                '\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""',
+                '\t\teval $convert_command > /dev/null 2>&1',
+                '\t\tclear',
+                '\t\tremove_command="rm \\\"${file}\\\""',
+                '\t\teval $remove_command',
+                'done',
+                'rm -f canvasflow_convert.lock'
+            ]
+        }
+
+        return lines;
+    }
+
     $.convertImages = function(imageFiles) {
         var dataFile = new File($.commandFilePath);
-        var closeTerminalCommand = 'kill -9 $(ps -p $(ps -p $PPID -o ppid=) -o ppid=)';
 
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
-            files.push('"' + imageFiles[i] + '"');
+            if($.os === 'dos') {
+                files.push(imageFiles[i]);
+            } else {
+                files.push('"' + imageFiles[i] + '"');
+            }
         }
         dataFile.encoding = 'UTF-8';
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
-        
-        dataFile.writeln('clear');
-        dataFile.writeln('files=( ' + files.join(' ') + ' )');
-        dataFile.writeln('for file in "${files[@]}"');
-        dataFile.writeln('\tdo :');
-        dataFile.writeln('\t\text="${file#*.}"');
-        dataFile.writeln('\t\tfilename=$(basename -- \"$file\")');
-        dataFile.writeln('\t\tfilename="${filename%.*}"');
-        dataFile.writeln('\t\tparent_filename="$(dirname "${file})")"');
-        dataFile.writeln('\t\ttarget_filename="${parent_filename}/${filename}.jpg"');
-        dataFile.writeln('\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\""');
-        dataFile.writeln('\t\teval $convert_command');
-        dataFile.writeln('\t\tremove_command="rm \\\"${file}\\\""');
-        dataFile.writeln('\t\teval $remove_command');
-        dataFile.writeln('done');
-        dataFile.writeln(closeTerminalCommand);
+
+        $.writeToFileScript(dataFile, $.getConvertImagesScriptContent(files));
 
         dataFile.execute();
         dataFile.close();
@@ -590,7 +754,16 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
 
     $.createPackage = function(baseFile) {
         try {
-            app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+            var resizingLockFile = new File('~/canvasflow_resizing.lock')
+            var convertLockFile = new File('~/canvasflow_convert.lock')
+            if(!resizingLockFile.exists && !convertLockFile.exists) {
+                app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+                return;
+            }
+
+            setTimeout(function() {
+                $.createPackage(baseFile);
+            }, 1000);
         } catch(e) {
             setTimeout(function() {
                 $.createPackage(baseFile);
@@ -615,16 +788,23 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         }
 
         var baseFile = new File(baseDirectory);
-        if(!!$.imagesToResize.length) {
+
+        if(!!$.imagesToResize.length) { 
+            var lockFile = new File('~/canvasflow_resizing.lock')
+            lockFile.encoding = 'UTF-8';
+            lockFile.open('w');
+            lockFile.close();
             $.resizeImages($.imagesToResize);
         }
         if(!!$.imagesToConvert.length) {
+            var lockFile = new File('~/canvasflow_convert.lock')
+            lockFile.encoding = 'UTF-8';
+            lockFile.open('w');
+            lockFile.close();
             $.convertImages($.imagesToConvert);
         }
-        
-        setTimeout(function() {
-            $.createPackage(baseFile);
-        }, 1000);
+
+        $.createPackage(baseFile);
 
         return baseFile.fsName + '.zip';
     }
@@ -711,8 +891,3 @@ var CanvasflowBuild = function(settingsPath, commandFilePath) {
         return $.buildZipFile(document, response, baseDirectory);
     }
 }
-
-var settingsFilePath = "~/canvaflow_settings.json";
-var commandFilePath = "~/resize.command";
-var cfBuild = new CanvasflowBuild(settingsFilePath, commandFilePath);
-cfBuild.build();
