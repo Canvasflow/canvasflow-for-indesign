@@ -19,8 +19,8 @@ function concatenate() {
         './modules/api.js',
         './modules/build.js',
         './modules/settings.js',
-        './modules/dialog.jsx',
-        './modules/publish.jsx',
+        './modules/dialog.js',
+        './modules/publish.js',
         './modules/main.js',
     ])
     .pipe(concat('Canvasflow.jsx'))
