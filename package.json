@@ -1,6 +1,6 @@
 {
   "name": "test-build",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,6 @@
   "devDependencies": {
     "gulp": "^4.0.2",
     "gulp-beautify": "^3.0.0",
-    "gulp-beautify-code": "^2.0.4",
     "gulp-concat": "^2.6.1",
     "gulp-remove-empty-lines": "^0.1.0",
     "gulp-strip-comments": "^2.5.2"

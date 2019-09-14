@@ -3,10 +3,9 @@ const path = require('path');
 
 const gulp = require('gulp');
 const concat = require('gulp-concat');
-var strip = require('gulp-strip-comments');
-var beautifyCode = require('gulp-beautify-code');
-var beautify = require('gulp-beautify');
-var removeEmptyLines = require('gulp-remove-empty-lines');
+const strip = require('gulp-strip-comments');
+const beautify = require('gulp-beautify');
+const removeEmptyLines = require('gulp-remove-empty-lines');
 
 function concatenate() {
     return gulp.src([
@@ -25,13 +24,13 @@ function concatenate() {
     ])
     .pipe(concat('Canvasflow.jsx'))
     .pipe(strip())
-    .pipe(beautifyCode())
     .pipe(beautify({ 
-        indent_size: 4 
+        indent_size: 4,
+        indent_with_tabs: true
     }))
     .pipe(removeEmptyLines({
         removeComments: true
-      }))
+    }))
     .pipe(gulp.dest('./build/'));
 }
 
