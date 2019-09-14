@@ -28,13 +28,6 @@ Error.prototype.toLog = function(logPath) {
     file.close();
 }
 
-try {
-    throw new Error("Houston, we have a problem.");
-}
-catch (e) {
-    logError(e)
-}
-
 function logError(e) {
     var file = new File("~/canvasflow_error_log.json");
     file.encoding = 'UTF-8';

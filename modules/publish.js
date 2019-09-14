@@ -1,10 +1,8 @@
 //@include "json2.js"
 //@include "api.js"
 //@include "build.jsx"
-var host = "http://api.cflowdev.com/v1";
-var settingsFilePath = "~/canvaflow_settings.json";
 
-var CanvasflowPublish = function(settingsPath, host, cfBuild) {
+var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';
@@ -13,17 +11,9 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     $.canvasflowApi = null;
     $.dialog = {};
     $.pagesRange = null;
+    $.cfBuild = cfBuild;
 
-    $.settingsPath = settingsPath;
-
-    $.getSavedSettings = function() {
-        var file = new File($.settingsPath);
-        if(file.exists) {
-            file.open('r');
-            return JSON.parse(file.read());
-        }
-    };
-    $.savedSettings = $.getSavedSettings();
+    $.savedSettings = canvasflowSettings.getSavedSettings();
 
     $.uploadZip = function(filepath) {
         var conn = new Socket;
@@ -44,6 +34,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
+        var creationMode = $.savedSettings.creationMode;
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;
@@ -61,6 +52,12 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             + "Content-Disposition: form-data; name=\"secretKey\"\r\n"
             + "\r\n"
             + apiKey + "\r\n"
+            + "\r\n";
+
+            var creationModeContent = "--" + boundary + "\r\n"
+            + "Content-Disposition: form-data; name=\"creationMode\"\r\n"
+            + "\r\n"
+            + creationMode + "\r\n"
             + "\r\n";
 
             var articleNameContent = "--" + boundary + "\r\n"
@@ -92,6 +89,8 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             + "\r\n"
             + "indesign" + "\r\n"
             + "\r\n";
+
+            $.uuid = $.cfBuild.uuid || '';
     
             var articleIdContent = "--" + boundary + "\r\n"
             + "Content-Disposition: form-data; name=\"articleId\"\r\n"
@@ -102,6 +101,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     
             var content = fileContent
             + apiKeyContent
+            + creationModeContent
             + articleNameContent
             + contentType
             + PublicationIDContent
@@ -130,6 +130,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
                 // var response = JSON.parse(data);
                 return true;
             } else {
+                alert(reply);
                 return false;
             }
         } else {
@@ -202,7 +203,6 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
     }
 
     $.displayConfirmDialog = function(onPublish, onCancel) {
-        
         var dialog = new Window('dialog', 'Publish', undefined, {closeButton: false});
         dialog.orientation = 'column';
         dialog.alignment = 'right';
@@ -257,7 +257,7 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
                 dialog.close(0);
                 onPublish();
             }catch(e) {
-                alert('Error: ' + e.message);
+                logError(e);
             }
         }
 
@@ -265,12 +265,15 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             dialog.close(0);
             onCancel();
         }
-        
-        $.dialogSUI = dialog.show();
-        return;
+    
+        dialog.show();
     }
 
     $.publish = function() {
+        if(canvasflowApi.getHealth() === null) {
+            throw new Error('Canvasflow Service not currently available');
+        }
+
         if (app.documents.length != 0){
             var zipFilePath = '';
             try {
@@ -280,21 +283,24 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
             } catch(e) {
-                alert(e.message);
+                logError(e);
                 return;
             }
 
             var onPublish = function() {
                 try {
+                    var publishStartTime = (new Date()).getTime();
                     if($.uploadZip(zipFilePath)) {
                         $.cleanUp();
                         new File(zipFilePath).remove()
                         alert('Article was uploaded successfully');
+                        logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
                     } else {
+                        logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
                         throw new Error('Error uploading the content, please try again');
                     }
                 } catch(e) {
-                    alert(e.message);
+                    logError(e);
                 }
             }
             
@@ -304,13 +310,21 @@ var CanvasflowPublish = function(settingsPath, host, cfBuild) {
             }
             
             // onPublish();
-            $.displayConfirmDialog(onPublish, onCancel);
+            try {
+                $.displayConfirmDialog(onPublish, onCancel);
+            } catch(e) {
+                logError(e);
+            }
         }
         else{
             alert ("Please open a document.");
         }
     }
 }
+/*
+var host = "http://api.cflowdev.com/v1";
+var settingsFilePath = "~/canvaflow_settings.json";
+
 var cfBuild = new CanvasflowBuild(settingsFilePath);
 var cfPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", cfBuild);
-cfPublish.publish();
+cfPublish.publish();*/
