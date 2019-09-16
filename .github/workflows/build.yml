@@ -1,0 +1,25 @@
+name: Build
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      
+      - run: mkdir -p app/build
+
+      - run: echo hello > mkdir -p app/build/example.txt
+
+      - uses: actions/upload-artifact@master
+        with:
+          name: my-artifact
+          path: app/build
+
+      - name: Use Node.js $
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10'
+      - name: test
+        run: |
+          npm install
+          npm run build
