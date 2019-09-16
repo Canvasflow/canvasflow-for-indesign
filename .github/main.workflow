@@ -13,5 +13,5 @@ action "npm build" {
   needs = "npm ci"
   uses = "docker://node:alpine"
   runs = "npm"
-  args = "build"
+  args = "run build"
 }
