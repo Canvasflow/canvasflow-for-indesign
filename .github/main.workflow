@@ -4,6 +4,7 @@ workflow "Build " {
 }
 
 action "npm ci" {
+  uses = "docker://node:alpine"
   runs = "npm"
   args = "ci"
 }
