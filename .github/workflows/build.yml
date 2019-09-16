@@ -8,7 +8,7 @@ jobs:
       
       - run: mkdir -p app/build
 
-      - run: echo hello > mkdir -p app/build/example.txt
+      - run: echo hello > app/build/example.txt
 
       - uses: actions/upload-artifact@master
         with:
