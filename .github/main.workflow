@@ -1,15 +1,17 @@
-jobs:
-  build:
-    runs-on: ubuntu-16.04
-    strategy:
-      matrix:
-        node: [ '10', '8' ]
-    name: Node ${{ matrix.node }} sample
-    steps:
-      - uses: actions/checkout@v1
-      - name: Setup node
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node }}
-      - run: npm install
-      - run: npm build
+workflow "Build" {
+  on = "push"
+  resolves = ["npm build"]
+}
+
+action "npm ci" {
+  uses = "docker://node:alpine"
+  runs = "npm"
+  args = "ci"
+}
+
+action "npm build" {
+  needs = "npm ci"
+  uses = "docker://node:alpine"
+  runs = "npm"
+  args = "build"
+}
