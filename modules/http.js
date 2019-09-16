@@ -8,7 +8,8 @@ var HTTPFile = function (url,port) {
     this.port = port;
     this.httpPrefix = this.url.match(/http:\/\//);
     this.domain = this.httpPrefix == null ? this.url.split("/")[0]+":"+this.port :this.url.split("/")[2]+":"+this.port;
-    this.call = "GET "+ (this.httpPrefix == null ? "http://"+this.url : this.url)+" HTTP/1.0\r\nHost:" +(this.httpPrefix == null ? this.url.split("/")[0] :this.url.split("/")[2])+"\r\nConnection: close\r\n\r\n";
+    // this.call = "GET "+ (this.httpPrefix == null ? "http://"+this.url : this.url)+" HTTP/1.0\r\nHost:" +(this.httpPrefix == null ? this.url.split("/")[0] :this.url.split("/")[2])+"\r\nConnection: close\r\n\r\n";
+    this.call = "GET "+ (this.httpPrefix == null ? "http://"+this.url : this.url)+" HTTP/1.0\r\nHost:" +(this.httpPrefix == null ? this.url.split("/")[0] :this.url.split("/")[2])+"\r\nAccept-encoding: gzip\r\nConnection: close\r\n\r\n";
     this.reply = new String();
     this.conn = new Socket();
     this.conn.encoding = "binary";
@@ -20,8 +21,9 @@ var HTTPFile = function (url,port) {
             this.reply = this.conn.read(9999999999);
             this.conn.close();
         } else {
-            this.reply = "";
+            this.reply = null;
         }
-        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);;
+        if(this.reply === null) return null
+        return this.reply.substr(this.reply.indexOf("\r\n\r\n")+4);
     };
 }
