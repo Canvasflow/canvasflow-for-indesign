@@ -6,8 +6,10 @@ const concat = require('gulp-concat');
 const strip = require('gulp-strip-comments');
 const beautify = require('gulp-beautify');
 const removeEmptyLines = require('gulp-remove-empty-lines');
+const buildPath = process.env.BUILD_PATH || path.join(__dirname, 'build');
 
 function concatenate() {
+    
     return gulp.src([
         './modules/json2.js', 
         './modules/error.js',
@@ -31,11 +33,11 @@ function concatenate() {
     .pipe(removeEmptyLines({
         removeComments: true
     }))
-    .pipe(gulp.dest('./build/'));
+    .pipe(gulp.dest(buildPath));
 }
 
 function prependEngine(cb) {
-    const filePath = path.join(__dirname, 'build', 'Canvasflow.jsx');
+    const filePath = path.join(buildPath, 'Canvasflow.jsx');
     var fileContent = fs.readFileSync(filePath, 'utf-8');
     fs.writeFileSync(filePath, `#targetengine "session" \n\n ${fileContent}`)
     cb();

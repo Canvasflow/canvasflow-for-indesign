@@ -1,0 +1,27 @@
+name: Build
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+
+      - name: Create Artifact Container
+        run: mkdir -p app/build
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+
+      - name: Compile plugin
+        env: 
+          BUILD_PATH: app/build
+        run: |
+          npm install
+          npm run build
+        
+      - name: Upload Artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: Canvasflow-for-InDesign
+          path: app/build
