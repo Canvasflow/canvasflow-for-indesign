@@ -4,22 +4,24 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      
-      - run: mkdir -p app/build
+      - name: Checkout code
+        uses: actions/checkout@v1
 
-      - run: echo hello > app/build/example.txt
+      - name: Create Artifact Container
+        run: mkdir -p app/build
 
-      - uses: actions/setup-node@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
 
-      - name: Build
+      - name: Compile plugin
         env: 
           BUILD_PATH: app/build
         run: |
           npm install
           npm run build
         
-      - uses: actions/upload-artifact@master
+      - name: Upload Artifact
+        uses: actions/upload-artifact@master
         with:
           name: Plugin
           path: app/build
