@@ -1,9 +1,15 @@
-workflow "Test my code" {
+workflow "Build " {
   on = "push"
-  resolves = ["npm test"]
+  resolves = ["npm build"]
 }
 
-action "npm test" {
+action "npm ci" {
   runs = "npm"
-  args = "test"
+  args = "ci"
+}
+
+action "npm build" {
+  needs = "npm ci"
+  runs = "npm"
+  args = "run build"
 }
