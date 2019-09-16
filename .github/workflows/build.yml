@@ -10,16 +10,16 @@ jobs:
 
       - run: echo hello > app/build/example.txt
 
-      - uses: actions/upload-artifact@master
-        with:
-          name: my-artifact
-          path: app/build
+      - uses: actions/setup-node@v1
 
-      - name: Use Node.js $
-        uses: actions/setup-node@v1
-        with:
-          node-version: '10'
-      - name: test
+      - name: Build
+        env: 
+          BUILD_PATH: app/build
         run: |
           npm install
           npm run build
+        
+      - uses: actions/upload-artifact@master
+        with:
+          name: Plugin
+          path: app/build
