@@ -23,5 +23,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@master
         with:
-          name: Plugin
+          name: Canvasflow-for-InDesign
           path: app/build
