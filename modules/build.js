@@ -783,6 +783,18 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         }
     }
 
+    $.cleanLocks = function() {
+        var lockFile = new File('~/canvasflow_resizing.lock')
+		if(lockFile.exists) {
+			lockFile.remove();
+        }
+        
+        lockFile = new File('~/canvasflow_convert.lock')
+		if(lockFile.exists) {
+			lockFile.remove();
+		}
+    }
+
     $.buildZipFile = function(document, data, baseDirectory) {
         var output = baseDirectory + '/data.json'; 
         var dataFile = new File(output);
@@ -800,6 +812,8 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         }
 
         var baseFile = new File(baseDirectory);
+
+        $.cleanLocks();
 
         if(!!$.imagesToResize.length) { 
             var lockFile = new File('~/canvasflow_resizing.lock')
