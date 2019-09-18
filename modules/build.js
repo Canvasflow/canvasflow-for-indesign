@@ -5,10 +5,15 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     var $ = this;
 
     $.commandFilePath = commandFilePath || '';
+    
     $.os = os;
     $.imagesToResize = [];
     $.imagesToConvert = [];
     $.imageSizeCap = 5 * 1000000; // 5Mb
+    $.baseDirName = 'cf-indesign'
+
+    $.resizingImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_resizing.lock';
+    $.convertImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_convert.lock';
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
@@ -451,11 +456,19 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
 
         if(originalImageSize >= $.imageSizeCap) {
+            var dataFile = new File($.commandFilePath);
+            if(!dataFile.exists) {
+                throw new Error('Command file do not exist');
+            }
             $.imagesToResize.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
             return '' + id + '.' + targetExt;
         }
         
         if(targetExt !== ext) {
+            var dataFile = new File($.commandFilePath);
+            if(!dataFile.exists) {
+                throw new Error('Command file do not exist');
+            }
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
                
@@ -484,7 +497,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                             });
                         }
                     } else {
-                        if($.savedSettings.previewImage && graphic.visible) {
+                        if(graphic.visible) {
                             imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                             data.push({
                                 type: "Image",
@@ -570,8 +583,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t)',
 
                 ')',
-            
-                'del %userprofile%\\canvasflow_resizing.lock',                
+                'del %userprofile%\\' + $.baseDirName + '\\canvasflow_resizing.lock'        
             )
         } else {
             lines = [
@@ -623,7 +635,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\t\teval $remove_command',
                 '\t\tfi',
                 'done',
-                'rm -f canvasflow_resizing.lock'
+                'rm -f ' + $.resizingImageLockFilePath
             ];
         }
 
@@ -632,6 +644,9 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
     $.resizeImages = function(imageFiles) {
         var dataFile = new File($.commandFilePath);
+        if(!dataFile.exists) {
+            throw new Error('Command file do not exist');
+        }
     
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
@@ -690,7 +705,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
                 ')',
             
-                'del %userprofile%\\canvasflow_convert.lock'
+                'del %userprofile%\\' + $.baseDirName + '\\canvasflow_convert.lock'
             )
         } else {
             lines = [
@@ -736,7 +751,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\tremove_command="rm \\\"${file}\\\""',
                 '\t\teval $remove_command',
                 'done',
-                'rm -f canvasflow_convert.lock'
+                'rm -f ' + $.convertImageLockFilePath
             ]
         }
 
@@ -745,6 +760,10 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
     $.convertImages = function(imageFiles) {
         var dataFile = new File($.commandFilePath);
+
+        if(!dataFile.exists) {
+            throw new Error('Command file do not exist');
+        }
 
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
@@ -766,8 +785,8 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
     $.createPackage = function(baseFile) {
         try {
-            var resizingLockFile = new File('~/canvasflow_resizing.lock')
-            var convertLockFile = new File('~/canvasflow_convert.lock')
+            var resizingLockFile = new File($.resizingImageLockFilePath)
+            var convertLockFile = new File($.convertImageLockFilePath)
             if(!resizingLockFile.exists && !convertLockFile.exists) {
                 app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
                 return;
@@ -784,12 +803,12 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     }
 
     $.cleanLocks = function() {
-        var lockFile = new File('~/canvasflow_resizing.lock')
+        var lockFile = new File($.resizingImageLockFilePath)
 		if(lockFile.exists) {
 			lockFile.remove();
         }
         
-        lockFile = new File('~/canvasflow_convert.lock')
+        lockFile = new File($.convertImageLockFilePath)
 		if(lockFile.exists) {
 			lockFile.remove();
 		}
@@ -816,14 +835,14 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         $.cleanLocks();
 
         if(!!$.imagesToResize.length) { 
-            var lockFile = new File('~/canvasflow_resizing.lock')
+            var lockFile = new File($.resizingImageLockFilePath)
             lockFile.encoding = 'UTF-8';
             lockFile.open('w');
             lockFile.close();
             $.resizeImages($.imagesToResize);
         }
         if(!!$.imagesToConvert.length) {
-            var lockFile = new File('~/canvasflow_convert.lock')
+            var lockFile = new File($.convertImageLockFilePath)
             lockFile.encoding = 'UTF-8';
             lockFile.open('w');
             lockFile.close();
@@ -842,6 +861,11 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
 
         $.createExportFolder();
+
+        var canvasflowBaseDir = new Folder('~/' + $.baseDirName);
+        if(!canvasflowBaseDir.exists) {
+            canvasflowBaseDir.create();
+        }
         
         baseDirectory = $.baseDirectory;
         var filePath = $.filePath;
