@@ -8,7 +8,7 @@ if(/^Win(.)*/gm.test($.os)) {
     os = 'dos';
 }
 
-var settingsFilePath = '~/' + baseDirName + '/canvasflow_settings.json';
+var settingsFilePath = '~/' + baseDirName + '/canvasflow_CanvasflowSettings.json';
 var commandFilePath = '~/' + baseDirName + '/canvasflow_runner.command';
 if(os === 'dos') {
     commandFilePath = '~/' + baseDirName + '/canvasflow_runner.bat';

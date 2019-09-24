@@ -15,13 +15,13 @@ function concatenate() {
         './modules/error.js',
         './modules/variables.js',
         './modules/timeout.js',
-        './modules/logger.js',
+        './modules/CanvasflowLogger.js',
         './modules/http.js',
         './modules/api.js',
-        './modules/build.js',
-        './modules/settings.js',
-        './modules/dialog.js',
-        './modules/publish.js',
+        './modules/CanvasflowBuild.js',
+        './modules/CanvasflowSettings.js',
+        './modules/CanvasflowDialog.js',
+        './modules/CanvasflowPublish.js',
         './modules/main.js',
     ])
     .pipe(concat('Canvasflow.jsx'))

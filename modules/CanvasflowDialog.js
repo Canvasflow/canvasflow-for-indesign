@@ -49,6 +49,9 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
         return response;
     }
 
+    // TODO Merge resets from into $.reset()
+    // $.reset()
+
     $.resetFromEndpoint = function(endpoint) {
         var pages = $.savedSettings.pages || '';
         var creationMode = $.savedSettings.creationMode || 'document';

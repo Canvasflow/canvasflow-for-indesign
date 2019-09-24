@@ -1,6 +1,6 @@
 //@include "json2.js"
 //@include "api.js"
-//@include "build.jsx"
+//@include "CanvasflowBuild.jsx"
 
 var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     var $ = this;
@@ -323,7 +323,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
 }
 /*
 var host = "http://api.cflowdev.com/v1";
-var settingsFilePath = "~/canvaflow_settings.json";
+var settingsFilePath = "~/canvaflow_CanvasflowSettings.json";
 
 var cfBuild = new CanvasflowBuild(settingsFilePath);
 var cfPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", cfBuild);
