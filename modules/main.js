@@ -42,7 +42,7 @@ var CanvasflowPlugin = function() {
                 }
 
                 var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, commandFilePath, os);
+                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
                 var canvasflowPublish = new CanvasflowPublish(canvasflowSettings, settings.endpoint, canvasflowBuild, canvasflowApi);
                 canvasflowPublish.publish();

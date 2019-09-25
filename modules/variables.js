@@ -9,9 +9,12 @@ if(/^Win(.)*/gm.test($.os)) {
 }
 
 var settingsFilePath = '~/' + baseDirName + '/canvasflow_CanvasflowSettings.json';
-var commandFilePath = '~/' + baseDirName + '/canvasflow_runner.command';
+var resizeCommandFilePath = '~/' + baseDirName + '/canvasflow_resize.command';
+var convertCommandFilePath = '~/' + baseDirName + '/canvasflow_convert.command';
+
 if(os === 'dos') {
-    commandFilePath = '~/' + baseDirName + '/canvasflow_runner.bat';
+    resizeCommandFilePath = '~/' + baseDirName + '/canvasflow_resize.bat';
+    convertCommandFilePath = '~/' + baseDirName + '/canvasflow_convert.bat';
 }
 
 var defaultHost = 'api.canvasflow.io';

@@ -1,10 +1,11 @@
 //@include "json2.js"
 //@include "timeout.js"
 
-var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
+var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
 
-    $.commandFilePath = commandFilePath || '';
+    $.resizeCommandFilePath = resizeCommandFilePath || '';
+    $.convertCommandFilePath = convertCommandFilePath || '';
     
     $.os = os;
     $.imagesToResize = [];
@@ -456,18 +457,18 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
 
         if(originalImageSize >= $.imageSizeCap) {
-            var dataFile = new File($.commandFilePath);
+            var dataFile = new File($.resizeCommandFilePath);
             if(!dataFile.exists) {
-                throw new Error('Command file do not exist');
+                throw new Error('Resize command file do not exist');
             }
             $.imagesToResize.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
             return '' + id + '.' + targetExt;
         }
         
         if(targetExt !== ext) {
-            var dataFile = new File($.commandFilePath);
+            var dataFile = new File($.convertCommandFilePath);
             if(!dataFile.exists) {
-                throw new Error('Command file do not exist');
+                throw new Error('Convert command file do not exist');
             }
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
@@ -606,7 +607,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\telse',
                 '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
                 '\t\tfi',
-                '\t\tif [ $ext == "eps" ]; then',
+                '\t\tif [[ $ext == "eps" ]]; then',
                 '\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""',
                 '\t\t\teval $transform_to_pdf',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
@@ -643,9 +644,9 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     }
 
     $.resizeImages = function(imageFiles) {
-        var dataFile = new File($.commandFilePath);
+        var dataFile = new File($.resizeCommandFilePath);
         if(!dataFile.exists) {
-            throw new Error('Command file do not exist');
+            throw new Error('Resize command file do not exist');
         }
     
         var files = [];
@@ -730,7 +731,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
                 '\t\tfi',
     
-                '\t\tif [ $ext == "eps" ]; then',
+                '\t\tif [[ $ext == "eps" ]]; then',
                 '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
                 '\t\t\teval $transform_to_pdf',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
@@ -759,10 +760,10 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     }
 
     $.convertImages = function(imageFiles) {
-        var dataFile = new File($.commandFilePath);
+        var dataFile = new File($.convertCommandFilePath);
 
         if(!dataFile.exists) {
-            throw new Error('Command file do not exist');
+            throw new Error('Convert command file do not exist');
         }
 
         var files = [];
@@ -847,9 +848,10 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
             lockFile.encoding = 'UTF-8';
             lockFile.open('w');
             lockFile.close();
-            setTimeout(function() {
+            $.convertImages($.imagesToConvert);
+            /*setTimeout(function() {
                 $.convertImages($.imagesToConvert);
-            }, 10000);
+            }, 10000);*/
         }
 
         $.createPackage(baseFile);
