@@ -216,10 +216,16 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         // Intro
-        var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
-        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 50], intro, {multiline: true});
+        var intro = 'You are about to publish the current document to Canvasflow. \n\nPlease confirm the following details are correct:';
+        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 70], intro, {multiline: true});
         dialog.introGroup.orientation = 'row:top';
         dialog.introGroup.alignment = 'left';
+
+        // External ID
+        dialog.externalIDGroup = dialog.add('group');
+        dialog.externalIDGroup.orientation = 'row';
+        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], "ID");
+        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], $.cfBuild.uuid);
 
         // Publication
         var publication = $.getPublication();
@@ -243,6 +249,13 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         dialog.styleGroup.orientation = 'row';
         dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
         dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], style.name);
+
+        // Creation Mode
+        dialog.creationModeGroup = dialog.add('group');
+        dialog.creationModeGroup.orientation = 'row';
+        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], "Article Creation");
+        var creationMode = $.savedSettings.creationMode[0].toUpperCase() +  $.savedSettings.creationMode.slice(1); 
+        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], creationMode);
 
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';

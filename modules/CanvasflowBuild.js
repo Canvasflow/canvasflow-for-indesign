@@ -841,12 +841,15 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
             lockFile.close();
             $.resizeImages($.imagesToResize);
         }
+        
         if(!!$.imagesToConvert.length) {
             var lockFile = new File($.convertImageLockFilePath)
             lockFile.encoding = 'UTF-8';
             lockFile.open('w');
             lockFile.close();
-            $.convertImages($.imagesToConvert);
+            setTimeout(function() {
+                $.convertImages($.imagesToConvert);
+            }, 10000);
         }
 
         $.createPackage(baseFile);
