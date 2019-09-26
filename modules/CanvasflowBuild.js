@@ -10,7 +10,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.os = os;
     $.imagesToResize = [];
     $.imagesToConvert = [];
-    $.imageSizeCap = 5 * 1000000; // 5Mb
+    $.imageSizeCap = 1.5 * 1000000; // 1.5Mb
     $.baseDirName = 'cf-indesign'
 
     $.resizingImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_resizing.lock';
