@@ -20,7 +20,8 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             settingsDialog.close();
             $.show();
         } else {
-            throw new Error(reply.replace(/(")/gi, ''))
+            alert('The api key is invalid');
+            // throw new Error(reply.replace(/(")/gi, ''))
         }
     }
 
@@ -187,21 +188,18 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
                 settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(publications)});
                 
+                selectedPublication = publications[0];
                 if(!!savedSettings.PublicationID) {
                     selectedPublication = $.getItemByID(publications, savedSettings.PublicationID);
                     if(selectedPublication === null) {
-                        throw new Error('Publication with id "' + savedSettings.PublicationID + '" was not found')
+                        alert('The saved publication do not exist, we selected another valid publication');
+                        // alert('Publication with id "' + savedSettings.PublicationID + '" was not found')
+                        selectedPublication = publications[0];
+                        savedSettings.PublicationID = selectedPublication.id;
                     }
-                    
-                    selection = $.getItemIndexByID(publications, savedSettings.PublicationID);
-                    if(selection === null) {
-                        throw new Error('Publication with id "' + savedSettings.PublicationID + '" was not found')
-                    }
-                    settingsDialog.publicationDropDownGroup.dropDown.selection = selection;
-                } else {
-                    selectedPublication = publications[0];
-                    settingsDialog.publicationDropDownGroup.dropDown.selection = 0;
                 }
+
+                settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID(publications, selectedPublication.id);
 
                 publicationType = selectedPublication.type;
 
@@ -216,17 +214,19 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     settingsDialog.issueDropDownGroup = settingsDialog.add('group');
                     settingsDialog.issueDropDownGroup.orientation = 'row';
                     settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
-                    settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)})
+                    settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)});
 
+                    selection = 0;
                     if(!!savedSettings.IssueID) {
                         selection = $.getItemIndexByID(issues, savedSettings.IssueID);
                         if(selection === null) {
-                            throw new Error('Issue with id "' + savedSettings.IssueID + '" was not found')
+                            alert('The saved issue do not exist, we selected another valid issue');
+                            // alert('Issue with id "' + savedSettings.IssueID + '" was not found')
+                            selection = 0;
                         }
-                        settingsDialog.issueDropDownGroup.dropDown.selection = selection
-                    } else {
-                        settingsDialog.issueDropDownGroup.dropDown.selection = 0;
                     }
+
+                    settingsDialog.issueDropDownGroup.dropDown.selection = selection;
                 }
 
                 // Add Preview Image selector
@@ -269,15 +269,16 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
                 settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(styles)})
 
+                selection = 0;
                 if(!!savedSettings.StyleID) {
                     selection = $.getItemIndexByID(styles, savedSettings.StyleID);
                     if(selection === null) {
-                        throw new Error('Style with id "' + savedSettings.StyleID + '" was not found')
+                        alert('The saved style do not exist, we selected another valid style');
+                        // alert('Style with id "' + savedSettings.StyleID + '" was not found');
+                        selection = 0;
                     }
-                    settingsDialog.styleDropDownGroup.dropDown.selection = selection
-                } else {
-                    settingsDialog.styleDropDownGroup.dropDown.selection = 0;
                 }
+                settingsDialog.styleDropDownGroup.dropDown.selection = selection
 
                 // Add Range selector
                 settingsDialog.pagesGroup = settingsDialog.add('group');
