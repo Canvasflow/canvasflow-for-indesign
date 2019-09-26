@@ -106,10 +106,6 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
         $.canvasflowSettings.save(settings);
     }
 
-    $.resetFromPublication = function(apiKey, PublicationID, endpoint) {
-        $.reset(endpoint, apiKey, PublicationID);
-    }
-
     $.process = function() {
         var savedSettings = $.savedSettings;
         if(!savedSettings) {
