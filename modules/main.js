@@ -10,8 +10,7 @@ var CanvasflowPlugin = function() {
     
         var canvasflowScriptActionSettings = app.scriptMenuActions.add("Settings");  
         canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
-            var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-            var canvasflowDialog = new CanvasflowDialog(canvasflowSettings, isInternal);
+            var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
             canvasflowDialog.show();
         }); 
         

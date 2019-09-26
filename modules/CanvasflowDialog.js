@@ -1,11 +1,14 @@
 //@include "json2.js"
 //@include "api.js"
+//@include "CanvasflowSettings.js"
 
-var CanvasflowDialog = function(canvasflowSettings, internal) {
+var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     var $ = this;
-    $.canvasflowSettings = canvasflowSettings;
+    $.canvasflowSettingsPath = canvasflowSettingsPath;
+    $.canvasflowSettings = new CanvasflowSettings(canvasflowSettingsPath);
     $.isInternal = internal;
     $.canvasflowApi;
+    settingsFilePath
     
     $.savedSettings = $.canvasflowSettings.getSavedSettings();
 
@@ -14,7 +17,8 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
         var response = JSON.parse(reply);
         if(response.isValid) {
             $.reset(endpoint, settingsDialog.apiKeyGroup.apiKey.text)
-            settingsDialog.destroy();
+            settingsDialog.close();
+            $.show();
         } else {
             throw new Error(reply.replace(/(")/gi, ''))
         }
@@ -353,14 +357,14 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
             }
             if(!endpointExist) {
                 $.reset(endpoints[endpointIndex].id);
-                settingsDialog.destroy();
-                return;
+                settingsDialog.close();
+                $.show();
             } else {
                 var endpoint = endpoints[endpointIndex].id;
                 if(savedSettings.endpoint !== endpoints[endpointIndex].id) {
                     $.reset(endpoints[endpointIndex].id);
-                    settingsDialog.destroy();
-                    return;
+                    settingsDialog.close();
+                    $.show();
                 }
 
                 $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
@@ -375,8 +379,8 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
                         var PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
                         if(savedSettings.PublicationID != PublicationID) {
                             $.reset(endpoint, savedSettings.apiKey, PublicationID);
-                            settingsDialog.destroy();
-                            return;
+                            settingsDialog.close();
+                            $.show();
                         } else {
                             var StyleID = '';
                             try {
@@ -413,6 +417,8 @@ var CanvasflowDialog = function(canvasflowSettings, internal) {
 
     $.show = function() {
         try {
+            $.canvasflowSettings = new CanvasflowSettings($.canvasflowSettingsPath);
+            $.savedSettings = $.canvasflowSettings.getSavedSettings();
             $.process()
         } catch(e) {
             alert(e.message);
