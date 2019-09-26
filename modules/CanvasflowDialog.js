@@ -382,14 +382,14 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                             settingsDialog.close();
                             $.show();
                         } else {
-                            var StyleID = '';
+                            var StyleID;
                             try {
                                 StyleID = styles[settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
                             } catch(e) {
                                 StyleID = '';
                             }
     
-                            var IssueID = '';
+                            var IssueID;
                             try {
                                 IssueID = issues[settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
                             } catch(e) {
