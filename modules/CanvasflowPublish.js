@@ -334,10 +334,3 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         }
     }
 }
-/*
-var host = "http://api.cflowdev.com/v1";
-var settingsFilePath = "~/canvaflow_CanvasflowSettings.json";
-
-var cfBuild = new CanvasflowBuild(settingsFilePath);
-var cfPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", cfBuild);
-cfPublish.publish();*/
