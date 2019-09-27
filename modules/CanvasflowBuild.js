@@ -876,7 +876,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var filePath = $.filePath;
             
         var templateFile = new File(filePath);
-        templateFile.open("r");
+        templateFile.open('r');
             
         var document = app.activeDocument;
             

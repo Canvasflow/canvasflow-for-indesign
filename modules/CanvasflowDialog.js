@@ -20,7 +20,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             settingsDialog.close();
             $.show();
         } else {
-            alert('The api key is invalid');
+            alert('The API key entered is not valid. Please check and try again');
             // throw new Error(reply.replace(/(")/gi, ''))
         }
     }
@@ -120,7 +120,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
         var apiKeyExist = false;
         var endpointExist = false;
-        var settingsDialog = new Window('dialog', 'Settings');
+        var settingsDialog = new Window('dialog', 'Canvasflow Settings');
         settingsDialog.orientation = 'column';
         settingsDialog.alignment = 'right';
         settingsDialog.preferredSize = [300,100];
@@ -192,7 +192,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 if(!!savedSettings.PublicationID) {
                     selectedPublication = $.getItemByID(publications, savedSettings.PublicationID);
                     if(selectedPublication === null) {
-                        alert('The saved publication do not exist, we selected another valid publication');
+                        alert('The currently selected Publication does not exist. The first Publication has been selected');
                         // alert('Publication with id "' + savedSettings.PublicationID + '" was not found')
                         selectedPublication = publications[0];
                         savedSettings.PublicationID = selectedPublication.id;
@@ -208,7 +208,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     issues = $.getIssues(savedSettings.apiKey, selectedPublication.id);
                     
                     if(issues.length === 0) {
-                        throw new Error('No issues were found on publication "' + publication.name + '"');
+                        alert('This Publication has no Issues. Please create an Issue and try again.');
                     }
                     
                     settingsDialog.issueDropDownGroup = settingsDialog.add('group');
@@ -220,7 +220,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     if(!!savedSettings.IssueID) {
                         selection = $.getItemIndexByID(issues, savedSettings.IssueID);
                         if(selection === null) {
-                            alert('The saved issue do not exist, we selected another valid issue');
+                            alert('The currently selected Issue does not exist. The first Issue in the current Publication has been selected');
                             // alert('Issue with id "' + savedSettings.IssueID + '" was not found')
                             selection = 0;
                         }
@@ -261,7 +261,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 // Select styles
                 styles = $.getStyles(savedSettings.apiKey, selectedPublication.id);
                 if(styles.length === 0) {
-                    throw new Error('No styles were found on publication "' + selectedPublication.name + '"');
+                    alert('This Publication has no Styles. Please create an Style and try again.');
                 }
 
                 settingsDialog.styleDropDownGroup = settingsDialog.add('group');
@@ -273,7 +273,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 if(!!savedSettings.StyleID) {
                     selection = $.getItemIndexByID(styles, savedSettings.StyleID);
                     if(selection === null) {
-                        alert('The saved style do not exist, we selected another valid style');
+                        alert('The currently selected Style does not exist. The first Style in the current Publication has been selected');
                         // alert('Style with id "' + savedSettings.StyleID + '" was not found');
                         selection = 0;
                     }
