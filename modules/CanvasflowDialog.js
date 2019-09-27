@@ -283,7 +283,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 // Add Range selector
                 settingsDialog.pagesGroup = settingsDialog.add('group');
                 settingsDialog.pagesGroup.orientation = 'row';
-                settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], "Pages");
+                settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], 'Publish Pages');
                 settingsDialog.pagesGroup.pages = settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.pages);
             } else {
                 apiKeyExist = false;
