@@ -330,7 +330,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             }
         }
         else{
-            alert ("Please open a document.");
+            alert ('Please select an article to Publish');
         }
     }
 }

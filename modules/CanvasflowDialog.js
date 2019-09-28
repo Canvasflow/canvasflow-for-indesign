@@ -20,7 +20,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             settingsDialog.close();
             $.show();
         } else {
-            alert('The api key is invalid');
+            alert('The API key entered is not valid. Please check and try again');
             // throw new Error(reply.replace(/(")/gi, ''))
         }
     }
@@ -111,6 +111,46 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.canvasflowSettings.save(settings);
     }
 
+    $.isValidPagesRangeSyntax = function(input) {
+        results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
+        var lowerRange = parseInt(results[1]);
+        var higherRange = parseInt(results[3]);
+        var totalOfPages = document.pages.length;
+
+        if(!lowerRange) {
+            alert('The lower range should be bigger than 0');
+            return false;
+        }
+
+        if(!higherRange) {
+            alert('The higher range should be bigger than 0');
+            return false;
+        }
+
+        if(lowerRange > higherRange) {
+            alert('The lower range should be smaller than the higher range');
+            return false;
+        }
+
+        if(lowerRange > totalOfPages) {
+            alert('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+            return false;
+        }
+
+        return true;
+    }
+
+    $.isValidPagesSyntax = function(input) {
+        if(!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
+            return $.isValidPagesRangeSyntax(input);
+        } else if(!!/^(\d)+(,\d+)*$/.exec(input)) {
+            return true;
+        }
+
+        alert('The range for pages has an invalid syntax');
+        return false;
+    }
+
     $.process = function() {
         var savedSettings = $.savedSettings;
         if(!savedSettings) {
@@ -120,7 +160,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
         var apiKeyExist = false;
         var endpointExist = false;
-        var settingsDialog = new Window('dialog', 'Settings');
+        var settingsDialog = new Window('dialog', 'Canvasflow Settings');
         settingsDialog.orientation = 'column';
         settingsDialog.alignment = 'right';
         settingsDialog.preferredSize = [300,100];
@@ -192,7 +232,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 if(!!savedSettings.PublicationID) {
                     selectedPublication = $.getItemByID(publications, savedSettings.PublicationID);
                     if(selectedPublication === null) {
-                        alert('The saved publication do not exist, we selected another valid publication');
+                        alert('The currently selected Publication does not exist. The first Publication has been selected');
                         // alert('Publication with id "' + savedSettings.PublicationID + '" was not found')
                         selectedPublication = publications[0];
                         savedSettings.PublicationID = selectedPublication.id;
@@ -208,7 +248,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     issues = $.getIssues(savedSettings.apiKey, selectedPublication.id);
                     
                     if(issues.length === 0) {
-                        throw new Error('No issues were found on publication "' + publication.name + '"');
+                        alert('This Publication has no Issues. Please create an Issue and try again.');
                     }
                     
                     settingsDialog.issueDropDownGroup = settingsDialog.add('group');
@@ -220,7 +260,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     if(!!savedSettings.IssueID) {
                         selection = $.getItemIndexByID(issues, savedSettings.IssueID);
                         if(selection === null) {
-                            alert('The saved issue do not exist, we selected another valid issue');
+                            alert('The currently selected Issue does not exist. The first Issue in the current Publication has been selected');
                             // alert('Issue with id "' + savedSettings.IssueID + '" was not found')
                             selection = 0;
                         }
@@ -261,7 +301,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 // Select styles
                 styles = $.getStyles(savedSettings.apiKey, selectedPublication.id);
                 if(styles.length === 0) {
-                    throw new Error('No styles were found on publication "' + selectedPublication.name + '"');
+                    alert('This Publication has no Styles. Please create an Style and try again.');
                 }
 
                 settingsDialog.styleDropDownGroup = settingsDialog.add('group');
@@ -273,7 +313,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 if(!!savedSettings.StyleID) {
                     selection = $.getItemIndexByID(styles, savedSettings.StyleID);
                     if(selection === null) {
-                        alert('The saved style do not exist, we selected another valid style');
+                        alert('The currently selected Style does not exist. The first Style in the current Publication has been selected');
                         // alert('Style with id "' + savedSettings.StyleID + '" was not found');
                         selection = 0;
                     }
@@ -283,7 +323,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 // Add Range selector
                 settingsDialog.pagesGroup = settingsDialog.add('group');
                 settingsDialog.pagesGroup.orientation = 'row';
-                settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], "Pages");
+                settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], 'Publish Pages');
                 settingsDialog.pagesGroup.pages = settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.pages);
             } else {
                 apiKeyExist = false;
@@ -326,27 +366,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             }
             
             if(!!pages.length) {
-                var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
-                if(results === null) {
-                    alert('The range for pages has an invalid syntax');
-                    return;
-                }
-
-                var lowerRange = parseInt(results[1]);
-                var higherRange = parseInt(results[3]);
-
-                if(!lowerRange) {
-                    alert('The lower range should be bigger than 0');
-                    return;
-                }
-
-                if(!higherRange) {
-                    alert('The higher range should be bigger than 0');
-                    return;
-                }
-
-                if(lowerRange > higherRange) {
-                    alert('The lower range should be smaller than the higher range ' + lowerRange + '>' + higherRange);
+                if(!$.isValidPagesSyntax(pages)) {
                     return;
                 }
             }
