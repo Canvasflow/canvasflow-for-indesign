@@ -4,4 +4,8 @@ var baseDirName = 'cf-indesign';
 var settingsFilePath = '~/' + baseDirName + '/canvasflow_settings.json';
 var isInternal = true;
 var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
-canvasflowDialog.show();
+try {
+    canvasflowDialog.show();
+} catch(e) {
+    alert(e.message);
+}

@@ -109,6 +109,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         }
 
         $.canvasflowSettings.save(settings);
+        delete settings;
     }
 
     $.isValidPagesRangeSyntax = function(input) {
@@ -153,10 +154,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
     $.process = function() {
         var savedSettings = $.savedSettings;
-        if(!savedSettings) {
-            savedSettings = JSON.parse($.defaultSavedSettings);
-            $.savedSettings = savedSettings;
-        }
 
         var apiKeyExist = false;
         var endpointExist = false;
@@ -191,7 +188,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         if(!!$.isInternal) { 
             settingsDialog.endpointDropDownGroup = settingsDialog.add('group');
             settingsDialog.endpointDropDownGroup.orientation = 'row';
-            settingsDialog.endpointDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Endpoint");
+            settingsDialog.endpointDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Endpoint');
             settingsDialog.endpointDropDownGroup.dropDown = settingsDialog.endpointDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(endpoints)});  
         } else {
             savedSettings.endpoint = endpoints[0].id;
@@ -423,7 +420,8 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                             savedSettings.endpoint = selectedEndpoint.id;
     
                             $.canvasflowSettings.save(savedSettings);
-                            settingsDialog.destroy();
+                            delete savedSettings;
+                            settingsDialog.close();
                         }
                     }
                 } 
@@ -431,13 +429,19 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         }
 
         settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
-            settingsDialog.destroy();
+            settingsDialog.close();
         }
         settingsDialog.show();
     };
 
     $.show = function() {
         try {
+            if(!!$.savedSettings) {
+                delete $.savedSettings;
+            }
+            if(!!$.canvasflowSettings) {
+                delete $.canvasflowSettings;
+            }
             $.canvasflowSettings = new CanvasflowSettings($.canvasflowSettingsPath);
             $.savedSettings = $.canvasflowSettings.getSavedSettings();
             $.process()
