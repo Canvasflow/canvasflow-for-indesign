@@ -849,14 +849,87 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             lockFile.open('w');
             lockFile.close();
             $.convertImages($.imagesToConvert);
-            /*setTimeout(function() {
-                $.convertImages($.imagesToConvert);
-            }, 10000);*/
         }
 
         $.createPackage(baseFile);
 
         return baseFile.fsName + '.zip';
+    }
+
+    $.getDefaultPages = function() {
+        var pages = [];
+        for(var i = 0; i < document.pages.length; i++) {
+            pages.push(i+1);
+        }
+        return pages;
+    }
+
+    $.getRangePages = function(input) {
+        var pages = [];
+        results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
+        var lowerRange = parseInt(results[1]);
+        var higherRange = parseInt(results[3]);
+        var totalOfPages = document.pages.length;
+
+        if(!lowerRange) {
+            throw new Error('The lower range should be bigger than 0');
+        }
+
+        if(!higherRange) {
+            throw new Error('The higher range should be bigger than 0');
+        }
+
+        if(lowerRange > higherRange) {
+            throw new Error('The lower range should be smaller than the higher range');
+        }
+
+        if(lowerRange > totalOfPages) {
+            throw new Error('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+        }
+
+        initialPageIndex = lowerRange ;
+        lastPageIndex = higherRange;
+            
+        if (higherRange > totalOfPages) {
+            lastPageIndex = totalOfPages
+        }
+
+        for(var i=initialPageIndex; i <= lastPageIndex; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    }
+
+    $.isElementExist = function(arr, element) {
+        for(var i = 0; i < arr.length; i++) {
+            if(arr[i] === element) return true;
+        }
+        return false;
+    }
+
+    $.getUniqueArray = function(arr) {
+        var response = [];
+        for(var i = 0; i < arr.length; i++) {
+            var element = arr[i];
+            if(!$.isElementExist(response, element)) {
+                response.push(element);
+            }
+        }
+        return response;
+    }
+
+    $.getCSVPages = function(input) {
+        var pages = [];
+        var pagesString = input.split(',');
+        for(var i=0; i < pagesString.length; i++) {
+            var pageNumber = parseInt(pagesString[i]);
+            if(!!pageNumber) {
+                pages.push(pageNumber);
+            }
+        }
+        pages = $.getUniqueArray(pages);
+        return pages;
     }
 
     $.build = function() {
@@ -885,41 +958,17 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             pages: []
         };
 
-        var pages = $.savedSettings.pages;
-        var initialPageIndex = 0;
-        var lastPageIndex = document.pages.length;
-        var totalOfPages = document.pages.length;
+        var settingPages = $.savedSettings.pages;
 
-        if(!!pages) {
-            var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
-            if(results === null) {
+        var pages = $.getDefaultPages();
+
+        if(!!settingPages) {
+            if(!!/^([0-9]+)(-)+([0-9]+)$/.exec(settingPages)) {
+                pages = $.getRangePages(settingPages);
+            } else if(!!/^(\d)+(,\d+)*$/.exec(settingPages)) {
+                pages = $.getCSVPages(settingPages);
+            } else {
                 throw new Error('The range for pages has an invalid syntax');
-            }
-
-            var lowerRange = parseInt(results[1]);
-            var higherRange = parseInt(results[3]);
-
-            if(!lowerRange) {
-                throw new Error('The lower range should be bigger than 0');
-            }
-
-            if(!higherRange) {
-                throw new Error('The higher range should be bigger than 0');
-            }
-
-            if(lowerRange > higherRange) {
-                throw new Error('The lower range should be smaller than the higher range');
-            }
-
-            if(lowerRange > totalOfPages) {
-                throw new Error('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
-            }
-
-            initialPageIndex = lowerRange - 1;
-            lastPageIndex = higherRange;
-            
-            if (higherRange > totalOfPages) {
-                lastPageIndex = totalOfPages
             }
         }
 
@@ -927,8 +976,11 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
 
-        for (var i = initialPageIndex; i < lastPageIndex; i++) {
-            var page = document.pages[i];
+        alert(JSON.stringify(pages));
+
+        do {
+            var pageIndex = pages.shift() - 1;
+            var page = document.pages[pageIndex];
             var position = $.getItemPosition(page.bounds);
             var pageData = {
                 id: page.id,
@@ -941,7 +993,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             $.getTextFrames(page, pageData.items);
             $.getImages(page, pageData.items, baseDirectory);
             response.pages.push(pageData);
-        }
+        } while(pages.length !== 0)
 
         return $.buildZipFile(document, response, baseDirectory);
     }

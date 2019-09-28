@@ -111,6 +111,46 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.canvasflowSettings.save(settings);
     }
 
+    $.isValidPagesRangeSyntax = function(input) {
+        results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
+        var lowerRange = parseInt(results[1]);
+        var higherRange = parseInt(results[3]);
+        var totalOfPages = document.pages.length;
+
+        if(!lowerRange) {
+            alert('The lower range should be bigger than 0');
+            return false;
+        }
+
+        if(!higherRange) {
+            alert('The higher range should be bigger than 0');
+            return false;
+        }
+
+        if(lowerRange > higherRange) {
+            alert('The lower range should be smaller than the higher range');
+            return false;
+        }
+
+        if(lowerRange > totalOfPages) {
+            alert('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+            return false;
+        }
+
+        return true;
+    }
+
+    $.isValidPagesSyntax = function(input) {
+        if(!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
+            return $.isValidPagesRangeSyntax(input);
+        } else if(!!/^(\d)+(,\d+)*$/.exec(input)) {
+            return true;
+        }
+
+        alert('The range for pages has an invalid syntax');
+        return false;
+    }
+
     $.process = function() {
         var savedSettings = $.savedSettings;
         if(!savedSettings) {
@@ -326,27 +366,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             }
             
             if(!!pages.length) {
-                var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
-                if(results === null) {
-                    alert('The range for pages has an invalid syntax');
-                    return;
-                }
-
-                var lowerRange = parseInt(results[1]);
-                var higherRange = parseInt(results[3]);
-
-                if(!lowerRange) {
-                    alert('The lower range should be bigger than 0');
-                    return;
-                }
-
-                if(!higherRange) {
-                    alert('The higher range should be bigger than 0');
-                    return;
-                }
-
-                if(lowerRange > higherRange) {
-                    alert('The lower range should be smaller than the higher range ' + lowerRange + '>' + higherRange);
+                if(!$.isValidPagesSyntax(pages)) {
                     return;
                 }
             }
