@@ -1,4 +1,5 @@
 //@include "json2.js"
+//@include "error.js"
 //@include "api.js"
 //@include "CanvasflowSettings.js"
 
@@ -6,9 +7,24 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     var $ = this;
     $.canvasflowSettingsPath = canvasflowSettingsPath;
     $.canvasflowSettings = new CanvasflowSettings(canvasflowSettingsPath);
+    $.settingsDialog = new Window('dialog', 'Canvasflow Settings');
     $.isInternal = internal;
+    $.defaultDialogSize = [300,100];
     $.canvasflowApi;
-    settingsFilePath
+
+    $.endpoints = [
+        {
+            name: 'Production',
+            id: 'api.canvasflow.io'
+        },
+        {
+            name: 'Development',
+            id: 'api.cflowdev.com'
+        }
+    ];
+
+    $.state = 'endpoint';
+    $.settings = {};
     
     $.savedSettings = $.canvasflowSettings.getSavedSettings();
 
@@ -152,15 +168,79 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         return false;
     }
 
+    $.removeElementFromDialog = function(element) {
+        try { $.settingsDialog.remove(element);} catch(e) {}
+    }
+
+    $.hideStylesAndIssueSection = function() {
+        $.removeElementFromDialog($.settingsDialog.issueDropDownGroup);
+        $.removeElementFromDialog($.settingsDialog.styleDropDownGroup);
+    }
+
+    $.hidePublication = function() {
+        $.removeElementFromDialog($.settingsDialog.publicationDropDownGroup);
+        $.removeElementFromDialog($.settingsDialog.previewImageDropDownGroup);
+        $.hideStylesAndIssueSection();
+        $.removeElementFromDialog($.settingsDialog.creationModeDropDownGroup);
+        $.removeElementFromDialog($.settingsDialog.pagesGroup);
+    }
+
+    $.hideApiKey = function() {
+        if(!!$.settingsDialog.apiKeyGroup) {
+            $.settingsDialog.remove($.settingsDialog.apiKeyGroup);
+            $.hidePublication();
+        }
+    }
+
+    $.buttonOnEndpoint = function() {
+        alert('Api Key: ' + $.settingsDialog.apiKeyGroup.apiKey.text);
+    }
+
+    $.onEndpointChange = function() {
+        // alert('Endpoint change');
+        try {
+            $.hidePublication();
+        
+            $.state = 'endpoint';
+            $.settingsDialog.size = [300,100];
+            $.settingsDialog.layout.layout();
+            $.settingsDialog.layout.resize();
+            $.settingsDialog.apiKeyGroup.apiKey.text = '';
+    
+            var endpointIndex = $.settingsDialog.endpointDropDownGroup.dropDown.selection.index;
+            $.settings.endpoint = $.endpoints[endpointIndex];
+            $.canvasflowApi = new CanvasflowApi('http://' + $.settings.endpoint + '/v2');
+            $.settingsDialog.buttonsBarGroup.saveBtn.enabled = false;
+            $.settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+                alert('Hello');
+                // $.buttonOnEndpoint();
+            }
+            
+            $.settingsDialog.buttonsBarGroup.saveBtn.text = 'Validate';
+        } catch(e) {
+            logError(e);
+            // alert(e.message);
+        }
+        
+    }
+
+    $.onApiChange = function() {
+        if(!!$.settingsDialog.apiKeyGroup.apiKey.text) {
+            $.settingsDialog.buttonsBarGroup.saveBtn.enabled = true;
+        } else {
+            $.settingsDialog.buttonsBarGroup.saveBtn.enabled = false;
+        }
+    }
+
     $.process = function() {
         var savedSettings = $.savedSettings;
 
         var apiKeyExist = false;
         var endpointExist = false;
-        var settingsDialog = new Window('dialog', 'Canvasflow Settings');
-        settingsDialog.orientation = 'column';
-        settingsDialog.alignment = 'right';
-        settingsDialog.preferredSize = [300,100];
+        
+        $.settingsDialog.orientation = 'column';
+        $.settingsDialog.alignment = 'right';
+        $.settingsDialog.preferredSize = [300,100];
 
         var valuesWidth = 200;
         var labelWidth = 150;
@@ -186,10 +266,10 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         ];
         
         if(!!$.isInternal) { 
-            settingsDialog.endpointDropDownGroup = settingsDialog.add('group');
-            settingsDialog.endpointDropDownGroup.orientation = 'row';
-            settingsDialog.endpointDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Endpoint');
-            settingsDialog.endpointDropDownGroup.dropDown = settingsDialog.endpointDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(endpoints)});  
+            $.settingsDialog.endpointDropDownGroup = $.settingsDialog.add('group');
+            $.settingsDialog.endpointDropDownGroup.orientation = 'row';
+            $.settingsDialog.endpointDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Endpoint');
+            $.settingsDialog.endpointDropDownGroup.dropDown = $.settingsDialog.endpointDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(endpoints)});
         } else {
             savedSettings.endpoint = endpoints[0].id;
         }
@@ -202,14 +282,20 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             endpointExist = true;
             selectedEndpoint = $.getItemByID(endpoints, savedSettings.endpoint);
             if(!!$.isInternal) { 
-                settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
+                $.settingsDialog.endpointDropDownGroup.dropDown.selection = $.getItemIndexByID(endpoints, savedSettings.endpoint);
+                $.settingsDialog.endpointDropDownGroup.dropDown.onChange = function () {
+                    $.onEndpointChange();
+                }
             }
 
             //Add Api Key
-            settingsDialog.apiKeyGroup = settingsDialog.add('group');
-            settingsDialog.apiKeyGroup.orientation = 'row';
-            settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "API Key");
-            settingsDialog.apiKeyGroup.apiKey = settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.apiKey);
+            $.settingsDialog.apiKeyGroup = $.settingsDialog.add('group');
+            $.settingsDialog.apiKeyGroup.orientation = 'row';
+            $.settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], "API Key");
+            $.settingsDialog.apiKeyGroup.apiKey = $.settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.apiKey);
+            $.settingsDialog.apiKeyGroup.apiKey.onChange = function () {
+                $.onApiChange();
+            }
             
             if(!!savedSettings.apiKey) {
                 apiKeyExist = true
@@ -220,10 +306,10 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     throw new Error('No publications were found');
                 }
                 
-                settingsDialog.publicationDropDownGroup = settingsDialog.add('group');
-                settingsDialog.publicationDropDownGroup.orientation = 'row';
-                settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
-                settingsDialog.publicationDropDownGroup.dropDown = settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(publications)});
+                $.settingsDialog.publicationDropDownGroup = $.settingsDialog.add('group');
+                $.settingsDialog.publicationDropDownGroup.orientation = 'row';
+                $.settingsDialog.publicationDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
+                $.settingsDialog.publicationDropDownGroup.dropDown = $.settingsDialog.publicationDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(publications)});
                 
                 selectedPublication = publications[0];
                 if(!!savedSettings.PublicationID) {
@@ -236,7 +322,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                     }
                 }
 
-                settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID(publications, selectedPublication.id);
+                $.settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID(publications, selectedPublication.id);
 
                 publicationType = selectedPublication.type;
 
@@ -248,10 +334,10 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                         alert('This Publication has no Issues. Please create an Issue and try again.');
                     }
                     
-                    settingsDialog.issueDropDownGroup = settingsDialog.add('group');
-                    settingsDialog.issueDropDownGroup.orientation = 'row';
-                    settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
-                    settingsDialog.issueDropDownGroup.dropDown = settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)});
+                    $.settingsDialog.issueDropDownGroup = $.settingsDialog.add('group');
+                    $.settingsDialog.issueDropDownGroup.orientation = 'row';
+                    $.settingsDialog.issueDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
+                    $.settingsDialog.issueDropDownGroup.dropDown = $.settingsDialog.issueDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(issues)});
 
                     selection = 0;
                     if(!!savedSettings.IssueID) {
@@ -263,48 +349,47 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                         }
                     }
 
-                    settingsDialog.issueDropDownGroup.dropDown.selection = selection;
+                    $.settingsDialog.issueDropDownGroup.dropDown.selection = selection;
                 }
 
                 // Add Preview Image selector
                 var previewImageOptions = ['Yes', 'No'];
-                settingsDialog.previewImageDropDownGroup = settingsDialog.add('group');
-                settingsDialog.previewImageDropDownGroup.orientation = 'row';
-                settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
-                settingsDialog.previewImageDropDownGroup.dropDown = settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
+                $.settingsDialog.previewImageDropDownGroup = $.settingsDialog.add('group');
+                $.settingsDialog.previewImageDropDownGroup.orientation = 'row';
+                $.settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
+                $.settingsDialog.previewImageDropDownGroup.dropDown = $.settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:previewImageOptions});
                 if(savedSettings.previewImage === true ) {
                     $.savedSettings.previewImage = true;
-                    settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
+                    $.settingsDialog.previewImageDropDownGroup.dropDown.selection = 0;
                 } else {
                     $.savedSettings.previewImage = false;
-                    settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
+                    $.settingsDialog.previewImageDropDownGroup.dropDown.selection = 1;
                 }
 
                 // Add Article Creation Mode 
                 var creationModeOptions = ['Document', 'Page'];
-                settingsDialog.creationModeDropDownGroup = settingsDialog.add('group');
-                settingsDialog.creationModeDropDownGroup.orientation = 'row';
-                settingsDialog.creationModeDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation');
-                settingsDialog.creationModeDropDownGroup.dropDown = settingsDialog.creationModeDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:creationModeOptions});
+                $.settingsDialog.creationModeDropDownGroup = $.settingsDialog.add('group');
+                $.settingsDialog.creationModeDropDownGroup.orientation = 'row';
+                $.settingsDialog.creationModeDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation');
+                $.settingsDialog.creationModeDropDownGroup.dropDown = $.settingsDialog.creationModeDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:creationModeOptions});
                 if(savedSettings.creationMode === 'document' ) {
                     $.savedSettings.creationMode = 'document';
-                    settingsDialog.creationModeDropDownGroup.dropDown.selection = 0;
+                    $.settingsDialog.creationModeDropDownGroup.dropDown.selection = 0;
                 } else {
                     $.savedSettings.creationMode = 'page';
-                    settingsDialog.creationModeDropDownGroup.dropDown.selection = 1;
+                    $.settingsDialog.creationModeDropDownGroup.dropDown.selection = 1;
                 }
 
-                
                 // Select styles
                 styles = $.getStyles(savedSettings.apiKey, selectedPublication.id);
                 if(styles.length === 0) {
                     alert('This Publication has no Styles. Please create an Style and try again.');
                 }
 
-                settingsDialog.styleDropDownGroup = settingsDialog.add('group');
-                settingsDialog.styleDropDownGroup.orientation = 'row';
-                settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
-                settingsDialog.styleDropDownGroup.dropDown = settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(styles)})
+                $.settingsDialog.styleDropDownGroup = $.settingsDialog.add('group');
+                $.settingsDialog.styleDropDownGroup.orientation = 'row';
+                $.settingsDialog.styleDropDownGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
+                $.settingsDialog.styleDropDownGroup.dropDown = $.settingsDialog.styleDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.mapItemsName(styles)})
 
                 selection = 0;
                 if(!!savedSettings.StyleID) {
@@ -315,34 +400,34 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                         selection = 0;
                     }
                 }
-                settingsDialog.styleDropDownGroup.dropDown.selection = selection
+                $.settingsDialog.styleDropDownGroup.dropDown.selection = selection
 
                 // Add Range selector
-                settingsDialog.pagesGroup = settingsDialog.add('group');
-                settingsDialog.pagesGroup.orientation = 'row';
-                settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], 'Publish Pages');
-                settingsDialog.pagesGroup.pages = settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.pages);
+                $.settingsDialog.pagesGroup = $.settingsDialog.add('group');
+                $.settingsDialog.pagesGroup.orientation = 'row';
+                $.settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], 'Publish Pages');
+                $.settingsDialog.pagesGroup.pages = $.settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], $.savedSettings.pages);
             } else {
                 apiKeyExist = false;
             }
         } else {
             selectedEndpoint = endpoints[0];
             if(!!$.isInternal) {
-                settingsDialog.endpointDropDownGroup.dropDown.selection = 0;
+                $.settingsDialog.endpointDropDownGroup.dropDown.selection = 0;
             }
         }
 
         // Panel buttons
-        settingsDialog.buttonsBarGroup = settingsDialog.add('group');
-        settingsDialog.buttonsBarGroup.orientation = 'row';
-        settingsDialog.buttonsBarGroup.alignChildren = 'bottom';    
-        settingsDialog.buttonsBarGroup.cancelBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'Cancel');
-        settingsDialog.buttonsBarGroup.saveBtn = settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
+        $.settingsDialog.buttonsBarGroup = $.settingsDialog.add('group');
+        $.settingsDialog.buttonsBarGroup.orientation = 'row';
+        $.settingsDialog.buttonsBarGroup.alignChildren = 'bottom';    
+        $.settingsDialog.buttonsBarGroup.cancelBtn = $.settingsDialog.buttonsBarGroup.add('button', undefined, 'Cancel');
+        $.settingsDialog.buttonsBarGroup.saveBtn = $.settingsDialog.buttonsBarGroup.add('button', undefined, 'OK');
         
-        settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
+        $.settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
             $.savedSettings.previewImage = true;
-            if(!!settingsDialog.previewImageDropDownGroup) {
-                if(settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 1) {
+            if(!!$.settingsDialog.previewImageDropDownGroup) {
+                if($.settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 1) {
                     $.savedSettings.previewImage = false;
                 }
             }
@@ -350,16 +435,16 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             $.savedSettings.creationMode = 'document';
             savedSettings.creationMode = 'document';
 
-            if(!!settingsDialog.creationModeDropDownGroup) {
-                if(settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 1) {
+            if(!!$.settingsDialog.creationModeDropDownGroup) {
+                if($.settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 1) {
                     $.savedSettings.creationMode = 'page';
                     savedSettings.creationMode = 'page';
                 }
             }
 
             var pages = '';
-            if(!!settingsDialog.pagesGroup) {
-                pages = settingsDialog.pagesGroup.pages.text;
+            if(!!$.settingsDialog.pagesGroup) {
+                pages = $.settingsDialog.pagesGroup.pages.text;
             }
             
             if(!!pages.length) {
@@ -371,45 +456,45 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             $.savedSettings.pages = pages;
             var endpointIndex = 0;
             if(!!$.isInternal) {
-                endpointIndex = settingsDialog.endpointDropDownGroup.dropDown.selection.index;
+                endpointIndex = $.settingsDialog.endpointDropDownGroup.dropDown.selection.index;
             }
             if(!endpointExist) {
                 $.reset(endpoints[endpointIndex].id);
-                settingsDialog.close();
+                $.settingsDialog.close();
                 $.show();
             } else {
                 var endpoint = endpoints[endpointIndex].id;
                 if(savedSettings.endpoint !== endpoints[endpointIndex].id) {
                     $.reset(endpoints[endpointIndex].id);
-                    settingsDialog.close();
+                    $.settingsDialog.close();
                     $.show();
                 }
 
                 $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
                 if(!apiKeyExist) {    
-                    $.validateKey(settingsDialog, endpoint);
+                    $.validateKey($.settingsDialog, endpoint);
                 } else {
                     // The api key was already validated
-                    if(savedSettings.apiKey !== settingsDialog.apiKeyGroup.apiKey.text) {
-                        $.validateKey(settingsDialog, endpoint);
+                    if(savedSettings.apiKey !== $.settingsDialog.apiKeyGroup.apiKey.text) {
+                        $.validateKey($.settingsDialog, endpoint);
                     } else {
-                        var PublicationID = publications[settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
+                        var PublicationID = publications[$.settingsDialog.publicationDropDownGroup.dropDown.selection.index].id;
                         if(savedSettings.PublicationID != PublicationID) {
                             $.reset(endpoint, savedSettings.apiKey, PublicationID);
-                            settingsDialog.close();
+                            $.settingsDialog.close();
                             $.show();
                         } else {
                             var StyleID;
                             try {
-                                StyleID = styles[settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
+                                StyleID = styles[$.settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
                             } catch(e) {
                                 StyleID = '';
                             }
     
                             var IssueID;
                             try {
-                                IssueID = issues[settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
+                                IssueID = issues[$.settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
                             } catch(e) {
                                 IssueID = '';
                             }
@@ -421,27 +506,21 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     
                             $.canvasflowSettings.save(savedSettings);
                             delete savedSettings;
-                            settingsDialog.close();
+                            $.settingsDialog.close();
                         }
                     }
                 } 
             }
         }
 
-        settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
-            settingsDialog.close();
+        $.settingsDialog.buttonsBarGroup.cancelBtn.onClick = function() {
+            $.settingsDialog.close();
         }
-        settingsDialog.show();
+        $.settingsDialog.show();
     };
 
     $.show = function() {
         try {
-            if(!!$.savedSettings) {
-                delete $.savedSettings;
-            }
-            if(!!$.canvasflowSettings) {
-                delete $.canvasflowSettings;
-            }
             $.canvasflowSettings = new CanvasflowSettings($.canvasflowSettingsPath);
             $.savedSettings = $.canvasflowSettings.getSavedSettings();
             $.process()
