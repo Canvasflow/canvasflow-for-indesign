@@ -303,7 +303,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     }
 
     $.renderWindow = function() {
-        var valuesWidth = 200;
+        var valuesWidth = 300;
         var labelWidth = 150;
 
         // ENDPOINTS
@@ -338,19 +338,13 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.apiKeyGroup = $.settingsDialog.add('group');
         $.settingsDialog.apiKeyGroup.orientation = 'row';
         $.settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], 'API Key');
-        $.settingsDialog.apiKeyGroup.apiKey = $.settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth, 20], '');
-        $.settingsDialog.apiKeyGroup.visible = true;
-        if(!!$.settings.apiKey) {
-            $.settingsDialog.apiKeyGroup.apiKey.text = $.settings.apiKey;
-            $.isValidApiKey = $.validateApiKey($.canvasflowApi, $.settings.apiKey)
-            if(!$.isValidApiKey) {
-                alert('The API key entered is not valid. Please check and try again.');
-            }
-        }
-        $.settingsDialog.apiKeyGroup.apiKey.onChange = function () {
+        $.settingsDialog.apiKeyGroup.apiKey = $.settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth * 0.72, 20], '');
+        $.settingsDialog.apiKeyGroup.testApiKeyBtn = $.settingsDialog.apiKeyGroup.add('button', [0, 0, valuesWidth * 0.25, 20], 'Validate');
+        $.settingsDialog.apiKeyGroup.testApiKeyBtn.helpTip = 'Check if the api key is valid and loads the defaults values for the account';
+        $.settingsDialog.apiKeyGroup.testApiKeyBtn.onClick = function() {
             $.hideAll($.settingsDialog);
-
-            var apiKey = $.settingsDialog.apiKeyGroup.apiKey.text;
+            var apiKey = $.settingsDialog.apiKeyGroup.apiKey.text.replace(/\s/g,'');
+            $.settingsDialog.apiKeyGroup.apiKey.text = apiKey;
 
             $.isValidApiKey = $.validateApiKey($.canvasflowApi, apiKey);
             if(!$.isValidApiKey) {
@@ -370,6 +364,18 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             } catch(e) {
                 logError(e);
             }
+        }
+        $.settingsDialog.apiKeyGroup.visible = true;
+        if(!!$.settings.apiKey) {
+            $.settingsDialog.apiKeyGroup.apiKey.text = $.settings.apiKey;
+            $.isValidApiKey = $.validateApiKey($.canvasflowApi, $.settings.apiKey)
+            if(!$.isValidApiKey) {
+                alert('The API key entered is not valid. Please check and try again.');
+            }
+        }
+        $.settingsDialog.apiKeyGroup.apiKey.onChanging = function () {
+            $.settingsDialog.buttonsBarGroup.saveBtn.visible = false;
+            $.hideAll($.settingsDialog);
         }
 
         // PUBLICATION
