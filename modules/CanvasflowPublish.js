@@ -134,7 +134,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
                 return false;
             }
         } else {
-            alert("I couldn't connect to the server");
+            alert('I couldn\'t connect to the server');
             return false;
         }
     }

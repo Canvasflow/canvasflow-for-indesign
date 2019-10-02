@@ -976,8 +976,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
 
-        alert(JSON.stringify(pages));
-
         do {
             var pageIndex = pages.shift() - 1;
             var page = document.pages[pageIndex];
