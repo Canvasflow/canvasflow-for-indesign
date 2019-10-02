@@ -15,8 +15,8 @@ var CanvasflowSettings = function(settingsPath){
         file.open('w');
         file.write($.defaultSavedSettings);
         file.close();
-
-        return $.defaultSavedSettings;
+        
+        return JSON.parse($.defaultSavedSettings);;
     };
 
     $.save = function(settings) {

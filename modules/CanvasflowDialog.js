@@ -78,7 +78,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
     $.getItemByID = function(items, id) {
         for(var i = 0; i< items.length; i++) {
-            if((items[i].id + '') == (id + '')) {
+            if(items[i].id == id) {
                 return items[i];
             }
         }
@@ -252,9 +252,10 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         var selection = 0;
         var selectedIssue = $.issues[0];
         if(!!$.settings.IssueID) {
+            
             selectedIssue = $.getItemByID($.issues, $.settings.IssueID);
             if(selectedIssue === null) {
-                alert('The currently selected Style does not exist. The first Style in the current Publication has been selected');
+                alert('The currently selected Issue does not exist. The first Issue in the current Publication has been selected');
                 selection = 0;
                 selectedIssue = $.issues[0];
             } else {
@@ -282,14 +283,16 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         }
 
         var selectedStyle = $.styles[0];
+        var selection = 0;
         if(!!$.settings.StyleID) {
             selectedStyle = $.getItemByID($.styles, $.settings.StyleID);
-        }
-
-        var selection = $.getItemIndexByID($.styles, selectedStyle.id);
-        if(selectedStyle === null) {
-            alert('The currently selected Style does not exist. The first Style in the current Publication has been selected');
-            selection = 0;
+            if(selectedStyle === null) {
+                alert('The currently selected Style does not exist. The first Style in the current Publication has been selected');
+                selection = 0;
+                selectedStyle = $.styles[0];
+            } else {
+                selection = $.getItemIndexByID($.styles, selectedStyle.id);
+            }
         }
 
         $.settings.StyleID = '' + selectedStyle.id;
@@ -304,7 +307,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     }
 
     $.displayPublications = function(settingsDialog) {
-        var settings = $.settings;
         $.publications = $.getPublications($.settings.apiKey);
         if($.publications.length === 0) {
             throw new Error('No publications were found');
@@ -314,7 +316,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         if(!!$.settings.PublicationID) {
             selectedPublication = $.getItemByID($.publications, $.settings.PublicationID);
         }
-        
 
         $.settings.PublicationID = selectedPublication.id;
 
@@ -324,13 +325,8 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             settingsDialog.publicationDropDownGroup.dropDown.add('item', publicationsNames[i]);
         }
         settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID($.publications, selectedPublication.id);
-        if($.settings.PublicationID == selectedPublication.id) {
-            $.settings = settings;
-        }
-        
         settingsDialog.publicationDropDownGroup.visible = true;
         
-
         if(selectedPublication.type === 'issue') {
             $.displayIssues(settingsDialog, $.settings.PublicationID);
         }
@@ -423,10 +419,11 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             }
         }
         $.settingsDialog.apiKeyGroup.apiKey.onChange = function () {
-            alert('Me llamaron');
             $.hideAll($.settingsDialog);
 
-            $.isValidApiKey = $.validateApiKey($.canvasflowApi, $.settingsDialog.apiKeyGroup.apiKey.text)
+            var apiKey = $.settingsDialog.apiKeyGroup.apiKey.text;
+
+            $.isValidApiKey = $.validateApiKey($.canvasflowApi, apiKey);
             if(!$.isValidApiKey) {
                 $.settingsDialog.buttonsBarGroup.saveBtn.visible = false;
                 $.hidePublication($.settingsDialog);
@@ -435,7 +432,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             }
 
             try {
-                $.settings.apiKey = $.settingsDialog.apiKeyGroup.apiKey.text;
+                $.settings.apiKey = apiKey;
                 $.displayPublications($.settingsDialog);
                 $.displayPreviewImage($.settingsDialog);
                 $.displayArticleCreationMode($.settingsDialog);
@@ -455,6 +452,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             var selectedPublication = $.publications[$.settingsDialog.publicationDropDownGroup.dropDown.selection.index];
             if(!!$.settings.PublicationID) {
                 if($.settings.PublicationID != selectedPublication.id) {
+                    $.settings.PublicationID = selectedPublication.id;
                     $.onPublicationChange($.settingsDialog, selectedPublication);
                 }
             } else {
