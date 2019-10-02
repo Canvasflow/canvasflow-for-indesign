@@ -436,6 +436,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 $.displayPublications($.settingsDialog);
                 $.displayPreviewImage($.settingsDialog);
                 $.displayArticleCreationMode($.settingsDialog);
+                $.settingsDialog.pagesGroup.visible = true;
                 $.settingsDialog.buttonsBarGroup.saveBtn.visible = true;
             } catch(e) {
                 logError(e);
@@ -510,10 +511,21 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             $.settings.StyleID = '' + $.styles[$.settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
         }
 
+        // API KEY
+        $.settingsDialog.pagesGroup = $.settingsDialog.add('group');
+        $.settingsDialog.pagesGroup.orientation = 'row';
+        $.settingsDialog.pagesGroup.add('statictext', [0, 0, labelWidth, 20], 'Publish Pages');
+        $.settingsDialog.pagesGroup.pages = $.settingsDialog.pagesGroup.add('edittext', [0, 0, valuesWidth, 20], '');
+        $.settingsDialog.pagesGroup.visible = false;
+        if(!!$.settings.pages) {
+            $.settingsDialog.pagesGroup.pages.text = $.settings.pages;
+        }
+
         if(!!$.isValidApiKey) {
             $.displayPublications($.settingsDialog);
             $.displayPreviewImage($.settingsDialog);
             $.displayArticleCreationMode($.settingsDialog);
+            $.settingsDialog.pagesGroup.visible = true;
         }
 
         // Panel buttons
@@ -533,6 +545,16 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 if(!!$.isInternal) { 
                     $.settings.endpoint = $.endpoints[$.settingsDialog.endpointDropDownGroup.dropDown.selection.index].id; 
                 }
+
+                var pages = $.settingsDialog.pagesGroup.pages.text;
+                
+                if(!!pages.length) {
+                    if(!$.isValidPagesSyntax(pages)) {
+                        return;
+                    }
+                }
+
+                $.settings.pages = pages;
                 
                 $.canvasflowSettings.save($.settings);
                 $.settingsDialog.close();

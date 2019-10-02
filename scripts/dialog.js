@@ -2,7 +2,7 @@
 //@include "./../modules/CanvasflowDialog.js"
 var baseDirName = 'cf-indesign';
 var settingsFilePath = '~/' + baseDirName + '/canvasflow_settings.json';
-var isInternal = false;
+var isInternal = true;
 var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
 try {
     canvasflowDialog.show();
