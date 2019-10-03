@@ -8,14 +8,13 @@ var CanvasflowPlugin = function() {
     
         }
     
-        var canvasflowScriptActionSettings = app.scriptMenuActions.add("Settings");  
+        var canvasflowScriptActionSettings = app.scriptMenuActions.add("&Settings");  
         canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
-            var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-            var canvasflowDialog = new CanvasflowDialog(canvasflowSettings, isInternal);
+            var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
             canvasflowDialog.show();
         }); 
         
-        var canvasflowScriptActionPublish = app.scriptMenuActions.add("Publish");  
+        var canvasflowScriptActionPublish = app.scriptMenuActions.add("&Publish");  
         canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
             var settingsFile = new File(settingsFilePath);
             if(!settingsFile.exists) {
@@ -42,10 +41,20 @@ var CanvasflowPlugin = function() {
                 }
 
                 var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, commandFilePath, os);
+                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
                 var canvasflowPublish = new CanvasflowPublish(canvasflowSettings, settings.endpoint, canvasflowBuild, canvasflowApi);
                 canvasflowPublish.publish();
+            } catch(e) {
+                logError(e);
+            }
+        });
+
+        var canvasflowScriptActionAbout = app.scriptMenuActions.add("&About");  
+        canvasflowScriptActionAbout.eventListeners.add("onInvoke", function() {  
+            try {
+                var canvasflowAbout = new CanvasflowAbout(version);
+                canvasflowAbout.show();
             } catch(e) {
                 logError(e);
             }
@@ -61,6 +70,8 @@ var CanvasflowPlugin = function() {
     
         canvasflowScriptMenu.menuItems.add(canvasflowScriptActionSettings);
         canvasflowScriptMenu.menuItems.add(canvasflowScriptActionPublish);
+        canvasflowScriptMenu.menuSeparators.add(LocationOptions.AT_END);
+        canvasflowScriptMenu.menuItems.add(canvasflowScriptActionAbout);
     }
 }
 

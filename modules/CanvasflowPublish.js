@@ -1,6 +1,6 @@
 //@include "json2.js"
 //@include "api.js"
-//@include "build.jsx"
+//@include "CanvasflowBuild.jsx"
 
 var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     var $ = this;
@@ -134,7 +134,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
                 return false;
             }
         } else {
-            alert("I couldn't connect to the server");
+            alert('I couldn\'t connect to the server');
             return false;
         }
     }
@@ -216,10 +216,16 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         // Intro
-        var intro = 'You are about to publish the current article to Canvasflow.  Please confirm the following details are correct.';
-        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 50], intro, {multiline: true});
+        var intro = 'You are about to publish the current document to Canvasflow. \n\nPlease confirm the following details are correct:';
+        dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 70], intro, {multiline: true});
         dialog.introGroup.orientation = 'row:top';
         dialog.introGroup.alignment = 'left';
+
+        // External ID
+        dialog.externalIDGroup = dialog.add('group');
+        dialog.externalIDGroup.orientation = 'row';
+        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], "ID");
+        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], $.cfBuild.uuid);
 
         // Publication
         var publication = $.getPublication();
@@ -243,6 +249,13 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         dialog.styleGroup.orientation = 'row';
         dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
         dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], style.name);
+
+        // Creation Mode
+        dialog.creationModeGroup = dialog.add('group');
+        dialog.creationModeGroup.orientation = 'row';
+        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], "Article Creation");
+        var creationMode = $.savedSettings.creationMode[0].toUpperCase() +  $.savedSettings.creationMode.slice(1); 
+        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], creationMode);
 
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';
@@ -317,14 +330,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             }
         }
         else{
-            alert ("Please open a document.");
+            alert ('Please select an article to Publish');
         }
     }
 }
-/*
-var host = "http://api.cflowdev.com/v1";
-var settingsFilePath = "~/canvaflow_settings.json";
-
-var cfBuild = new CanvasflowBuild(settingsFilePath);
-var cfPublish = new CanvasflowPublish(settingsFilePath, "api.cflowdev.com", cfBuild);
-cfPublish.publish();*/

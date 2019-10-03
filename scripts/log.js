@@ -1,4 +1,4 @@
-//@include "./../modules/logger.js"
+//@include "./../modules/CanvasflowLogger.js"
 
 var logFilePath = "~/canvaflow_debug_log.log";
 

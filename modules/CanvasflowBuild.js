@@ -1,14 +1,20 @@
 //@include "json2.js"
 //@include "timeout.js"
 
-var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
+var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
 
-    $.commandFilePath = commandFilePath || '';
+    $.resizeCommandFilePath = resizeCommandFilePath || '';
+    $.convertCommandFilePath = convertCommandFilePath || '';
+    
     $.os = os;
     $.imagesToResize = [];
     $.imagesToConvert = [];
-    $.imageSizeCap = 5 * 1000000; // 5Mb
+    $.imageSizeCap = 1.5 * 1000000; // 1.5Mb
+    $.baseDirName = 'cf-indesign'
+
+    $.resizingImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_resizing.lock';
+    $.convertImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_convert.lock';
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
@@ -451,11 +457,19 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
 
         if(originalImageSize >= $.imageSizeCap) {
+            var dataFile = new File($.resizeCommandFilePath);
+            if(!dataFile.exists) {
+                throw new Error('Resize command file do not exist');
+            }
             $.imagesToResize.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
             return '' + id + '.' + targetExt;
         }
         
         if(targetExt !== ext) {
+            var dataFile = new File($.convertCommandFilePath);
+            if(!dataFile.exists) {
+                throw new Error('Convert command file do not exist');
+            }
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
                
@@ -484,7 +498,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                             });
                         }
                     } else {
-                        if($.savedSettings.previewImage && graphic.visible) {
+                        if(graphic.visible) {
                             imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                             data.push({
                                 type: "Image",
@@ -570,8 +584,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t)',
 
                 ')',
-            
-                'del %userprofile%\\canvasflow_resizing.lock',                
+                'del %userprofile%\\' + $.baseDirName + '\\canvasflow_resizing.lock'        
             )
         } else {
             lines = [
@@ -594,7 +607,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\telse',
                 '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
                 '\t\tfi',
-                '\t\tif [ $ext == "eps" ]; then',
+                '\t\tif [[ $ext == "eps" ]]; then',
                 '\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""',
                 '\t\t\teval $transform_to_pdf',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
@@ -623,7 +636,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\t\teval $remove_command',
                 '\t\tfi',
                 'done',
-                'rm -f canvasflow_resizing.lock'
+                'rm -f ' + $.resizingImageLockFilePath
             ];
         }
 
@@ -631,7 +644,10 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     }
 
     $.resizeImages = function(imageFiles) {
-        var dataFile = new File($.commandFilePath);
+        var dataFile = new File($.resizeCommandFilePath);
+        if(!dataFile.exists) {
+            throw new Error('Resize command file do not exist');
+        }
     
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
@@ -690,7 +706,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
                 ')',
             
-                'del %userprofile%\\canvasflow_convert.lock'
+                'del %userprofile%\\' + $.baseDirName + '\\canvasflow_convert.lock'
             )
         } else {
             lines = [
@@ -714,9 +730,11 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\telse',
                 '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
                 '\t\tfi',
+
+                '\t\text="${file#*.}"',
     
-                '\t\tif [ $ext == "eps" ]; then',
-                '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
+                '\t\tif [[ $ext == "eps" ]]; then',
+                '\t\t\ttransform_to_pdf="echo \'\\\"${file}\\\"\'  | xargs -n1 pstopdf"',
                 '\t\t\teval $transform_to_pdf',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
                 '\t\t\teval $remove_command',
@@ -725,7 +743,6 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\tfi',
     
                 '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
-                '\t\text="${file#*.}"',
                 '\t\tfilename=$(basename -- \"$file\")',
                 '\t\tfilename="${filename%.*}"',
                 '\t\tparent_filename="$(dirname "${file})")"',
@@ -736,7 +753,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 '\t\tremove_command="rm \\\"${file}\\\""',
                 '\t\teval $remove_command',
                 'done',
-                'rm -f canvasflow_convert.lock'
+                'rm -f ' + $.convertImageLockFilePath
             ]
         }
 
@@ -744,7 +761,11 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
     }
 
     $.convertImages = function(imageFiles) {
-        var dataFile = new File($.commandFilePath);
+        var dataFile = new File($.convertCommandFilePath);
+
+        if(!dataFile.exists) {
+            throw new Error('Convert command file do not exist');
+        }
 
         var files = [];
         for(var i = 0; i < imageFiles.length; i++) {
@@ -766,8 +787,8 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
     $.createPackage = function(baseFile) {
         try {
-            var resizingLockFile = new File('~/canvasflow_resizing.lock')
-            var convertLockFile = new File('~/canvasflow_convert.lock')
+            var resizingLockFile = new File($.resizingImageLockFilePath)
+            var convertLockFile = new File($.convertImageLockFilePath)
             if(!resizingLockFile.exists && !convertLockFile.exists) {
                 app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
                 return;
@@ -781,6 +802,18 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
                 $.createPackage(baseFile);
             }, 1000);
         }
+    }
+
+    $.cleanLocks = function() {
+        var lockFile = new File($.resizingImageLockFilePath)
+		if(lockFile.exists) {
+			lockFile.remove();
+        }
+        
+        lockFile = new File($.convertImageLockFilePath)
+		if(lockFile.exists) {
+			lockFile.remove();
+		}
     }
 
     $.buildZipFile = function(document, data, baseDirectory) {
@@ -801,15 +834,18 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
 
         var baseFile = new File(baseDirectory);
 
+        $.cleanLocks();
+
         if(!!$.imagesToResize.length) { 
-            var lockFile = new File('~/canvasflow_resizing.lock')
+            var lockFile = new File($.resizingImageLockFilePath)
             lockFile.encoding = 'UTF-8';
             lockFile.open('w');
             lockFile.close();
             $.resizeImages($.imagesToResize);
         }
+        
         if(!!$.imagesToConvert.length) {
-            var lockFile = new File('~/canvasflow_convert.lock')
+            var lockFile = new File($.convertImageLockFilePath)
             lockFile.encoding = 'UTF-8';
             lockFile.open('w');
             lockFile.close();
@@ -821,6 +857,82 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         return baseFile.fsName + '.zip';
     }
 
+    $.getDefaultPages = function() {
+        var pages = [];
+        for(var i = 0; i < document.pages.length; i++) {
+            pages.push(i+1);
+        }
+        return pages;
+    }
+
+    $.getRangePages = function(input) {
+        var pages = [];
+        results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
+        var lowerRange = parseInt(results[1]);
+        var higherRange = parseInt(results[3]);
+        var totalOfPages = document.pages.length;
+
+        if(!lowerRange) {
+            throw new Error('The lower range should be bigger than 0');
+        }
+
+        if(!higherRange) {
+            throw new Error('The higher range should be bigger than 0');
+        }
+
+        if(lowerRange > higherRange) {
+            throw new Error('The lower range should be smaller than the higher range');
+        }
+
+        if(lowerRange > totalOfPages) {
+            throw new Error('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+        }
+
+        initialPageIndex = lowerRange ;
+        lastPageIndex = higherRange;
+            
+        if (higherRange > totalOfPages) {
+            lastPageIndex = totalOfPages
+        }
+
+        for(var i=initialPageIndex; i <= lastPageIndex; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    }
+
+    $.isElementExist = function(arr, element) {
+        for(var i = 0; i < arr.length; i++) {
+            if(arr[i] === element) return true;
+        }
+        return false;
+    }
+
+    $.getUniqueArray = function(arr) {
+        var response = [];
+        for(var i = 0; i < arr.length; i++) {
+            var element = arr[i];
+            if(!$.isElementExist(response, element)) {
+                response.push(element);
+            }
+        }
+        return response;
+    }
+
+    $.getCSVPages = function(input) {
+        var pages = [];
+        var pagesString = input.split(',');
+        for(var i=0; i < pagesString.length; i++) {
+            var pageNumber = parseInt(pagesString[i]);
+            if(!!pageNumber) {
+                pages.push(pageNumber);
+            }
+        }
+        pages = $.getUniqueArray(pages);
+        return pages;
+    }
+
     $.build = function() {
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
@@ -828,12 +940,17 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
 
         $.createExportFolder();
+
+        var canvasflowBaseDir = new Folder('~/' + $.baseDirName);
+        if(!canvasflowBaseDir.exists) {
+            canvasflowBaseDir.create();
+        }
         
         baseDirectory = $.baseDirectory;
         var filePath = $.filePath;
             
         var templateFile = new File(filePath);
-        templateFile.open("r");
+        templateFile.open('r');
             
         var document = app.activeDocument;
             
@@ -842,41 +959,17 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
             pages: []
         };
 
-        var pages = $.savedSettings.pages;
-        var initialPageIndex = 0;
-        var lastPageIndex = document.pages.length;
-        var totalOfPages = document.pages.length;
+        var settingPages = $.savedSettings.pages;
 
-        if(!!pages) {
-            var results = /^([0-9]+)(-)+([0-9]+)$/.exec(pages)
-            if(results === null) {
+        var pages = $.getDefaultPages();
+
+        if(!!settingPages) {
+            if(!!/^([0-9]+)(-)+([0-9]+)$/.exec(settingPages)) {
+                pages = $.getRangePages(settingPages);
+            } else if(!!/^(\d)+(,\d+)*$/.exec(settingPages)) {
+                pages = $.getCSVPages(settingPages);
+            } else {
                 throw new Error('The range for pages has an invalid syntax');
-            }
-
-            var lowerRange = parseInt(results[1]);
-            var higherRange = parseInt(results[3]);
-
-            if(!lowerRange) {
-                throw new Error('The lower range should be bigger than 0');
-            }
-
-            if(!higherRange) {
-                throw new Error('The higher range should be bigger than 0');
-            }
-
-            if(lowerRange > higherRange) {
-                throw new Error('The lower range should be smaller than the higher range');
-            }
-
-            if(lowerRange > totalOfPages) {
-                throw new Error('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
-            }
-
-            initialPageIndex = lowerRange - 1;
-            lastPageIndex = higherRange;
-            
-            if (higherRange > totalOfPages) {
-                lastPageIndex = totalOfPages
             }
         }
 
@@ -884,8 +977,9 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
         app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
 
-        for (var i = initialPageIndex; i < lastPageIndex; i++) {
-            var page = document.pages[i];
+        do {
+            var pageIndex = pages.shift() - 1;
+            var page = document.pages[pageIndex];
             var position = $.getItemPosition(page.bounds);
             var pageData = {
                 id: page.id,
@@ -898,7 +992,7 @@ var CanvasflowBuild = function(canvasflowSettings, commandFilePath, os) {
             $.getTextFrames(page, pageData.items);
             $.getImages(page, pageData.items, baseDirectory);
             response.pages.push(pageData);
-        }
+        } while(pages.length !== 0)
 
         return $.buildZipFile(document, response, baseDirectory);
     }
