@@ -339,8 +339,9 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.apiKeyGroup.orientation = 'row';
         $.settingsDialog.apiKeyGroup.add('statictext', [0, 0, labelWidth, 20], 'API Key');
         $.settingsDialog.apiKeyGroup.apiKey = $.settingsDialog.apiKeyGroup.add('edittext', [0, 0, valuesWidth * 0.72, 20], '');
-        $.settingsDialog.apiKeyGroup.testApiKeyBtn = $.settingsDialog.apiKeyGroup.add('button', [0, 0, valuesWidth * 0.25, 20], 'Validate');
+        $.settingsDialog.apiKeyGroup.testApiKeyBtn = $.settingsDialog.apiKeyGroup.add('button', [0, 0, valuesWidth * 0.25, 20], '&Validate');
         $.settingsDialog.apiKeyGroup.testApiKeyBtn.helpTip = 'Check if the api key is valid and loads the defaults values for the account';
+        $.settingsDialog.apiKeyGroup.testApiKeyBtn.shortcutKey = 'v';
         $.settingsDialog.apiKeyGroup.testApiKeyBtn.onClick = function() {
             $.hideAll($.settingsDialog);
             var apiKey = $.settingsDialog.apiKeyGroup.apiKey.text.replace(/\s/g,'');
