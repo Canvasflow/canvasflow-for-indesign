@@ -730,9 +730,11 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 '\t\telse',
                 '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
                 '\t\tfi',
+
+                '\t\text="${file#*.}"',
     
                 '\t\tif [[ $ext == "eps" ]]; then',
-                '\t\t\ttransform_to_pdf="echo \\\"${file}\\\"  | xargs -n1 pstopdf"',
+                '\t\t\ttransform_to_pdf="echo \'\\\"${file}\\\"\'  | xargs -n1 pstopdf"',
                 '\t\t\teval $transform_to_pdf',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
                 '\t\t\teval $remove_command',
@@ -741,7 +743,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 '\t\tfi',
     
                 '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
-                '\t\text="${file#*.}"',
                 '\t\tfilename=$(basename -- \"$file\")',
                 '\t\tfilename="${filename%.*}"',
                 '\t\tparent_filename="$(dirname "${file})")"',
