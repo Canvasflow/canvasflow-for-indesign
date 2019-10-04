@@ -631,7 +631,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
                 '\t\t\teval $resize_command > /dev/null 2>&1',
                 '\t\tfi',
-                '\t\tif [ $ext != "jpeg" ] && [ $ext != "jpg" ]; then',
+                '\t\tif [[ $ext != "jpeg" ]] && [[ $ext != "jpg" ]]; then',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
                 '\t\t\teval $remove_command',
                 '\t\tfi',
