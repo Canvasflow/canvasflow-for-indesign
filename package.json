@@ -1,6 +1,6 @@
 {
   "name": "canvasflow-for-indesign",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Canvasflow plugin for InDesign",
   "main": "gulpfile.js",
   "scripts": {
