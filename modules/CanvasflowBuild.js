@@ -459,7 +459,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         if(originalImageSize >= $.imageSizeCap) {
             var dataFile = new File($.resizeCommandFilePath);
             if(!dataFile.exists) {
-                throw new Error('Resize command file do not exist');
+                throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
             }
             $.imagesToResize.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
             return '' + id + '.' + targetExt;
@@ -468,7 +468,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         if(targetExt !== ext) {
             var dataFile = new File($.convertCommandFilePath);
             if(!dataFile.exists) {
-                throw new Error('Convert command file do not exist');
+                throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
             }
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
@@ -646,7 +646,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.resizeImages = function(imageFiles) {
         var dataFile = new File($.resizeCommandFilePath);
         if(!dataFile.exists) {
-            throw new Error('Resize command file do not exist');
+            throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
         }
     
         var files = [];
@@ -764,7 +764,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var dataFile = new File($.convertCommandFilePath);
 
         if(!dataFile.exists) {
-            throw new Error('Convert command file do not exist');
+            throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
         }
 
         var files = [];
@@ -934,6 +934,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     }
 
     $.build = function() {
+        app.activeDocument.zeroPoint = [0, 0];
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
