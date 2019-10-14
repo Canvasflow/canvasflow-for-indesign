@@ -934,7 +934,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     }
 
     $.build = function() {
-        app.activeDocument.zeroPoint = [0, 0];
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
@@ -954,6 +953,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         templateFile.open('r');
             
         var document = app.activeDocument;
+        var zeroPoint =  document.zeroPoint;
+        document.zeroPoint = [0, 0];
             
         $.uuid = $.getDocumentID(document);
         var response = {
@@ -994,6 +995,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             $.getImages(page, pageData.items, baseDirectory);
             response.pages.push(pageData);
         } while(pages.length !== 0)
+
+        document.zeroPoint = zeroPoint;
 
         return $.buildZipFile(document, response, baseDirectory);
     }
