@@ -14,6 +14,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     $.settings = $.canvasflowSettings.getSavedSettings();
 
     $.publications = [];
+    $.publicationType;
 
     $.endpoints = [
         {
@@ -138,9 +139,11 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settings.IssueID = '';
         $.settings.StyleID = '';
         if(selectedPublication.type === 'issue') {
+            $.publicationType = 'issue';
             // Reset Issue
             $.displayIssues(settingsDialog, PublicationID);
         } else {
+            $.publicationType = 'article';
             settingsDialog.issueDropDownGroup.visible = false;
         }
 
@@ -172,9 +175,19 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     }
 
     $.displayIssues = function(settingsDialog, PublicationID) {
+        var issues = [];
         $.issues = $.getIssues($.settings.apiKey, PublicationID);
+        for(var i = 0; i < $.issues.length; i++) {
+            var issue = $.issues[i];
+            if(!!issue.id) {
+                issues.push(issue);
+            }
+        }
+        $.issues = issues;
+
         if($.issues.length === 0) {
             alert('This Publication has no Issues. Please create an Issue and try again.');
+            $.settings.IssueID = '';
             return;
         }
 
@@ -184,8 +197,9 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             selectedIssue = $.getItemByID($.issues, $.settings.IssueID);
             if(selectedIssue === null) {
                 alert('The currently selected Issue does not exist. \nThe first Issue in the current Publication has been selected. Please click Save to update the change.');
-                selection = 0;
-                selectedIssue = $.issues[0];
+                $.settings.IssueID = '';
+                $.displayIssues(settingsDialog, PublicationID);
+                return;
             } else {
                 selection = $.getItemIndexByID($.issues, selectedIssue.id);
             }
@@ -255,7 +269,9 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         settingsDialog.publicationDropDownGroup.dropDown.selection = $.getItemIndexByID($.publications, selectedPublication.id);
         settingsDialog.publicationDropDownGroup.visible = true;
         
+        $.publicationType = 'article';
         if(selectedPublication.type === 'issue') {
+            $.publicationType = 'issue';
             $.displayIssues(settingsDialog, $.settings.PublicationID);
         }
 
@@ -474,6 +490,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         if(!!$.isValidApiKey) {
             $.settingsDialog.buttonsBarGroup.saveBtn.visible = true;
         }
+        
         $.settingsDialog.buttonsBarGroup.saveBtn.onClick = function() {
             try {
                 $.settings.apiKey = $.settingsDialog.apiKeyGroup.apiKey.text;
@@ -491,6 +508,11 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 }
 
                 $.settings.pages = pages;
+
+                if($.publicationType === 'issue' && !$.settings.IssueID) {
+                    alert('This Publication has no Issues. Please create an Issue and try again.');
+                    return
+                }
                 
                 $.canvasflowSettings.save($.settings);
                 $.settingsDialog.close();
