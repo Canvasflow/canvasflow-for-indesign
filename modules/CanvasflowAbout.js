@@ -3,26 +3,28 @@ var CanvasflowAbout = function(version) {
     $.version = version;
 
     $.show = function() {
-        var dialog = new Window('dialog', 'InDesign to Canvasflow');
+        var dialog = new Window('dialog', 'Canvasflow');
         dialog.orientation = 'column';
         dialog.alignment = 'right';
-        dialog.preferredSize = [300,100];
+        dialog.preferredSize = [270,100];
         var labelWidth = 100;
-        var valueWidth = 200;
+        var valueWidth = 150;
+
+        var title = dialog.add('statictext', undefined,'InDesign to Canvasflow');
+        title.alignment = 'left';
 
         var fields = [
             {
                 label: 'Version',
-                value: version
+                value: $.version
             },
-            /*{
-                label: 'Plugin help',
-                value: 'Link',
-                link: 'https://docs.canvasflow.io/article/245-using-the-indesign-plugin'
-            },*/
             {
-                label: 'Contact support',
+                label: 'Support',
                 value: 'support@canvasflow.io'
+            },
+            {
+                label: 'Website',
+                value: 'https://canvasflow.io'
             }
         ];
         
@@ -30,29 +32,14 @@ var CanvasflowAbout = function(version) {
             var field = fields[i];
             var group = dialog.add('group');
             group.orientation = 'row';
+            
             group.add('statictext', [0, 0, labelWidth, 20], field.label);
-            if(!!field.link) {
-                var hyperlinkBtn = group.add('button', [0, 0, valueWidth, 20]);
-                hyperlinkBtn.text = 'Link'
-                hyperlinkBtn.onClick = function() {
-                    try {
-                        dialog.select(hyperlinkBtn, SelectionOptions.REPLACE_WITH);
-                        // app.select({texts: 'https://google.com'}, SelectionOptions.REPLACE_WITH);
-                        app.copy();
-                        alert('Link copy into the clipboard');
-                    }catch(e) {
-                        alert(e.message);
-                    }
-                   
-                }
-            } else {
-                group.add('statictext', [0, 0, valueWidth, 20], field.value);
-            }
+            group.add('statictext', [0, 0, valueWidth, 20], field.value);
         }
-        var copyright = dialog.add('statictext', [0, 0, 300, 20], '© 2015-2019 Canvasflow Ltd');
+        dialog.add('statictext', [0, 0, labelWidth, 0], '');
+        var copyright = dialog.add('statictext', undefined,'\u00A9 2015-2019 Canvasflow Ltd');
         copyright.alignment = 'left';
 
-        // system.callSystem("open " + "http://www.google.com");
         dialog.buttonsBarGroup = dialog.add('group', undefined, 'buttons');
         dialog.buttonsBarGroup.closeBtn = dialog.add('button', undefined, 'Close');
         dialog.buttonsBarGroup.closeBtn.alignment = 'bottom';
@@ -60,6 +47,5 @@ var CanvasflowAbout = function(version) {
             dialog.close();
         }
         dialog.show();
-        // alert('Version: ' + version);
     }
 }
