@@ -29,11 +29,11 @@ Error.prototype.toLog = function(logPath) {
 }
 
 function logError(e) {
-    var file = new File('~/cf-indesign/canvasflow_error.json');
+    var file = new File(getBasePath() + '/cf-indesign/canvasflow_error.json');
     file.encoding = 'UTF-8';
     file.open('w');
     file.write(e.toJson());
     file.close();
-    e.toLog('~/cf-indesign/canvasflow_error.log')
+    e.toLog(getBasePath() + '/cf-indesign/canvasflow_error.log')
     alert(e.toJson())
 }

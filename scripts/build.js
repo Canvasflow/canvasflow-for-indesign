@@ -7,9 +7,9 @@ if(/^Win(.)*/gm.test($.os)) {
 }
 
 var baseDirName = 'cf-indesign';
-var settingsFilePath = '~/' + baseDirName + '/canvasflow_settings.json';
-var resizeCommandFilePath = '~/' + baseDirName + '/canvasflow_resize.command';
-var convertCommandFilePath = '~/' + baseDirName + '/canvasflow_convert.command';
+var settingsFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_settings.json';
+var resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_resize.command';
+var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.command';
 
 var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
 var cfBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
