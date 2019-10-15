@@ -1,5 +1,6 @@
 //@include "json2.js"
 //@include "timeout.js"
+//@include "env.js"
 
 var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
@@ -13,8 +14,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.imageSizeCap = 1.5 * 1000000; // 1.5Mb
     $.baseDirName = 'cf-indesign'
 
-    $.resizingImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_resizing.lock';
-    $.convertImageLockFilePath = '~/' + $.baseDirName + '/canvasflow_convert.lock';
+    $.resizingImageLockFilePath = getBasePath() + '/' + $.baseDirName + '/canvasflow_resizing.lock';
+    $.convertImageLockFilePath = getBasePath() + '/' + $.baseDirName + '/canvasflow_convert.lock';
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
@@ -941,7 +942,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
         $.createExportFolder();
 
-        var canvasflowBaseDir = new Folder('~/' + $.baseDirName);
+        var canvasflowBaseDir = new Folder(getBasePath() + '/' + $.baseDirName);
         if(!canvasflowBaseDir.exists) {
             canvasflowBaseDir.create();
         }

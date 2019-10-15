@@ -1,6 +1,6 @@
 //@include "./../modules/CanvasflowLogger.js"
 
-var logFilePath = "~/canvaflow_debug_log.log";
+var logFilePath = getBasePath() + '/canvaflow_debug_log.log';
 
 var logger = new CanvasflowLogger(logFilePath, true);
 logger.log((new Date()).getTime(), 'test func');
