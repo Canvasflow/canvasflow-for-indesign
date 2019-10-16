@@ -1,7 +1,7 @@
 var CanvasflowSettings = function(settingsPath){
     var $ = this;
     $.settingsPath = settingsPath;
-    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true, "pages": "", "creationMode": "document"}';
+    $.defaultSavedSettings = '{"apiKey":"", "PublicationID": "", "IssueID": "", "StyleID": "", "endpoint": "", "previewImage": true, "pages": "", "creationMode": "document", "contentOrder": "natural"}';
 
     $.getSavedSettings = function() {
         var file = new File($.settingsPath);
@@ -31,6 +31,7 @@ var CanvasflowSettings = function(settingsPath){
         '", "previewImage": ' + settings.previewImage +
         ', "pages": "' + (settings.pages || '') + '"' + 
         ', "creationMode": "' + (settings.creationMode || 'document') + '"' +
+        ', "contentOrder": "' + (settings.contentOrder || 'natural') + '"' +
         '}';
         file.write(content);
         file.close();
