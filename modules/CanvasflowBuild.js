@@ -543,6 +543,10 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.getResizeImagesScriptContent = function(files) {
         var lines = [];
         if($.os === 'dos') {
+            var basePath = 'userprofile';
+            if(!!getEnv('CF_USER_BASE_PATH')) {
+                basePath = 'cf_user_base_path';
+            }
             lines.push(
                 '@echo off',
                 'setlocal enabledelayedexpansion'
@@ -585,7 +589,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 '\t)',
 
                 ')',
-                'del %userprofile%\\' + $.baseDirName + '\\canvasflow_resizing.lock'        
+                'del %' + basePath + '%\\' + $.baseDirName + '\\canvasflow_resizing.lock'        
             )
         } else {
             lines = [
@@ -671,6 +675,10 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.getConvertImagesScriptContent = function(files) {
         var lines = [];
         if($.os === 'dos') {
+            var basePath = 'userprofile';
+            if(!!getEnv('CF_USER_BASE_PATH')) {
+                basePath = 'cf_user_base_path';
+            }
             lines.push(
                 '@echo off',
                 'setlocal enabledelayedexpansion'
@@ -707,7 +715,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
                 ')',
             
-                'del %userprofile%\\' + $.baseDirName + '\\canvasflow_convert.lock'
+                'del %' + basePath + '%\\' + $.baseDirName + '\\canvasflow_convert.lock'
             )
         } else {
             lines = [

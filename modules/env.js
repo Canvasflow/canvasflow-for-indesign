@@ -5,3 +5,7 @@ function getBasePath() {
     }
     return '~';
 }
+
+function getEnv(env) {
+    $.getenv(env)
+}
