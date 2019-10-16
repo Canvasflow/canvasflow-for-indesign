@@ -130,6 +130,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         settingsDialog.issueDropDownGroup.visible = false;
         settingsDialog.previewImageDropDownGroup.visible = false;
         settingsDialog.creationModeDropDownGroup.visible = false;
+        settingsDialog.contentOrderDropDownGroup.visible = false;
         settingsDialog.styleDropDownGroup.visible = false;
         settingsDialog.pagesGroup.visible = false;
     }
@@ -305,6 +306,20 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         settingsDialog.creationModeDropDownGroup.dropDown.selection = selection;
     }
 
+    $.displayArticleContentOrder = function(settingsDialog) {
+        settingsDialog.contentOrderDropDownGroup.visible = true;
+        var selection = 0;
+        var contentOrder = 'natural';
+        if($.settings.contentOrder === 'textFirst') {
+            contentOrder = 'textFirst';
+            selection = 1;
+        }
+
+        $.settings.contentOrder = contentOrder;
+
+        settingsDialog.contentOrderDropDownGroup.dropDown.selection = selection;
+    }
+
     $.hideAll = function(settingsDialog) {
         $.settings.PublicationID = '';
         $.settings.IssueID = '';
@@ -376,6 +391,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
                 $.displayPublications($.settingsDialog);
                 $.displayPreviewImage($.settingsDialog);
                 $.displayArticleCreationMode($.settingsDialog);
+                $.displayArticleContentOrder($.settingsDialog);
                 $.settingsDialog.pagesGroup.visible = true;
                 $.settingsDialog.buttonsBarGroup.saveBtn.visible = true;
             } catch(e) {
@@ -453,6 +469,21 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             }
         }
 
+        // Add Article Content Order
+        var contentOrderOptions = ['Natural', 'Separate Images'];
+        $.settingsDialog.contentOrderDropDownGroup = $.settingsDialog.add('group', undefined, 'contentOrder');
+        $.settingsDialog.contentOrderDropDownGroup.orientation = 'row';
+        $.settingsDialog.contentOrderDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Content Ordering');
+        $.settingsDialog.contentOrderDropDownGroup.dropDown = $.settingsDialog.contentOrderDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:contentOrderOptions});
+        $.settingsDialog.contentOrderDropDownGroup.visible = false;
+        $.settingsDialog.contentOrderDropDownGroup.dropDown.onChange = function() {
+            if($.settingsDialog.contentOrderDropDownGroup.dropDown.selection.index === 0) {
+                $.settings.contentOrder = 'natural';
+            } else {
+                $.settings.contentOrder = 'textFirst';
+            }
+        }
+
         // STYLES
         $.settingsDialog.styleDropDownGroup = $.settingsDialog.add('group', undefined, 'styles');
         $.settingsDialog.styleDropDownGroup.orientation = 'row';
@@ -477,6 +508,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             $.displayPublications($.settingsDialog);
             $.displayPreviewImage($.settingsDialog);
             $.displayArticleCreationMode($.settingsDialog);
+            $.displayArticleContentOrder($.settingsDialog);
             $.settingsDialog.pagesGroup.visible = true;
         }
 

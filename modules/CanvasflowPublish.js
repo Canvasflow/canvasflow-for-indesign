@@ -34,7 +34,8 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
         var StyleID = $.savedSettings.StyleID;
-        var creationMode = $.savedSettings.creationMode;
+        var creationMode = $.savedSettings.creationMode || 'document';
+        var contentOrder = $.savedSettings.contentOrder || 'natural';
     
         if(conn.open(host, "BINARY")) {
             conn.timeout=20000;
@@ -58,6 +59,12 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             + "Content-Disposition: form-data; name=\"creationMode\"\r\n"
             + "\r\n"
             + creationMode + "\r\n"
+            + "\r\n";
+
+            var contentOrderContent = "--" + boundary + "\r\n"
+            + "Content-Disposition: form-data; name=\"contentOrder\"\r\n"
+            + "\r\n"
+            + contentOrder + "\r\n"
             + "\r\n";
 
             var articleNameContent = "--" + boundary + "\r\n"
@@ -102,6 +109,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             var content = fileContent
             + apiKeyContent
             + creationModeContent
+            + contentOrderContent
             + articleNameContent
             + contentType
             + PublicationIDContent
