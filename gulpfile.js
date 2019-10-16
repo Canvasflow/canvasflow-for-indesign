@@ -14,6 +14,7 @@ function concatenate() {
     return gulp.src([
         './modules/json2.js', 
         './modules/env.js',
+        './modules/dir.js',
         './modules/error.js',
         './modules/variables.js',
         './modules/timeout.js',

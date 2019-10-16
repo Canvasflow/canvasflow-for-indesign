@@ -14,8 +14,7 @@ var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_co
 var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
 var cfBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
 try {
-    cfBuild.build();
-    alert('Complete build');
+    alert('Complete build is located in the path: ' + cfBuild.build());
 } catch(e) {
     alert(e.message);
 }

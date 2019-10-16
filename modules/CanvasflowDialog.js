@@ -470,7 +470,8 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         }
 
         // Add Article Content Order
-        var contentOrderOptions = ['Natural', 'Separate Images'];
+        // var contentOrderOptions = ['Natural', 'Separate Images'];
+        var contentOrderOptions = ['Natural'];
         $.settingsDialog.contentOrderDropDownGroup = $.settingsDialog.add('group', undefined, 'contentOrder');
         $.settingsDialog.contentOrderDropDownGroup.orientation = 'row';
         $.settingsDialog.contentOrderDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Content Ordering');
