@@ -568,19 +568,20 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
                 '\tset image_width=""',
                 '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
+                '\tset image_width=!image_width:\'=!',
 
                 '\tset target_filename="!parent_dir!!filename!.jpg"',
                 '\tif !image_width! gtr 2048 (',
                 '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -geometry 2048x !original_image! !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image! !target_filename!',
                 '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -geometry 2048x !original_image![0] -quality 50 !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] -quality 50 !target_filename!',
                 '\t\t)',
                 '\t) else (',
                 '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB !original_image! !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
                 '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB !original_image![0] -quality 50 !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] -quality 50 !target_filename!',
                 '\t\t)',
                 '\t)',
 
@@ -701,12 +702,13 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
                 '\tset image_width=""',
                 '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
+                '\tset image_width=!image_width:\'=!',
 
                 '\tset target_filename="!parent_dir!!filename!.jpg"',
                 '\tif "!ext!" neq ".tif" (',
-                '\t\tmagick convert -colorspace sRGB !original_image! !target_filename!',
+                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
                 '\t) else (',
-                '\t\tmagick convert -colorspace sRGB !original_image![0] !target_filename!',
+                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!',
                 '\t)',
 
                 '\tif "!ext!" neq ".jpg" (',
