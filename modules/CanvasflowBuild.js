@@ -1,6 +1,7 @@
 //@include "json2.js"
 //@include "timeout.js"
 //@include "env.js"
+//@include "dir.js"
 
 var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
@@ -864,6 +865,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         }
 
         $.createPackage(baseFile);
+        removeDir(baseFile.fsName);
 
         return baseFile.fsName + '.zip';
     }
