@@ -210,8 +210,8 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         return null;
     }
 
-    $.displayConfirmDialog = function(onPublish, onCancel) {
-        var dialog = new Window('dialog', 'Publish', undefined, {closeButton: false});
+    $.displayConfirmDialog = function() {
+        var dialog = new Window('dialog', 'Publish to Canvasflow', undefined, {closeButton: false});
         dialog.orientation = 'column';
         dialog.alignment = 'right';
         dialog.preferredSize = [300,100];
@@ -232,14 +232,14 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         // External ID
         dialog.externalIDGroup = dialog.add('group');
         dialog.externalIDGroup.orientation = 'row';
-        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], "ID");
+        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], 'ID');
         dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], $.cfBuild.uuid);
 
         // Publication
         var publication = $.getPublication();
         dialog.publicationGroup = dialog.add('group');
         dialog.publicationGroup.orientation = 'row';
-        dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], "Publication");
+        dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], 'Publication');
         dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], publication.name);
 
         // Issue
@@ -247,7 +247,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             var issue = $.getIssue();
             dialog.issueGroup = dialog.add('group');
             dialog.issueGroup.orientation = 'row';
-            dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], "Issue");
+            dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], 'Issue');
             dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], issue.name);
         }
         
@@ -255,13 +255,13 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var style = $.getStyle();
         dialog.styleGroup = dialog.add('group');
         dialog.styleGroup.orientation = 'row';
-        dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], "Style");
+        dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], 'Style');
         dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], style.name);
 
         // Creation Mode
         dialog.creationModeGroup = dialog.add('group');
         dialog.creationModeGroup.orientation = 'row';
-        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], "Article Creation");
+        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation');
         var creationMode = $.savedSettings.creationMode[0].toUpperCase() +  $.savedSettings.creationMode.slice(1); 
         dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], creationMode);
 
@@ -272,22 +272,14 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         dialog.buttonsBarGroup.saveBtn = dialog.buttonsBarGroup.add('button', undefined, 'OK');
 
         dialog.buttonsBarGroup.saveBtn.onClick = function() {
-            try {
-                dialog.active = false;
-                dialog.hide();
-                dialog.close(0);
-                onPublish();
-            }catch(e) {
-                logError(e);
-            }
+            dialog.close(1);
         }
 
         dialog.buttonsBarGroup.cancelBtn.onClick = function() {
             dialog.close(0);
-            onCancel();
         }
     
-        dialog.show();
+        return dialog.show();
     }
 
     $.publish = function() {
@@ -297,44 +289,25 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
 
         if (app.documents.length != 0){
             var zipFilePath = '';
-            try {
+            var response = $.displayConfirmDialog();
+            if(!!response) {
                 var baseDirectory = app.activeDocument.filePath + '/';
                 $.filePath = baseDirectory + app.activeDocument.name;
                 var ext = app.activeDocument.name.split('.').pop();
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
-            } catch(e) {
-                logError(e);
-                return;
-            }
 
-            var onPublish = function() {
-                try {
-                    var publishStartTime = (new Date()).getTime();
-                    if($.uploadZip(zipFilePath)) {
-                        $.cleanUp();
-                        new File(zipFilePath).remove()
-                        alert('Article was uploaded successfully');
-                        logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
-                    } else {
-                        logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
-                        throw new Error('Error uploading the content, please try again');
-                    }
-                } catch(e) {
-                    logError(e);
+                var publishStartTime = (new Date()).getTime();
+                if($.uploadZip(zipFilePath)) {
+                    $.cleanUp();
+                    new File(zipFilePath).remove()
+                    alert('Article was uploaded successfully');
+                    logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
+                } else {
+                    $.cleanUp();
+                    logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
+                    throw new Error('Error uploading the content, please try again');
                 }
-            }
-            
-            var onCancel = function() {
-                $.cleanUp();
-                new File(zipFilePath).remove();
-            }
-            
-            // onPublish();
-            try {
-                $.displayConfirmDialog(onPublish, onCancel);
-            } catch(e) {
-                logError(e);
             }
         }
         else{
