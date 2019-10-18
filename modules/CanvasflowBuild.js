@@ -991,6 +991,11 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         // This set the document to pixels
         app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
+        var w = new Window ('palette', 'Building');
+        w.progressBar = w.add('progressbar', undefined, 0, pages.length);
+        w.progressText = w.add('statictext', [0, 0, 100, 20], '');
+        w.progressBar.preferredSize.width = 300;
+        w.show();
 
         do {
             var pageIndex = pages.shift() - 1;
@@ -1007,6 +1012,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             $.getTextFrames(page, pageData.items);
             $.getImages(page, pageData.items, baseDirectory);
             response.pages.push(pageData);
+            w.progressBar.value = w.progressBar.value + 1;
+            w.progressText.text = 'Page ' + w.progressBar.value + 'of ' + pages.length;
         } while(pages.length !== 0)
 
         document.zeroPoint = zeroPoint;
