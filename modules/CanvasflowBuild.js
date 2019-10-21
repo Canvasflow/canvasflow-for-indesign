@@ -437,7 +437,14 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         destFilePath = imageDirectory + '/' + id + '.' + ext;
         destFilePath = destFilePath.replace(/%20/gi, ' ');
 
-        if($.isNotSupportedExtension(ext) || !originalImageFile.exists) {
+        if($.isNotSupportedExtension(ext)) {
+            return $.exportImageRepresentation(graphic, imageDirectory, id);
+        }
+
+        if(!originalImageFile.exists) {
+            if(!!logger) {
+                logger.log((new Date()).getTime(), 'The image do not exist: "' + fileName + '"');
+            }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
