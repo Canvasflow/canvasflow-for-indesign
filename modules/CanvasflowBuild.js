@@ -528,20 +528,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         $.getImageFromGraphics(page.allGraphics, data, baseDirectory);
     }
 
-    $.createPreview = function(document, baseDirectory) {
-        var imagePath = baseDirectory + '/preview.jpg';
-        if(imagePath.exists) {
-            imagePath.remove();
-        }
-        try {                           
-            if($.isUniquePreview()) {
-                app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
-                app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
-                document.exportFile(ExportFormat.JPG, new File(imagePath));
-            }
-        } catch(e) {}
-    }
-
     $.writeToFileScript = function(dataFile, lines) {
         for(var i=0; i < lines.length; i++) {
             var line = lines[i];
@@ -845,11 +831,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         dataFile.open('w');
         dataFile.write(JSON.stringify(data));
         dataFile.close();
-
-        $.createPreview(document, baseDirectory);
-        if (app.dialogs.length > 0) {
-            app.dialogs.everyItem().destroy();
-        }
 
         var baseFile = new File(baseDirectory);
 
