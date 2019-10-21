@@ -151,8 +151,6 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var baseDirectory = $.baseDirectory;
         var dataPath = baseDirectory + '/data.json'; 
         new File(dataPath).remove();
-        var previewPath = baseDirectory + '/preview.jpg'; 
-        new File(previewPath).remove();
     
         var imagesPath = baseDirectory + '/images';
         var imagesFolder = new Folder(imagesPath);

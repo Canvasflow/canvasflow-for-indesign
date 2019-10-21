@@ -27,7 +27,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         }
     ];
 
-    $.previewImageOptions = ['Yes', 'No'];
     $.creationModeOptions = ['Document', 'Page'];
     
     $.validateApiKey = function(canvasflowApi, apiKey) {
@@ -128,7 +127,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
         settingsDialog.publicationDropDownGroup.visible = false;
         settingsDialog.issueDropDownGroup.visible = false;
-        settingsDialog.previewImageDropDownGroup.visible = false;
         settingsDialog.creationModeDropDownGroup.visible = false;
         settingsDialog.contentOrderDropDownGroup.visible = false;
         settingsDialog.styleDropDownGroup.visible = false;
@@ -279,19 +277,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.displayStyles(settingsDialog, $.settings.PublicationID);
     }
 
-    $.displayPreviewImage = function(settingsDialog) {
-        settingsDialog.previewImageDropDownGroup.visible = true;
-        var previewImage = false;
-        var selection = 1;
-        if($.settings.previewImage === true) {
-            previewImage = true;
-            selection = 0;
-        }
-
-        $.settings.previewImage = previewImage;
-        settingsDialog.previewImageDropDownGroup.dropDown.selection = selection;
-    }
-
     $.displayArticleCreationMode = function(settingsDialog) {
         settingsDialog.creationModeDropDownGroup.visible = true;
         var selection = 0;
@@ -327,7 +312,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
         settingsDialog.publicationDropDownGroup.visible = false;
         settingsDialog.issueDropDownGroup.visible = false;
-        settingsDialog.previewImageDropDownGroup.visible = false;
         settingsDialog.creationModeDropDownGroup.visible = false;
         settingsDialog.styleDropDownGroup.visible = false;
         settingsDialog.pagesGroup.visible = false;
@@ -389,7 +373,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
             try {
                 $.settings.apiKey = apiKey;
                 $.displayPublications($.settingsDialog);
-                $.displayPreviewImage($.settingsDialog);
                 $.displayArticleCreationMode($.settingsDialog);
                 $.displayArticleContentOrder($.settingsDialog);
                 $.settingsDialog.pagesGroup.visible = true;
@@ -438,20 +421,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.issueDropDownGroup.visible = false;
         $.settingsDialog.issueDropDownGroup.dropDown.onChange = function() {
             $.settings.IssueID = $.issues[$.settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
-        }
-
-        // PREVIEW IMAGE
-        $.settingsDialog.previewImageDropDownGroup = $.settingsDialog.add('group', undefined, 'previewImage');
-        $.settingsDialog.previewImageDropDownGroup.orientation = 'row';
-        $.settingsDialog.previewImageDropDownGroup.add('statictext', [0, 0, labelWidth, 20], 'Use preview images');
-        $.settingsDialog.previewImageDropDownGroup.dropDown = $.settingsDialog.previewImageDropDownGroup.add('dropdownlist', [0, 0, valuesWidth, 20], undefined, {items:$.previewImageOptions});
-        $.settingsDialog.previewImageDropDownGroup.visible = false;
-        $.settingsDialog.previewImageDropDownGroup.dropDown.onChange = function() {
-            if($.settingsDialog.previewImageDropDownGroup.dropDown.selection.index === 0) {
-                $.settings.previewImage = true;
-            } else {
-                $.settings.previewImage = false;
-            }
         }
 
         // Add Article Creation Mode 
@@ -507,7 +476,6 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
 
         if(!!$.isValidApiKey) {
             $.displayPublications($.settingsDialog);
-            $.displayPreviewImage($.settingsDialog);
             $.displayArticleCreationMode($.settingsDialog);
             $.displayArticleContentOrder($.settingsDialog);
             $.settingsDialog.pagesGroup.visible = true;

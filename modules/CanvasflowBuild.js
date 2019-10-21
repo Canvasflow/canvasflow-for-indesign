@@ -437,7 +437,14 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         destFilePath = imageDirectory + '/' + id + '.' + ext;
         destFilePath = destFilePath.replace(/%20/gi, ' ');
 
-        if($.isNotSupportedExtension(ext) || !originalImageFile.exists) {
+        if($.isNotSupportedExtension(ext)) {
+            return $.exportImageRepresentation(graphic, imageDirectory, id);
+        }
+
+        if(!originalImageFile.exists) {
+            if(!!logger) {
+                logger.log((new Date()).getTime(), 'The image do not exist: "' + fileName + '"');
+            }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
@@ -519,20 +526,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
     $.getImages = function(page, data, baseDirectory) {
         $.getImageFromGraphics(page.allGraphics, data, baseDirectory);
-    }
-
-    $.createPreview = function(document, baseDirectory) {
-        var imagePath = baseDirectory + '/preview.jpg';
-        if(imagePath.exists) {
-            imagePath.remove();
-        }
-        try {                           
-            if($.isUniquePreview()) {
-                app.jpegExportPreferences.pageString = app.activeDocument.pages.item(0).name;  
-                app.jpegExportPreferences.jpegExportRange = ExportRangeOrAllPages.EXPORT_RANGE; 
-                document.exportFile(ExportFormat.JPG, new File(imagePath));
-            }
-        } catch(e) {}
     }
 
     $.writeToFileScript = function(dataFile, lines) {
@@ -838,11 +831,6 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         dataFile.open('w');
         dataFile.write(JSON.stringify(data));
         dataFile.close();
-
-        $.createPreview(document, baseDirectory);
-        if (app.dialogs.length > 0) {
-            app.dialogs.everyItem().destroy();
-        }
 
         var baseFile = new File(baseDirectory);
 
