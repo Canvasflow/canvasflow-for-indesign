@@ -6,9 +6,9 @@ var CanvasflowAbout = function(version) {
         var dialog = new Window('dialog', 'Canvasflow');
         dialog.orientation = 'column';
         dialog.alignment = 'right';
-        dialog.preferredSize = [270,100];
+        dialog.preferredSize = [300,100];
         var labelWidth = 100;
-        var valueWidth = 150;
+        var valueWidth = 200;
 
         var title = dialog.add('statictext', undefined,'InDesign to Canvasflow');
         title.alignment = 'left';
@@ -17,6 +17,10 @@ var CanvasflowAbout = function(version) {
             {
                 label: 'Version',
                 value: $.version
+            },
+            {
+                label: 'Install path',
+                value: getBasePath()
             },
             {
                 label: 'Support',

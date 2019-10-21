@@ -58,15 +58,22 @@ var CanvasflowPlugin = function() {
         var canvasflowScriptActionBuild = app.scriptMenuActions.add("&Build");  
         canvasflowScriptActionBuild.eventListeners.add("onInvoke", function() {  
             try {
-                var settingsFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_settings.json';
-                var resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_resize.command';
-                var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.command';
-                
-                var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                var cfBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
-                var buildFile = new File(cfBuild.build());
-                alert('Build Completed\n' + buildFile.displayName);
-                buildFile.parent.execute()
+                if (app.documents.length != 0){
+                    var response = confirm('This will generate the deliverable ZIP file, but will NOT publish to Canvasflow.  Please do this only if instructed by a member of the Canvasflow support team.')
+                    if(response) {
+                        var settingsFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_settings.json';
+                        var resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_resize.command';
+                        var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.command';
+                        
+                        var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
+                        var cfBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
+                        var buildFile = new File(cfBuild.build());
+                        alert('Build Completed\n' + buildFile.displayName);
+                        buildFile.parent.execute()
+                    }
+                } else {
+                    alert ('Please select an article to build');
+                }
             } catch(e) {
                 logError(e);
             }
