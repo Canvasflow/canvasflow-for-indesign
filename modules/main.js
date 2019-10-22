@@ -53,6 +53,7 @@ var CanvasflowPlugin = function() {
                 var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
                 var canvasflowPublish = new CanvasflowPublish(canvasflowSettings, settings.endpoint, canvasflowBuild, canvasflowApi);
+                
                 logger.log((new Date()).getTime(), '-----------     START     -----------');
                 canvasflowPublish.publish();
                 logger.log((new Date()).getTime(), '-----------     END     -----------');
@@ -65,19 +66,17 @@ var CanvasflowPlugin = function() {
         canvasflowScriptActionBuild.eventListeners.add("onInvoke", function() {  
             try {
                 if (app.documents.length != 0){
-                    var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.  Please do this only if instructed by a member of the Canvasflow support team.')
+                    var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.')
                     if(response) {
-                        var settingsFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_settings.json';
-                        var resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_resize.command';
-                        var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.command';
-                        
                         var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                        var cfBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
+                        var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
+
                         logger.log((new Date()).getTime(), '-----------     START     -----------');
-                        var buildFile = new File(cfBuild.build());
+                        var buildFile = new File(canvasflowBuild.build());
+                        logger.log((new Date()).getTime(), '-----------     END     -----------');
+                        
                         alert('Build Completed\n' + buildFile.displayName);
                         buildFile.parent.execute()
-                        logger.log((new Date()).getTime(), '-----------     END     -----------');
                     }
                 } else {
                     alert ('Please select an article to build');
