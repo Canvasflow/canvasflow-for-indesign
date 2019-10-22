@@ -438,6 +438,9 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         destFilePath = destFilePath.replace(/%20/gi, ' ');
 
         if($.isNotSupportedExtension(ext)) {
+            if(!!logger) {
+                logger.log((new Date()).getTime(), 'The image extension is not valid: "' + fileName + '", extension: ' + ext);
+            }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
@@ -447,6 +450,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
+
+        logger.log((new Date()).getTime(), 'The image exist "' + fileName +'" and should be processed by the script');
 
         var originalImageSize = originalImageFile.length;
 
@@ -466,18 +471,18 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         originalImageFile.copy(imageDirectory + '/' + id + '.' + ext);
 
         if(originalImageSize >= $.imageSizeCap) {
-            var dataFile = new File($.resizeCommandFilePath);
+            var dataFile = new File(resizeCommandFilePath);
             if(!dataFile.exists) {
-                throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
+                throw new Error('The command "resize" required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@canvasflow.io if you require assistance.');
             }
             $.imagesToResize.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
             return '' + id + '.' + targetExt;
         }
         
         if(targetExt !== ext) {
-            var dataFile = new File($.convertCommandFilePath);
+            var dataFile = new File(convertCommandFilePath);
             if(!dataFile.exists) {
-                throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
+                throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@canvasflow.io if you require assistance.');
             }
             $.imagesToConvert.push(File(imageDirectory + '/' + id + '.' + ext).fsName);
         }
@@ -646,7 +651,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.resizeImages = function(imageFiles) {
         var dataFile = new File($.resizeCommandFilePath);
         if(!dataFile.exists) {
-            throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
+            throw new Error('The command "resize" required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@canvasflow.io if you require assistance.');
         }
     
         var files = [];
@@ -769,7 +774,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var dataFile = new File($.convertCommandFilePath);
 
         if(!dataFile.exists) {
-            throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@cvanvasflow.io if you require assistance.');
+            throw new Error('The command "convert" required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@canvasflow.io if you require assistance.');
         }
 
         var files = [];

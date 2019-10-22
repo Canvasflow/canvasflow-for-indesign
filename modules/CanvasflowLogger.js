@@ -31,3 +31,4 @@ var CanvasflowLogger = function(logFilePath, enable) {
 
     $.createFile();
 }
+logger = new CanvasflowLogger(logFilePath, isDebugEnable);
