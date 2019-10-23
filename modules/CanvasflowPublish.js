@@ -133,8 +133,8 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             conn.close();
     
             if( reply.indexOf( "200" ) > 0 ) {
-                var data = reply.substring(reply.indexOf("{"), reply.length);
-                alert(reply);
+                // var data = reply.substring(reply.indexOf("{"), reply.length);
+                // alert(reply);
                 // var response = JSON.parse(data);
                 return true;
             } else {
