@@ -77,7 +77,7 @@ var CanvasflowPlugin = function() {
                             alert('Build Completed\n' + buildFile.displayName);
                             buildFile.parent.execute()
                         } else {
-                            alert('Build was canceled');
+                            alert('Build cancelled');
                         }
                     }
                 } else {

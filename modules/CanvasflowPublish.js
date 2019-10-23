@@ -147,23 +147,6 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         }
     }
 
-    $.cleanUp = function() {
-        var baseDirectory = $.baseDirectory;
-        var dataPath = baseDirectory + '/data.json'; 
-        new File(dataPath).remove();
-    
-        var imagesPath = baseDirectory + '/images';
-        var imagesFolder = new Folder(imagesPath);
-        var files = imagesFolder.getFiles();
-        for(var i =0; i < files.length; i++) {
-            var item = files[i];
-            item.remove();
-        }
-        imagesFolder.remove();
-    
-        new Folder(baseDirectory).remove();
-    }
-
     $.getPublication = function() {
         var apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
@@ -295,17 +278,15 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
                 if(!cfBuild.isBuildSuccess) {
-                    throw new Error('Build cancelled');
+                    alert('Build cancelled');
+                    return;
                 }
-
                 var publishStartTime = (new Date()).getTime();
                 if($.uploadZip(zipFilePath)) {
-                    $.cleanUp();
                     new File(zipFilePath).remove()
                     alert('Article was uploaded successfully');
                     logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
                 } else {
-                    $.cleanUp();
                     logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
                     throw new Error('Error uploading the content, please try again');
                 }
