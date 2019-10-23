@@ -446,12 +446,12 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
         if(!originalImageFile.exists) {
             if(!!logger) {
-                logger.log((new Date()).getTime(), 'The image do not exist: "' + fileName + '"');
+                logger.log((new Date()).getTime(), 'Image does not exist: "' + fileName + '"');
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
-        logger.log((new Date()).getTime(), 'The image exist "' + fileName +'" and should be processed by the script');
+        logger.log((new Date()).getTime(), 'Image exists "' + fileName +'" and should be processed by the script');
 
         var originalImageSize = originalImageFile.length;
 
