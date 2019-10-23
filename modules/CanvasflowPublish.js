@@ -284,7 +284,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
                 var publishStartTime = (new Date()).getTime();
                 if($.uploadZip(zipFilePath)) {
                     new File(zipFilePath).remove()
-                    alert('Article was uploaded successfully');
+                    alert('Success \nThe file has been published to Canvasflow');
                     logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
                 } else {
                     logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
