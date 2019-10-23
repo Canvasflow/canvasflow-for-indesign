@@ -47,8 +47,6 @@ var CanvasflowPlugin = function() {
                     return;
                 }
 
-                
-
                 var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
                 var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
@@ -74,9 +72,13 @@ var CanvasflowPlugin = function() {
                         logger.log((new Date()).getTime(), '-----------     START     -----------');
                         var buildFile = new File(canvasflowBuild.build());
                         logger.log((new Date()).getTime(), '-----------     END     -----------');
-                        
-                        alert('Build Completed\n' + buildFile.displayName);
-                        buildFile.parent.execute()
+
+                        if(canvasflowBuild.isBuildSuccess) {
+                            alert('Build Completed\n' + buildFile.displayName);
+                            buildFile.parent.execute()
+                        } else {
+                            alert('Build cancelled');
+                        }
                     }
                 } else {
                     alert ('Please select an article to build');
