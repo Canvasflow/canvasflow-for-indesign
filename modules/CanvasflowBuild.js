@@ -13,7 +13,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     $.imagesToResize = [];
     $.imagesToConvert = [];
     $.imageSizeCap = 1.5 * 1000000; // 1.5Mb
-    $.baseDirName = 'cf-indesign'
+    $.baseDirName = 'cf-indesign';
+    $.isBuildSuccess = true;
 
     $.resizingImageLockFilePath = getBasePath() + '/' + $.baseDirName + '/canvasflow_resizing.lock';
     $.convertImageLockFilePath = getBasePath() + '/' + $.baseDirName + '/canvasflow_convert.lock';
@@ -572,15 +573,15 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 '\tset target_filename="!parent_dir!!filename!.jpg"',
                 '\tif !image_width! gtr 2048 (',
                 '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x "!original_image!" "!target_filename!"',
+                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image! !target_filename!',
                 '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x "!original_image![0]" -quality 50 "!target_filename!"',
+                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] -quality 50 !target_filename!',
                 '\t\t)',
                 '\t) else (',
                 '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image!" "!target_filename!"',
+                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
                 '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image![0]" -quality 50 "!target_filename!"',
+                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] -quality 50 !target_filename!',
                 '\t\t)',
                 '\t)',
 
@@ -705,9 +706,9 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
                 '\tset target_filename="!parent_dir!!filename!.jpg"',
                 '\tif "!ext!" neq ".tif" (',
-                '\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image!" "!target_filename!"',
+                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
                 '\t) else (',
-                '\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image![0]" "!target_filename!"',
+                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!',
                 '\t)',
 
                 '\tif "!ext!" neq ".jpg" (',
@@ -795,12 +796,87 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         dataFile.close();
     }
 
+    $.areAllImagesProcessed = function(baseDirectory) {
+        var dataPath = baseDirectory + '/data.json'; 
+        var dataFile = new File(dataPath);
+        dataFile.open('r');
+        var data = JSON.parse(dataFile.read());
+        for(var i = 0; i < data.pages.length; i++) {
+            var page = data.pages[i];
+            for(var j = 0; j < page.items.length; j++) {
+                var item = page.items[j];
+                if(item.type === 'Image') {
+                    var imagePath = baseDirectory + '/images/' + item.content;
+                    var imageFile = new File(imagePath);
+                    if(!imageFile.exists) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    $.removeMissingImageFromData = function(baseDirectory) {
+        var dataPath = baseDirectory + '/data.json'; 
+        var dataFile = new File(dataPath);
+        dataFile.open('r');
+        var data = JSON.parse(dataFile.read());
+        var response = {
+            pages: []
+        };
+
+        for(var i = 0; i < data.pages.length; i++) {
+            var page = data.pages[i];
+            var targetPage = {
+                id: page.id,
+                x: page.x,
+                y: page.y,
+                width: page.width,
+                height: page.height,
+                items: []
+            };
+            for(var j = 0; j < page.items.length; j++) {
+                var item = page.items[j];
+                if(item.type === 'Image') {
+                    var imagePath = baseDirectory + '/images/' + item.content;
+                    var imageFile = new File(imagePath);
+                    if(!imageFile.exists) {
+                        continue;
+                    }
+                }
+                targetPage.items.push(item);
+            }
+            response.pages.push(targetPage);
+        }
+
+        dataFile.remove();
+        dataFile.open('w');
+        dataFile.write(JSON.stringify(response));
+        dataFile.close();
+        alert('y')
+    }
+
     $.createPackage = function(baseFile) {
         try {
             var resizingLockFile = new File($.resizingImageLockFilePath)
             var convertLockFile = new File($.convertImageLockFilePath)
             if(!resizingLockFile.exists && !convertLockFile.exists) {
+                if(!$.areAllImagesProcessed(baseFile.fsName)) {
+                    var response = confirm('Warning \nOne or more images are missing, do you still want to build?')
+                    if(response) {
+                        $.removeMissingImageFromData(baseFile.fsName);
+                        app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+                    } else {
+                        $.isBuildSuccess = false;
+                    }
+                    removeDir(baseFile.fsName);
+                    return;
+                }
+
                 app.packageUCF(baseFile.fsName, baseFile.fsName + '.zip', 'application/zip');
+                removeDir(baseFile.fsName);
                 return;
             }
 
@@ -858,7 +934,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         }
 
         $.createPackage(baseFile);
-        removeDir(baseFile.fsName);
+        // removeDir(baseFile.fsName);
 
         return baseFile.fsName + '.zip';
     }
@@ -940,6 +1016,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     }
 
     $.build = function() {
+        $.isBuildSuccess = true;
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
