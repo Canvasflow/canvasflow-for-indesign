@@ -801,6 +801,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var dataFile = new File(dataPath);
         dataFile.open('r');
         var data = JSON.parse(dataFile.read());
+        alert('x');
         for(var i = 0; i < data.pages.length; i++) {
             var page = data.pages[i];
             for(var j = 0; j < page.items.length; j++) {

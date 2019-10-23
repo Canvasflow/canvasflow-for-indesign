@@ -294,6 +294,9 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
                 var ext = app.activeDocument.name.split('.').pop();
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
                 zipFilePath = cfBuild.build();
+                if(!cfBuild.isBuildSuccess) {
+                    throw new Error('Build cancelled');
+                }
 
                 var publishStartTime = (new Date()).getTime();
                 if($.uploadZip(zipFilePath)) {
