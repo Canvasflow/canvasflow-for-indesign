@@ -1063,11 +1063,10 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
         var w = new Window ('palette', 'Processing pages');
         w.progressBar = w.add('progressbar', undefined, 0, pages.length);
-        w.progressText = w.add('statictext', [0, 0, 100, 20], '');
+        w.progressText = w.add('statictext', [0, 0, 100, 20], 'Page 0 of '+ pages.length);
         w.progressBar.preferredSize.width = 300;
         w.show();
         var totalOfPages = pages.length;
-        w.progressText.text = 'Page ' + 0 + ' of ' + totalOfPages;
 
         do {
             var pageIndex = pages.shift() - 1;
