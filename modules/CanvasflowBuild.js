@@ -446,12 +446,12 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
         if(!originalImageFile.exists) {
             if(!!logger) {
-                logger.log((new Date()).getTime(), 'The image do not exist: "' + fileName + '"');
+                logger.log((new Date()).getTime(), 'Image does not exist: "' + fileName + '"');
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
-        logger.log((new Date()).getTime(), 'The image exist "' + fileName +'" and should be processed by the script');
+        logger.log((new Date()).getTime(), 'Image exists "' + fileName +'" and should be processed by the script');
 
         var originalImageSize = originalImageFile.length;
 
@@ -572,15 +572,15 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 '\tset target_filename="!parent_dir!!filename!.jpg"',
                 '\tif !image_width! gtr 2048 (',
                 '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image! !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x "!original_image!" "!target_filename!"',
                 '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] -quality 50 !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x "!original_image![0]" -quality 50 "!target_filename!"',
                 '\t\t)',
                 '\t) else (',
                 '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image!" "!target_filename!"',
                 '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] -quality 50 !target_filename!',
+                '\t\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image![0]" -quality 50 "!target_filename!"',
                 '\t\t)',
                 '\t)',
 
@@ -705,9 +705,9 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
                 '\tset target_filename="!parent_dir!!filename!.jpg"',
                 '\tif "!ext!" neq ".tif" (',
-                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
+                '\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image!" "!target_filename!"',
                 '\t) else (',
-                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!',
+                '\t\tmagick convert -colorspace sRGB -density !image_width! "!original_image![0]" "!target_filename!"',
                 '\t)',
 
                 '\tif "!ext!" neq ".jpg" (',
