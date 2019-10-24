@@ -13,18 +13,18 @@ var CanvasflowApi = function (host) {
     };
 
     CanvasflowApi.prototype.getPublications = function(apiKey) {
-        return this.http('/publications?secretkey=' + apiKey);
+        return JSON.parse(this.http('/publications?secretkey=' + apiKey));
     };
 
     CanvasflowApi.prototype.validate = function(apiKey) {
-        return this.http('/info?secretkey=' + apiKey);
+        return JSON.parse(this.http('/info?secretkey=' + apiKey));
     };
 
     CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
-        return this.http('/issues?secretkey=' + apiKey + '&publicationId=' + PublicationID);
+        return JSON.parse(this.http('/issues?secretkey=' + apiKey + '&publicationId=' + PublicationID));
     };
 
     CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
-        return this.http('/styles?secretkey=' + apiKey + '&publicationId=' + PublicationID);
+        return JSON.parse(this.http('/styles?secretkey=' + apiKey + '&publicationId=' + PublicationID));
     };
 }

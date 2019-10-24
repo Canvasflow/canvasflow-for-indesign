@@ -151,7 +151,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
 
-        var publications = JSON.parse($.canvasflowApi.getPublications(apiKey));
+        var publications = $.canvasflowApi.getPublications(apiKey);
         for(var i=0; i < publications.length; i++) {
             var publication = publications[i];
             if(publication.id == PublicationID) {
@@ -166,7 +166,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID;
 
-        var issues = JSON.parse($.canvasflowApi.getIssues(apiKey, PublicationID));
+        var issues = $.canvasflowApi.getIssues(apiKey, PublicationID);
         for(var i=0; i < issues.length; i++) {
             var issue = issues[i];
             if(issue.id == IssueID) {
@@ -181,7 +181,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var PublicationID = $.savedSettings.PublicationID;
         var StyleID = $.savedSettings.StyleID;
 
-        var styles = JSON.parse($.canvasflowApi.getStyles(apiKey, PublicationID));
+        var styles = $.canvasflowApi.getStyles(apiKey, PublicationID);
         for(var i=0; i < styles.length; i++) {
             var style = styles[i];
             if(style.id == StyleID) {

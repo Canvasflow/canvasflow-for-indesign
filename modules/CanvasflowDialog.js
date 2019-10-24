@@ -30,8 +30,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     $.creationModeOptions = ['Document', 'Page'];
     
     $.validateApiKey = function(canvasflowApi, apiKey) {
-        var reply = canvasflowApi.validate(apiKey);
-        var response = JSON.parse(reply);
+        var response = canvasflowApi.validate(apiKey);
         if(response.isValid) {
             return true;
         } else {
@@ -40,18 +39,15 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     }
 
     $.getPublications = function(apiKey) {
-        var reply = $.canvasflowApi.getPublications(apiKey);
-        return JSON.parse(reply);
+        return $.canvasflowApi.getPublications(apiKey);
     };
 
     $.getIssues = function(apiKey, PublicationID) {
-        var reply = $.canvasflowApi.getIssues(apiKey, PublicationID);
-        return JSON.parse(reply);
+        return $.canvasflowApi.getIssues(apiKey, PublicationID);
     };
 
     $.getStyles = function(apiKey, PublicationID) {
-        var reply = $.canvasflowApi.getStyles(apiKey, PublicationID);
-        return JSON.parse(reply);
+        return $.canvasflowApi.getStyles(apiKey, PublicationID);
     };
 
     $.getItemIndexByID = function(items, id) {
