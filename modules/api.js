@@ -2,34 +2,29 @@
 var CanvasflowApi = function (host) {
     this.host = host;
 
-    CanvasflowApi.prototype.getHealth = function() {
-        var reply = new HTTPFile(this.host + "/health?qid=" + Date.now());
-        // var reply = new HTTPFile(this.host + "?endpoint=/publications&secretkey=" + apiKey);
-        reply.getResponse()
+    CanvasflowApi.prototype.http = function(method){
+        var reply = new HTTPFile(this.host + method + "&qid=" + Date.now());
         return reply.getResponse();
+        // return JSON.parse(reply.getResponse());
+    }
+
+    CanvasflowApi.prototype.getHealth = function() {
+        return this.http('/health?cf=1');
     };
 
     CanvasflowApi.prototype.getPublications = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/publications?secretkey=" + apiKey + "&qid=" + Date.now());
-        reply.getResponse()
-        return reply.getResponse();
+        return this.http('/publications?secretkey=' + apiKey);
     };
 
     CanvasflowApi.prototype.validate = function(apiKey) {
-        var reply = new HTTPFile(this.host + "/info?secretkey=" + apiKey + "&qid=" + Date.now());
-        reply.getResponse()
-        return reply.getResponse();
+        return this.http('/info?secretkey=' + apiKey);
     };
 
     CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/issues?secretkey=" + apiKey + "&publicationId=" + PublicationID + "&qid=" + Date.now());
-        reply.getResponse()
-        return reply.getResponse();
+        return this.http('/issues?secretkey=' + apiKey + '&publicationId=' + PublicationID);
     };
 
     CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
-        var reply = new HTTPFile(this.host + "/styles?secretkey=" + apiKey + "&publicationId=" + PublicationID + "&qid=" + Date.now());
-        reply.getResponse()
-        return reply.getResponse();
+        return this.http('/styles?secretkey=' + apiKey + '&publicationId=' + PublicationID);
     };
 }
