@@ -403,7 +403,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             'tga'
         ];
 
-        return exts.indexOf(ext) != -1;
+        return exts.indexOf(ext) === -1;
     }
 
     $.saveGraphicToImage = function(graphic, imageDirectory) {

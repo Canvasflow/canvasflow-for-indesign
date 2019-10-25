@@ -68,19 +68,23 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             var StyleIDContent = $.createFormParam(boundary, 'styleId', StyleID);
             var contentType = $.createFormParam(boundary, 'contentType', 'indesign');
             var articleIdContent = $.createFormParam(boundary, 'articleId', $.uuid);
+            var contentBoundary = '--' + boundary + '--\r\n\r';
     
-            var content = fileContent
-            + apiKeyContent
-            + creationModeContent
-            + contentOrderContent
-            + articleNameContent
-            + contentType
-            + PublicationIDContent
-            + IssueIDContent
-            + StyleIDContent
-            + articleIdContent
-            + '--' + boundary + '--\r\n\r';
-    
+            var content = [
+                fileContent,
+                apiKeyContent,
+                creationModeContent,
+                contentOrderContent,
+                articleNameContent,
+                contentType,
+                PublicationIDContent,
+                IssueIDContent,
+                StyleIDContent,
+                articleIdContent,
+                contentBoundary
+            ];
+            content = content.join('');
+                
             var cs = 'POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n'
             + 'Content-Length: ' + content.length + '\r\n'
             + 'Content-Type: multipart/form-data; boundary=' + boundary + '\r\n'
