@@ -29,7 +29,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var reply = '';
         var host = $.host + ':80'
     
-        var f = File ( filepath);
+        var f = File (filepath);
         var filename = f.name
         f.encoding = 'BINARY';
         f.open("r");
@@ -46,7 +46,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var contentOrder = $.savedSettings.contentOrder || 'natural';
     
         if(conn.open(host, 'BINARY')) {
-            conn.timeout=20000;
+            conn.timeout = 20000;
     
             var boundary = Math.random().toString().substr(2);
 
