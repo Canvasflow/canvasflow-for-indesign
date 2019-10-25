@@ -5,7 +5,7 @@
 //@include "Array.js"
 //@include "ScriptBuilder.js"
 
-var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
+var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
 
     $.resizeCommandFilePath = resizeCommandFilePath || '';

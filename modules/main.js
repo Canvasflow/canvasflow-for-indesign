@@ -48,9 +48,9 @@ var CanvasflowPlugin = function() {
                 }
 
                 var settings = new Settings(settingsFilePath);
-                var build = new Build(settings, resizeCommandFilePath, convertCommandFilePath, os);
+                var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');
-                var publisher = new Publisher(settings, settingsData.endpoint, build, canvasflowApi);
+                var publisher = new Publisher(settings, settingsData.endpoint, builder, canvasflowApi);
                 
                 logger.log((new Date()).getTime(), '-----------     START     -----------');
                 publisher.publish();
@@ -67,13 +67,13 @@ var CanvasflowPlugin = function() {
                     var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.')
                     if(response) {
                         var settings = new Settings(settingsFilePath);
-                        var build = new Build(settings, resizeCommandFilePath, convertCommandFilePath, os);
+                        var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os);
 
                         logger.log((new Date()).getTime(), '-----------     START     -----------');
-                        var buildFile = new File(build.build());
+                        var buildFile = new File(builder.build());
                         logger.log((new Date()).getTime(), '-----------     END     -----------');
 
-                        if(build.isBuildSuccess) {
+                        if(builder.isBuildSuccess) {
                             alert('Build Completed\n' + buildFile.displayName);
                             buildFile.parent.execute()
                         } else {

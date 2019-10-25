@@ -1,8 +1,8 @@
 //@include "json2.js"
 //@include "api.js"
-//@include "Build.jsx"
+//@include "Builder.js"
 
-var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
+var Publisher = function(canvasflowSettings, host, builder, canvasflowApi) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';
@@ -11,7 +11,7 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     $.canvasflowApi = null;
     $.dialog = {};
     $.pagesRange = null;
-    $.cfBuild = cfBuild;
+    $.builder = builder;
     $.boundary = Math.random().toString().substr(2);
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
@@ -77,7 +77,7 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     
             $.boundary = Math.random().toString().substr(2);
 
-            $.uuid = $.cfBuild.getDocumentID();
+            $.uuid = $.builder.getDocumentID();
 
             var form = {
                 file: {
@@ -194,7 +194,7 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         dialog.externalIDGroup = dialog.add('group');
         dialog.externalIDGroup.orientation = 'row';
         dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
-        dialog.externalIDGroup.add('statictext', defaultValueDim, $.cfBuild.getDocumentID());
+        dialog.externalIDGroup.add('statictext', defaultValueDim, $.builder.getDocumentID());
 
         // Publication
         var publication = $.getPublication();
@@ -256,8 +256,8 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
                 $.filePath = baseDirectory + app.activeDocument.name;
                 var ext = app.activeDocument.name.split('.').pop();
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace('.' + ext, '');
-                zipFilePath = cfBuild.build();
-                if(!cfBuild.isBuildSuccess) {
+                zipFilePath = builder.build();
+                if(!builder.isBuildSuccess) {
                     alert('Build cancelled');
                     return;
                 }

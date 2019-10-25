@@ -1,5 +1,5 @@
 //@include "./../modules/Settings.js"
-//@include "./../modules/Build.js"
+//@include "./../modules/Builder.js"
 
 var os = 'unix';
 if(/^Win(.)*/gm.test($.os)) {
@@ -12,9 +12,9 @@ var resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_res
 var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.command';
 
 var canvasflowSettings = new Settings(settingsFilePath);
-var cfBuild = new Build(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
+var builder = new Builder(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
 try {
-    alert('Complete build is located in the path: ' + cfBuild.build());
+    alert('Complete build is located in the path: ' + builder.build());
 } catch(e) {
     alert(e.message);
 }
