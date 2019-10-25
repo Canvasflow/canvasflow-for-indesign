@@ -77,7 +77,7 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     
             $.boundary = Math.random().toString().substr(2);
 
-            $.uuid = $.cfBuild.uuid || '';
+            $.uuid = $.cfBuild.getDocumentID();
 
             var form = {
                 file: {
@@ -194,7 +194,7 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         dialog.externalIDGroup = dialog.add('group');
         dialog.externalIDGroup.orientation = 'row';
         dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
-        dialog.externalIDGroup.add('statictext', defaultValueDim, $.cfBuild.uuid);
+        dialog.externalIDGroup.add('statictext', defaultValueDim, $.cfBuild.getDocumentID());
 
         // Publication
         var publication = $.getPublication();

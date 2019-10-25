@@ -10,6 +10,7 @@ var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFi
 
     $.resizeCommandFilePath = resizeCommandFilePath || '';
     $.convertCommandFilePath = convertCommandFilePath || '';
+    $.doc = app.activeDocument;
     
     $.os = os;
     $.imagesToResize = [];
@@ -53,8 +54,8 @@ var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFi
         return uuid.substring(0, uuid.length / 2);
     }
 
-    $.getDocumentID = function(doc) {
-        var uuid = $.getUUIDFromDocument(doc);
+    $.getDocumentID = function() {
+        var uuid = $.getUUIDFromDocument($.doc);
         if(!uuid) {
             var dt = new Date().getTime();
             var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -63,7 +64,8 @@ var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFi
                 return (c=='x' ? r :(r&0x3|0x8)).toString(16);
             });
             uuid = uuid.substring(0, uuid.length / 2);
-            doc.insertLabel("CANVASFLOW-ID", uuid);
+            $.doc.insertLabel('CANVASFLOW-ID', uuid);
+            $.doc.save();
         }
 
         return uuid;
@@ -811,7 +813,7 @@ var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFi
         var zeroPoint =  document.zeroPoint;
         document.zeroPoint = [0, 0];
             
-        $.uuid = $.getDocumentID(document);
+        $.uuid = $.getDocumentID();
         var response = {
             pages: []
         };
