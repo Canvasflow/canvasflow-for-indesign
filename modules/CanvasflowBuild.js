@@ -91,23 +91,14 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         }
     }
 
-    $.appendTextBoxes = function (textFrames, textBoxes) {
-        if(textBoxes.length > 0) {
-            for(var i = 0; i < textBoxes.length; i++) {
-                var textBox = textBoxes[i];
-                for(var j = 0; j < textBox.textFrames.length; j++) {
-                    textFrames.push(textBox.textFrames[j]);
-                }
-            }
-        }
-    }
-
-    $.appendGroups = function (textFrames, groups) {
-        if(groups.length > 0) {
-            for(var i = 0; i < groups.length; i++) {
-                var group = groups[i];
-                for(var j = 0; j < group.textFrames.length; j++) {
-                    textFrames.push(group.textFrames[j]);
+    $.appendToTextFrames = function (textFrames, elements) {
+        if(elements.length > 0) {
+            for(var i = 0; i < elements.length; i++) {
+                var element = elements[i];
+                if(!!element.textFrames) {
+                    for(var j = 0; j < element.textFrames.length; j++) {
+                        textFrames.push(element.textFrames[j]);
+                    }
                 }
             }
         }
@@ -336,13 +327,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             textFrames.push(page.textFrames[i]);
         }
 
-        if(page.textBoxes.length > 0) {
-            $.appendTextBoxes(textFrames, page.textBoxes)
-        }
-
-        if(page.groups.length > 0) {
-            $.appendGroups(textFrames, page.groups)
-        }
+        $.appendToTextFrames(textFrames, page.textBoxes)
+        $.appendToTextFrames(textFrames, page.groups)
 
         for (var i = 0; i < textFrames.length; i++) {
             var textFrame = textFrames[i];
