@@ -1,6 +1,6 @@
 //@include "json2.js"
 
-var CanvasflowSettings = function(settingsPath){
+var Settings = function(settingsPath){
     var $ = this;
     $.settingsPath = settingsPath;
     $.defaultSavedSettings = JSON.stringify({

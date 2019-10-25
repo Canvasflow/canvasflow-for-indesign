@@ -16,8 +16,8 @@ var CanvasflowPlugin = function() {
                 return ;
             }
             logger.log((new Date()).getTime(), '-----------     START     -----------');
-            var canvasflowDialog = new CanvasflowDialog(settingsFilePath, isInternal);
-            canvasflowDialog.show();
+            var settingsDialog = new SettingsDialog(settingsFilePath, isInternal);
+            settingsDialog.show();
             logger.log((new Date()).getTime(), '-----------     END     -----------');
         }); 
         
@@ -30,30 +30,30 @@ var CanvasflowPlugin = function() {
             }
             try {
                 settingsFile.open('r');
-                var settings = JSON.parse(settingsFile.read());
+                var settingsData = JSON.parse(settingsFile.read());
 
-                if(!settings.endpoint) {
+                if(!settingsData.endpoint) {
                     alert('Please select an endpoint')
                     return;
                 }
 
-                if(!settings.apiKey) {
+                if(!settingsData.apiKey) {
                     alert('Please register the api key in Settings')
                     return;
                 }
 
-                if(!settings.PublicationID) {
+                if(!settingsData.PublicationID) {
                     alert('Please select a publication in Settings')
                     return;
                 }
 
-                var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
-                var canvasflowApi = new CanvasflowApi('http://' + settings.endpoint + '/v2');
-                var canvasflowPublish = new CanvasflowPublish(canvasflowSettings, settings.endpoint, canvasflowBuild, canvasflowApi);
+                var settings = new Settings(settingsFilePath);
+                var build = new Build(settings, resizeCommandFilePath, convertCommandFilePath, os);
+                var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');
+                var publish = new Publish(settings, settingsData.endpoint, build, canvasflowApi);
                 
                 logger.log((new Date()).getTime(), '-----------     START     -----------');
-                canvasflowPublish.publish();
+                publish.publish();
                 logger.log((new Date()).getTime(), '-----------     END     -----------');
             } catch(e) {
                 logError(e);
@@ -66,14 +66,14 @@ var CanvasflowPlugin = function() {
                 if (app.documents.length != 0){
                     var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.')
                     if(response) {
-                        var canvasflowSettings = new CanvasflowSettings(settingsFilePath);
-                        var canvasflowBuild = new CanvasflowBuild(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os);
+                        var settings = new Settings(settingsFilePath);
+                        var build = new Build(settings, resizeCommandFilePath, convertCommandFilePath, os);
 
                         logger.log((new Date()).getTime(), '-----------     START     -----------');
-                        var buildFile = new File(canvasflowBuild.build());
+                        var buildFile = new File(build.build());
                         logger.log((new Date()).getTime(), '-----------     END     -----------');
 
-                        if(canvasflowBuild.isBuildSuccess) {
+                        if(build.isBuildSuccess) {
                             alert('Build Completed\n' + buildFile.displayName);
                             buildFile.parent.execute()
                         } else {
@@ -91,8 +91,8 @@ var CanvasflowPlugin = function() {
         var canvasflowScriptActionAbout = app.scriptMenuActions.add('&About');  
         canvasflowScriptActionAbout.eventListeners.add('onInvoke', function() {  
             try {
-                var canvasflowAbout = new CanvasflowAbout(version);
-                canvasflowAbout.show();
+                var aboutDialog = new AboutDialog(version);
+                aboutDialog.show();
             } catch(e) {
                 logError(e);
             }

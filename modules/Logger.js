@@ -1,4 +1,4 @@
-var CanvasflowLogger = function(logFilePath, enable) {
+var Logger = function(logFilePath, enable) {
     var $ = this;
     $.logFilePath = logFilePath;
     $.enable = enable;
@@ -31,4 +31,4 @@ var CanvasflowLogger = function(logFilePath, enable) {
 
     $.createFile();
 }
-logger = new CanvasflowLogger(logFilePath, isDebugEnable);
+logger = new Logger(logFilePath, isDebugEnable);

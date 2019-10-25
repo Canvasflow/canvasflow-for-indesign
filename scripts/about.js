@@ -1,7 +1,7 @@
-//@include "./../modules/CanvasflowAbout.js"
+//@include "./../modules/AboutDialog.js"
 
 var version = '0.1.0';
-var canvasflowAbout = new CanvasflowAbout(version);
+var canvasflowAbout = new AboutDialog(version);
 try {
     canvasflowAbout.show();
 } catch(e) {

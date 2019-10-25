@@ -1,8 +1,8 @@
 //@include "json2.js"
 //@include "api.js"
-//@include "CanvasflowBuild.jsx"
+//@include "Build.jsx"
 
-var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
+var Publish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';

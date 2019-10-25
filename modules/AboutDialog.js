@@ -1,4 +1,4 @@
-var CanvasflowAbout = function(version) {
+var AboutDialog = function(version) {
     var $ = this;
     $.version = version;
 

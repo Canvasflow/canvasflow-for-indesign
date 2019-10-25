@@ -1,11 +1,11 @@
 //@include "json2.js"
 //@include "error.js"
 //@include "CanvasflowApi.js"
-//@include "CanvasflowSettings.js"
+//@include "Settings.js"
 
-var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
+var SettingsDialog = function(canvasflowSettingsPath, internal) {
     var $ = this;
-    $.canvasflowSettings = new CanvasflowSettings(canvasflowSettingsPath);
+    $.canvasflowSettings = new Settings(canvasflowSettingsPath);
     $.settingsDialog = new Window('dialog', 'Canvasflow Settings');
     $.isInternal = internal;
     $.defaultDialogSize = [300,100];

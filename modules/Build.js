@@ -4,7 +4,7 @@
 //@include "dir.js"
 //@include "array.js"
 
-var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
+var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
 
     $.resizeCommandFilePath = resizeCommandFilePath || '';
