@@ -50,10 +50,10 @@ var CanvasflowPlugin = function() {
                 var settings = new Settings(settingsFilePath);
                 var build = new Build(settings, resizeCommandFilePath, convertCommandFilePath, os);
                 var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');
-                var publish = new Publish(settings, settingsData.endpoint, build, canvasflowApi);
+                var publisher = new Publisher(settings, settingsData.endpoint, build, canvasflowApi);
                 
                 logger.log((new Date()).getTime(), '-----------     START     -----------');
-                publish.publish();
+                publisher.publish();
                 logger.log((new Date()).getTime(), '-----------     END     -----------');
             } catch(e) {
                 logError(e);

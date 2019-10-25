@@ -26,7 +26,7 @@ function concatenate() {
         './modules/Build.js',
         './modules/Settings.js',
         './modules/SettingsDialog.js',
-        './modules/Publish.js',
+        './modules/Publisher.js',
         './modules/main.js',
     ])
     .pipe(concat('Canvasflow.jsx'))

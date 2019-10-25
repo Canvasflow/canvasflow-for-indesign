@@ -2,7 +2,7 @@
 //@include "api.js"
 //@include "Build.jsx"
 
-var Publish = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
+var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';
