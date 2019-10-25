@@ -119,13 +119,10 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         var PublicationID = $.savedSettings.PublicationID;
 
         var publications = $.canvasflowApi.getPublications(apiKey);
-        for(var i=0; i < publications.length; i++) {
-            var publication = publications[i];
-            if(publication.id == PublicationID) {
-                return publication;
-            }
-        }
-        return null;
+        var matches = publications.filter(function(publication) {
+            return publication.id == PublicationID;
+        });
+        return !!matches.length ? matches[0] : null;
     }
 
     $.getIssue = function() {
@@ -134,13 +131,10 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         var IssueID = $.savedSettings.IssueID;
 
         var issues = $.canvasflowApi.getIssues(apiKey, PublicationID);
-        for(var i=0; i < issues.length; i++) {
-            var issue = issues[i];
-            if(issue.id == IssueID) {
-                return issue;
-            }
-        }
-        return null;
+        var matches = issues.filter(function(issue) {
+            return issue.id == IssueID;
+        });
+        return !!matches.length ? matches[0] : null;
     }
 
     $.getStyle = function() {
@@ -149,13 +143,10 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         var StyleID = $.savedSettings.StyleID;
 
         var styles = $.canvasflowApi.getStyles(apiKey, PublicationID);
-        for(var i=0; i < styles.length; i++) {
-            var style = styles[i];
-            if(style.id == StyleID) {
-                return style;
-            }
-        }
-        return null;
+        var matches = styles.filter(function(style) {
+            return style.id == StyleID;
+        });
+        return !!matches.length ? matches[0] : null;
     }
 
     $.displayConfirmDialog = function() {
@@ -166,6 +157,9 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
 
         var valuesWidth = 200;
         var labelWidth = 150;
+
+        var defaultLabelDim = [0, 0, labelWidth, 20];
+        var defaultValueDim = [0, 0, labelWidth, 20];
 
         var endpoint = $.savedSettings.endpoint;
 
@@ -180,38 +174,38 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         // External ID
         dialog.externalIDGroup = dialog.add('group');
         dialog.externalIDGroup.orientation = 'row';
-        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], 'ID');
-        dialog.externalIDGroup.add('statictext', [0, 0, labelWidth, 20], $.cfBuild.uuid);
+        dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
+        dialog.externalIDGroup.add('statictext', defaultValueDim, $.cfBuild.uuid);
 
         // Publication
         var publication = $.getPublication();
         dialog.publicationGroup = dialog.add('group');
         dialog.publicationGroup.orientation = 'row';
-        dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], 'Publication');
-        dialog.publicationGroup.add('statictext', [0, 0, labelWidth, 20], publication.name);
+        dialog.publicationGroup.add('statictext', defaultLabelDim, 'Publication');
+        dialog.publicationGroup.add('statictext', defaultValueDim, publication.name);
 
         // Issue
         if(publication.type === 'issue') {
             var issue = $.getIssue();
             dialog.issueGroup = dialog.add('group');
             dialog.issueGroup.orientation = 'row';
-            dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], 'Issue');
-            dialog.issueGroup.add('statictext', [0, 0, labelWidth, 20], issue.name);
+            dialog.issueGroup.add('statictext', defaultLabelDim, 'Issue');
+            dialog.issueGroup.add('statictext', defaultValueDim, issue.name);
         }
         
         // Style
         var style = $.getStyle();
         dialog.styleGroup = dialog.add('group');
         dialog.styleGroup.orientation = 'row';
-        dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], 'Style');
-        dialog.styleGroup.add('statictext', [0, 0, labelWidth, 20], style.name);
+        dialog.styleGroup.add('statictext', defaultLabelDim, 'Style');
+        dialog.styleGroup.add('statictext', defaultValueDim, style.name);
 
         // Creation Mode
         dialog.creationModeGroup = dialog.add('group');
         dialog.creationModeGroup.orientation = 'row';
-        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], 'Article Creation');
+        dialog.creationModeGroup.add('statictext', defaultLabelDim, 'Article Creation');
         var creationMode = $.savedSettings.creationMode[0].toUpperCase() +  $.savedSettings.creationMode.slice(1); 
-        dialog.creationModeGroup.add('statictext', [0, 0, labelWidth, 20], creationMode);
+        dialog.creationModeGroup.add('statictext', defaultValueDim, creationMode);
 
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';

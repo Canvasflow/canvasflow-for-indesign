@@ -1,5 +1,6 @@
 //@include "json2.js"
 //@include "error.js"
+//@include "array.js"
 //@include "CanvasflowApi.js"
 //@include "Settings.js"
 
@@ -64,12 +65,10 @@ var SettingsDialog = function(canvasflowSettingsPath, internal) {
     }
 
     $.getItemByID = function(items, id) {
-        for(var i = 0; i< items.length; i++) {
-            if(items[i].id == id) {
-                return items[i];
-            }
-        }
-        return null;
+        var matches = items.filter(function(item) {
+            return item.id == id;
+        });
+        return !!matches.length ? matches[0] : null;
     }
 
     $.mapItemsName = function(items) {
