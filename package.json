@@ -4,7 +4,8 @@
   "description": "Canvasflow plugin for InDesign",
   "main": "gulpfile.js",
   "scripts": {
-    "build": "gulp"
+    "build": "gulp",
+    "watch": "gulp watch"
   },
   "keywords": [],
   "author": "",

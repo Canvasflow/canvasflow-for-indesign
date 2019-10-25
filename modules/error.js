@@ -35,5 +35,5 @@ function logError(e) {
     file.write(e.toJson());
     file.close();
     e.toLog(getBasePath() + '/cf-indesign/canvasflow_error.log')
-    alert(e.toJson())
+    // alert(e.toJson())
 }

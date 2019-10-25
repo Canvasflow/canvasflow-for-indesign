@@ -10,7 +10,6 @@ const buildPath = process.env.BUILD_PATH || path.join(__dirname, 'build');
 const package = require('./package.json');
 
 function concatenate() {
-    
     return gulp.src([
         './modules/json2.js', 
         './modules/Array.js', 
@@ -47,4 +46,13 @@ function prependEngine(cb) {
     fs.writeFileSync(filePath, `#targetengine "session" \n\nvar version='${package.version}'; \n\n ${fileContent}`)
     cb();
 }
-exports.default = gulp.series(concatenate, prependEngine);
+
+const compile = gulp.series(concatenate, prependEngine);
+// exports.default = compile;
+
+gulp.task('default', compile);
+gulp.task('compile', compile);
+gulp.task('watch', function () {
+    return gulp.watch('modules/**' , compile);
+});
+
