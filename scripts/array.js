@@ -5,4 +5,16 @@ var words = ['spray', 'limit', 'elite', 'exuberant', 'destruction', 'present'];
 
 const result = words.filter(function(word) { return word.length > 6 });
 
-alert(JSON.stringify(result.join('')));
+var foo = {
+    bar: 'x',
+    foo: '4',
+    x: true,
+    y: 20.00
+}
+ var keys = [];
+
+ for(var k in foo) {
+    keys.push(k);
+ }
+
+ alert(JSON.stringify(['x'].concat(['y', 'z'])));

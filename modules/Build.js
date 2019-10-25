@@ -327,8 +327,8 @@ var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFi
             textFrames.push(page.textFrames[i]);
         }
 
-        $.appendToTextFrames(textFrames, page.textBoxes)
-        $.appendToTextFrames(textFrames, page.groups)
+        $.appendToTextFrames(textFrames, page.textBoxes);
+        $.appendToTextFrames(textFrames, page.groups);
 
         for (var i = 0; i < textFrames.length; i++) {
             var textFrame = textFrames[i];

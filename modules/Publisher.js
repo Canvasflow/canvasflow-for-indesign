@@ -12,15 +12,42 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
     $.dialog = {};
     $.pagesRange = null;
     $.cfBuild = cfBuild;
+    $.boundary = Math.random().toString().substr(2);
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
-    $.createFormParam = function(boundary, property, value){
-        return '--' + boundary + '\r\n'
+    $.createTextFormParam = function(property, value){
+        return '--' + $.boundary + '\r\n'
             + 'Content-Disposition: form-data; name="' + property +'"\r\n'
             + '\r\n'
             + value + '\r\n'
             + '\r\n';
+    }
+
+    $.getTextFormParams = function(textProperties) {
+        var response = [];
+        for(var property in textProperties) {
+            response.push($.createTextFormParam(property, textProperties[property]))
+        }
+        return response;
+    }
+
+    $.createFileFormParam = function(property, fileName, fileContent){
+        return '--' + $.boundary + '\r\n'
+            + 'Content-Disposition: form-data; name="' + property + '"; filename="' + fileName +'"\r\n'
+            + 'Content-Type: application/octet-stream\r\n'
+            + '\r\n'
+            + fileContent + '\r\n'
+            + '\r\n';
+    }
+
+    $.getFileFormParams = function(fileProperties) {
+        var response = [];
+        for(var property in fileProperties) {
+            var file = fileProperties[property];
+            response.push($.createFileFormParam(property, file.name, file.content))
+        }
+        return response;
     }
 
     $.uploadZip = function(filepath) {
@@ -32,7 +59,7 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         var f = File (filepath);
         var filename = f.name
         f.encoding = 'BINARY';
-        f.open("r");
+        f.open('r');
         var fContent = f.read();
         f.close();
 
@@ -48,53 +75,45 @@ var Publisher = function(canvasflowSettings, host, cfBuild, canvasflowApi) {
         if(conn.open(host, 'BINARY')) {
             conn.timeout = 20000;
     
-            var boundary = Math.random().toString().substr(2);
+            $.boundary = Math.random().toString().substr(2);
 
             $.uuid = $.cfBuild.uuid || '';
+
+            var form = {
+                file: {
+                    contentFile: {
+                        name: filename,
+                        content: fContent
+                    }
+                },
+                text: {
+                    secretKey: apiKey,
+                    creationMode: creationMode,
+                    contentOrder: contentOrder,
+                    articleName: articleName,
+                    publicationId: PublicationID,
+                    issueId: IssueID,
+                    styleId: StyleID,
+                    contentType: 'indesign',
+                    articleId: $.uuid
+                }
+            }
+
+            var content = $.getFileFormParams(form.file)
+                .concat($.getTextFormParams(form.text))
+                .concat(['--' + $.boundary + '--\r\n\r'])
+                .join('');
     
-            var fileContent = '--' + boundary + '\r\n'
-            + 'Content-Disposition: form-data; name="contentFile"; filename="' + filename +'"\r\n'
-            + 'Content-Type: application/octet-stream\r\n'
-            + '\r\n'
-            + fContent
-            + '\r\n';
-    
-            var apiKeyContent = $.createFormParam(boundary, 'secretKey', apiKey);
-            var creationModeContent = $.createFormParam(boundary, 'creationMode', creationMode);
-            var contentOrderContent = $.createFormParam(boundary, 'contentOrder', contentOrder);
-            var articleNameContent = $.createFormParam(boundary, 'articleName', articleName);
-            var PublicationIDContent = $.createFormParam(boundary, 'publicationId', PublicationID);
-            var IssueIDContent = $.createFormParam(boundary, 'issueId', IssueID);
-            var StyleIDContent = $.createFormParam(boundary, 'styleId', StyleID);
-            var contentType = $.createFormParam(boundary, 'contentType', 'indesign');
-            var articleIdContent = $.createFormParam(boundary, 'articleId', $.uuid);
-            var contentBoundary = '--' + boundary + '--\r\n\r';
-    
-            var content = [
-                fileContent,
-                apiKeyContent,
-                creationModeContent,
-                contentOrderContent,
-                articleNameContent,
-                contentType,
-                PublicationIDContent,
-                IssueIDContent,
-                StyleIDContent,
-                articleIdContent,
-                contentBoundary
-            ];
-            content = content.join('');
-                
             var cs = 'POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n'
             + 'Content-Length: ' + content.length + '\r\n'
-            + 'Content-Type: multipart/form-data; boundary=' + boundary + '\r\n'
+            + 'Content-Type: multipart/form-data; boundary=' + $.boundary + '\r\n'
             + 'Host: '+ host + '\r\n'
             + 'Authorization: ' + apiKey + '\r\n'
             + 'Accept: */*\r\n'
             + '\r\n'
             + content;
     
-            conn.write( cs );
+            conn.write(cs);
     
             reply = conn.read();
             conn.close();
