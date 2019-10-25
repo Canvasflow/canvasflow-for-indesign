@@ -3,13 +3,13 @@ var CanvasflowPlugin = function() {
 
     $.install = function() {
         try {
-            app.menus.item("$ID/Main").submenus.item("Canvasflow").remove();
+            app.menus.item('$ID/Main').submenus.item('Canvasflow').remove();
         } catch(e) {
     
         }
     
-        var canvasflowScriptActionSettings = app.scriptMenuActions.add("&Settings");  
-        canvasflowScriptActionSettings.eventListeners.add("onInvoke", function() {  
+        var canvasflowScriptActionSettings = app.scriptMenuActions.add('&Settings');  
+        canvasflowScriptActionSettings.eventListeners.add('onInvoke', function() {  
             var settingsFile = new File(settingsFilePath);
             if(!settingsFile.parent.exists) {
                 alert('Please run the Install command, help please refer to the help documentation');
@@ -21,8 +21,8 @@ var CanvasflowPlugin = function() {
             logger.log((new Date()).getTime(), '-----------     END     -----------');
         }); 
         
-        var canvasflowScriptActionPublish = app.scriptMenuActions.add("&Publish");  
-        canvasflowScriptActionPublish.eventListeners.add("onInvoke", function() {  
+        var canvasflowScriptActionPublish = app.scriptMenuActions.add('&Publish');  
+        canvasflowScriptActionPublish.eventListeners.add('onInvoke', function() {  
             var settingsFile = new File(settingsFilePath);
             if(!settingsFile.exists) {
                 alert('Please open Settings first and register the api key');
@@ -60,8 +60,8 @@ var CanvasflowPlugin = function() {
             }
         });
 
-        var canvasflowScriptActionBuild = app.scriptMenuActions.add("&Build");  
-        canvasflowScriptActionBuild.eventListeners.add("onInvoke", function() {  
+        var canvasflowScriptActionBuild = app.scriptMenuActions.add('&Build');  
+        canvasflowScriptActionBuild.eventListeners.add('onInvoke', function() {  
             try {
                 if (app.documents.length != 0){
                     var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.')
@@ -88,8 +88,8 @@ var CanvasflowPlugin = function() {
             }
         });
 
-        var canvasflowScriptActionAbout = app.scriptMenuActions.add("&About");  
-        canvasflowScriptActionAbout.eventListeners.add("onInvoke", function() {  
+        var canvasflowScriptActionAbout = app.scriptMenuActions.add('&About');  
+        canvasflowScriptActionAbout.eventListeners.add('onInvoke', function() {  
             try {
                 var canvasflowAbout = new CanvasflowAbout(version);
                 canvasflowAbout.show();
@@ -100,10 +100,10 @@ var CanvasflowPlugin = function() {
     
         var canvasflowScriptMenu = null;
         try {  
-            canvasflowScriptMenu = app.menus.item("$ID/Main").submenus.item("Canvasflow");  
+            canvasflowScriptMenu = app.menus.item('$ID/Main').submenus.item('Canvasflow');  
             canvasflowScriptMenu.title;  
         } catch (e) {  
-            canvasflowScriptMenu = app.menus.item("$ID/Main").submenus.add("Canvasflow");  
+            canvasflowScriptMenu = app.menus.item('$ID/Main').submenus.add('Canvasflow');  
         }  
     
         canvasflowScriptMenu.menuItems.add(canvasflowScriptActionPublish);

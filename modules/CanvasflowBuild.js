@@ -363,7 +363,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 } catch(e) {}
 
                 data.push({
-                    type: "TextFrame",
+                    type: 'TextFrame',
                     id: textFrame.id,
                     storyId: StoryID,
                     next: next,
@@ -496,35 +496,17 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         if(graphics.length > 0) {
             for (var i = 0; i < graphics.length; i++) {
                 var graphic = graphics[i];
-                if(graphic.isValid) {
-                    var imagePath;
+                if(graphic.isValid && graphic.visible) {
+                    var imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                     var position = $.getItemPosition(graphic.parent.geometricBounds);
-                    var imageExist = $.checkIfGraphicImageExist(graphic);
-                    if(imageExist) {
-                        if(graphic.visible) {
-                            imagePath = $.saveGraphicToImage(graphic, imageDirectory);
-                            data.push({
-                                type: "Image",
-                                id: graphic.id,
-                                content: imagePath,
-                                width: position.width,
-                                height: position.height,
-                                position: position
-                            });
-                        }
-                    } else {
-                        if(graphic.visible) {
-                            imagePath = $.saveGraphicToImage(graphic, imageDirectory);
-                            data.push({
-                                type: "Image",
-                                id: graphic.id,
-                                content: imagePath,
-                                width: position.width,
-                                height: position.height,
-                                position: position
-                            });
-                        }
-                    }
+                    data.push({
+                        type: 'Image',
+                        id: graphic.id,
+                        content: imagePath,
+                        width: position.width,
+                        height: position.height,
+                        position: position
+                    });
                 }
             }
         }
@@ -1020,7 +1002,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
-        $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
+        $.baseDirectory = baseDirectory + app.activeDocument.name.replace('.' + ext, '');
 
         $.createExportFolder();
 
@@ -1058,16 +1040,18 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             }
         }
 
+        var totalOfPages = pages.length;
+
         // This set the document to pixels
         app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
+
         var w = new Window ('palette', 'Processing pages');
-        w.progressBar = w.add('progressbar', undefined, 0, pages.length);
-        w.progressText = w.add('statictext', [0, 0, 100, 20], 'Page 0 of '+ pages.length);
+        w.progressBar = w.add('progressbar', undefined, 0, totalOfPages);
+        w.progressText = w.add('statictext', [0, 0, 100, 20], 'Page 0 of '+ totalOfPages);
         w.progressBar.preferredSize.width = 300;
         w.show();
-        var totalOfPages = pages.length;
-
+        
         do {
             var pageIndex = pages.shift() - 1;
             var page = document.pages[pageIndex];
