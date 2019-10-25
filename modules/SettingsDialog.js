@@ -1,6 +1,6 @@
 //@include "json2.js"
 //@include "error.js"
-//@include "array.js"
+//@include "Array.js"
 //@include "CanvasflowApi.js"
 //@include "Settings.js"
 

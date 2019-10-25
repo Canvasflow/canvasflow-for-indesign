@@ -2,7 +2,7 @@
 //@include "timeout.js"
 //@include "env.js"
 //@include "dir.js"
-//@include "array.js"
+//@include "Array.js"
 
 var Build = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
