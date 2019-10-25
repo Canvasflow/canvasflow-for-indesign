@@ -13,6 +13,10 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
     $.isValidApiKey = false;
     $.settings = $.canvasflowSettings.getSavedSettings();
 
+    $.valuesWidth = 300;
+    $.defaultLabelDim = [0, 0, 150, 20];
+    $.defaultValueDim = [0, 0, $.valuesWidth, 20];
+
     $.publications = [];
     $.publicationType;
 
@@ -313,18 +317,20 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         settingsDialog.pagesGroup.visible = false;
     }
 
-    $.renderWindow = function() {
-        var valuesWidth = 300;
-        var labelWidth = 150;
+    $.createDropDownList = function(dropDownGroup, items) {
+        return dropDownGroup.add('dropdownlist', $.defaultValueDim, undefined, {items: !!items ? items : []});
+    }
 
-        var defaultLabelDim = [0, 0, labelWidth, 20];
-        var defaultValueDim = [0, 0, valuesWidth, 20];
+    $.renderWindow = function() {
+        var valuesWidth = $.valuesWidth;
+        var defaultLabelDim = $.defaultLabelDim;
+        var defaultValueDim = $.defaultValueDim;
 
         // ENDPOINTS
         $.settingsDialog.endpointDropDownGroup = $.settingsDialog.add('group', undefined, 'endpoint');
         $.settingsDialog.endpointDropDownGroup.orientation = 'row';
         $.settingsDialog.endpointDropDownGroup.add('statictext', defaultLabelDim, 'Endpoint');
-        $.settingsDialog.endpointDropDownGroup.dropDown = $.settingsDialog.endpointDropDownGroup.add('dropdownlist', defaultValueDim, undefined, {items:$.mapItemsName($.endpoints)});
+        $.settingsDialog.endpointDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.endpointDropDownGroup, $.mapItemsName($.endpoints));
         
         var selectedEndpoint = $.endpoints[0];
         if(!$.isInternal) { 
@@ -397,7 +403,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.publicationDropDownGroup = $.settingsDialog.add('group', undefined, 'publications');
         $.settingsDialog.publicationDropDownGroup.orientation = 'row';
         $.settingsDialog.publicationDropDownGroup.add('statictext', defaultLabelDim, 'Publication');
-        $.settingsDialog.publicationDropDownGroup.dropDown = $.settingsDialog.publicationDropDownGroup.add('dropdownlist', defaultValueDim, undefined, {items:[]});
+        $.settingsDialog.publicationDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.publicationDropDownGroup);
         $.settingsDialog.publicationDropDownGroup.visible = false;
         $.settingsDialog.publicationDropDownGroup.dropDown.onChange = function() {
             var selectedPublication = $.publications[$.settingsDialog.publicationDropDownGroup.dropDown.selection.index];
@@ -416,7 +422,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.issueDropDownGroup = $.settingsDialog.add('group', undefined, 'issues');
         $.settingsDialog.issueDropDownGroup.orientation = 'row';
         $.settingsDialog.issueDropDownGroup.add('statictext', defaultLabelDim, 'Issue');
-        $.settingsDialog.issueDropDownGroup.dropDown = $.settingsDialog.issueDropDownGroup.add('dropdownlist', defaultValueDim, undefined, {items:[]});
+        $.settingsDialog.issueDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.issueDropDownGroup);
         $.settingsDialog.issueDropDownGroup.visible = false;
         $.settingsDialog.issueDropDownGroup.dropDown.onChange = function() {
             $.settings.IssueID = $.issues[$.settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
@@ -427,7 +433,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.creationModeDropDownGroup = $.settingsDialog.add('group', undefined, 'creationMode');
         $.settingsDialog.creationModeDropDownGroup.orientation = 'row';
         $.settingsDialog.creationModeDropDownGroup.add('statictext', defaultLabelDim, 'Article Creation');
-        $.settingsDialog.creationModeDropDownGroup.dropDown = $.settingsDialog.creationModeDropDownGroup.add('dropdownlist', defaultValueDim, undefined, {items:creationModeOptions});
+        $.settingsDialog.creationModeDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.creationModeDropDownGroup, creationModeOptions);
         $.settingsDialog.creationModeDropDownGroup.visible = false;
         $.settingsDialog.creationModeDropDownGroup.dropDown.onChange = function() {
             if($.settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 0) {
@@ -443,7 +449,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.contentOrderDropDownGroup = $.settingsDialog.add('group', undefined, 'contentOrder');
         $.settingsDialog.contentOrderDropDownGroup.orientation = 'row';
         $.settingsDialog.contentOrderDropDownGroup.add('statictext', defaultLabelDim, 'Content Ordering');
-        $.settingsDialog.contentOrderDropDownGroup.dropDown = $.settingsDialog.contentOrderDropDownGroup.add('dropdownlist', defaultValueDim, undefined, {items:contentOrderOptions});
+        $.settingsDialog.contentOrderDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.contentOrderDropDownGroup, contentOrderOptions);
         $.settingsDialog.contentOrderDropDownGroup.visible = false;
         $.settingsDialog.contentOrderDropDownGroup.dropDown.onChange = function() {
             if($.settingsDialog.contentOrderDropDownGroup.dropDown.selection.index === 0) {
@@ -457,7 +463,7 @@ var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
         $.settingsDialog.styleDropDownGroup = $.settingsDialog.add('group', undefined, 'styles');
         $.settingsDialog.styleDropDownGroup.orientation = 'row';
         $.settingsDialog.styleDropDownGroup.add('statictext', defaultLabelDim, 'Style');
-        $.settingsDialog.styleDropDownGroup.dropDown = $.settingsDialog.styleDropDownGroup.add('dropdownlist', defaultValueDim, undefined, {items:[]});
+        $.settingsDialog.styleDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.styleDropDownGroup);
         $.settingsDialog.styleDropDownGroup.visible = false;
         $.settingsDialog.styleDropDownGroup.dropDown.onChange = function() {
             $.settings.StyleID = '' + $.styles[$.settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
