@@ -20,7 +20,7 @@ function concatenate() {
         './modules/timeout.js',
         './modules/CanvasflowLogger.js',
         './modules/http.js',
-        './modules/api.js',
+        './modules/CanvasflowApi.js',
         './modules/CanvasflowAbout.js',
         './modules/CanvasflowBuild.js',
         './modules/CanvasflowSettings.js',

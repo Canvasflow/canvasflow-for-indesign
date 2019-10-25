@@ -15,11 +15,19 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
+    $.createFormParam = function(boundary, property, value){
+        return '--' + boundary + '\r\n'
+            + 'Content-Disposition: form-data; name="' + property +'"\r\n'
+            + '\r\n'
+            + value + '\r\n'
+            + '\r\n';
+    }
+
     $.uploadZip = function(filepath) {
         var conn = new Socket;
     
-        var reply = "";
-        var host = $.host + ":80"
+        var reply = '';
+        var host = $.host + ':80'
     
         var f = File ( filepath);
         var filename = f.name
@@ -37,74 +45,29 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
         var creationMode = $.savedSettings.creationMode || 'document';
         var contentOrder = $.savedSettings.contentOrder || 'natural';
     
-        if(conn.open(host, "BINARY")) {
+        if(conn.open(host, 'BINARY')) {
             conn.timeout=20000;
     
             var boundary = Math.random().toString().substr(2);
-    
-            var fileContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"contentFile\"; filename=\"" + filename +"\"\r\n"
-            + "Content-Type: application/octet-stream\r\n"
-            + "\r\n"
-            + fContent
-            + "\r\n";
-    
-            var apiKeyContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"secretKey\"\r\n"
-            + "\r\n"
-            + apiKey + "\r\n"
-            + "\r\n";
-
-            var creationModeContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"creationMode\"\r\n"
-            + "\r\n"
-            + creationMode + "\r\n"
-            + "\r\n";
-
-            var contentOrderContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"contentOrder\"\r\n"
-            + "\r\n"
-            + contentOrder + "\r\n"
-            + "\r\n";
-
-            var articleNameContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"articleName\"\r\n"
-            + "\r\n"
-            + articleName + "\r\n"
-            + "\r\n";
-    
-            var PublicationIDContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"publicationId\"\r\n"
-            + "\r\n"
-            + PublicationID + "\r\n"
-            + "\r\n";
-    
-            var IssueIDContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"issueId\"\r\n"
-            + "\r\n"
-            + IssueID + "\r\n"
-            + "\r\n";
-    
-            var StyleIDContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"styleId\"\r\n"
-            + "\r\n"
-            + StyleID + "\r\n"
-            + "\r\n";
-    
-            var contentType = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"contentType\"\r\n"
-            + "\r\n"
-            + "indesign" + "\r\n"
-            + "\r\n";
 
             $.uuid = $.cfBuild.uuid || '';
     
-            var articleIdContent = "--" + boundary + "\r\n"
-            + "Content-Disposition: form-data; name=\"articleId\"\r\n"
-            + "\r\n"
-            + $.uuid + "\r\n"
-            // + "xxxxxxx" + "\r\n"
-            + "\r\n";
+            var fileContent = '--' + boundary + '\r\n'
+            + 'Content-Disposition: form-data; name="contentFile"; filename="' + filename +'"\r\n'
+            + 'Content-Type: application/octet-stream\r\n'
+            + '\r\n'
+            + fContent
+            + '\r\n';
+    
+            var apiKeyContent = $.createFormParam(boundary, 'secretKey', apiKey);
+            var creationModeContent = $.createFormParam(boundary, 'creationMode', creationMode);
+            var contentOrderContent = $.createFormParam(boundary, 'contentOrder', contentOrder);
+            var articleNameContent = $.createFormParam(boundary, 'articleName', articleName);
+            var PublicationIDContent = $.createFormParam(boundary, 'publicationId', PublicationID);
+            var IssueIDContent = $.createFormParam(boundary, 'issueId', IssueID);
+            var StyleIDContent = $.createFormParam(boundary, 'styleId', StyleID);
+            var contentType = $.createFormParam(boundary, 'contentType', 'indesign');
+            var articleIdContent = $.createFormParam(boundary, 'articleId', $.uuid);
     
             var content = fileContent
             + apiKeyContent
@@ -116,15 +79,15 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             + IssueIDContent
             + StyleIDContent
             + articleIdContent
-            + "--" + boundary + "--\r\n\r";
+            + '--' + boundary + '--\r\n\r';
     
-            var cs = "POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n"
-            + "Content-Length: " + content.length + "\r\n"
-            + "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n" 
-            + "Host: "+ host + "\r\n"
-            + "Authorization: " + apiKey + "\r\n"
-            + "Accept: */*\r\n"
-            + "\r\n"
+            var cs = 'POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n'
+            + 'Content-Length: ' + content.length + '\r\n'
+            + 'Content-Type: multipart/form-data; boundary=' + boundary + '\r\n'
+            + 'Host: '+ host + '\r\n'
+            + 'Authorization: ' + apiKey + '\r\n'
+            + 'Accept: */*\r\n'
+            + '\r\n'
             + content;
     
             conn.write( cs );
@@ -132,7 +95,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
             reply = conn.read();
             conn.close();
     
-            if( reply.indexOf( "200" ) > 0 ) {
+            if (reply.indexOf('200') > 0) {
                 // var data = reply.substring(reply.indexOf("{"), reply.length);
                 // alert(reply);
                 // var response = JSON.parse(data);
@@ -275,7 +238,7 @@ var CanvasflowPublish = function(canvasflowSettings, host, cfBuild, canvasflowAp
                 var baseDirectory = app.activeDocument.filePath + '/';
                 $.filePath = baseDirectory + app.activeDocument.name;
                 var ext = app.activeDocument.name.split('.').pop();
-                $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
+                $.baseDirectory = baseDirectory + app.activeDocument.name.replace('.' + ext, '');
                 zipFilePath = cfBuild.build();
                 if(!cfBuild.isBuildSuccess) {
                     alert('Build cancelled');

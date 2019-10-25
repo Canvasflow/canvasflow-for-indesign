@@ -1,6 +1,6 @@
 //@include "json2.js"
 //@include "error.js"
-//@include "api.js"
+//@include "CanvasflowApi.js"
 //@include "CanvasflowSettings.js"
 
 var CanvasflowDialog = function(canvasflowSettingsPath, internal) {
