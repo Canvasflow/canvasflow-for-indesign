@@ -13,6 +13,7 @@ function concatenate() {
     
     return gulp.src([
         './modules/json2.js', 
+        './modules/Array.js', 
         './modules/env.js',
         './modules/dir.js',
         './modules/error.js',
