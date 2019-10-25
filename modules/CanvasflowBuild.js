@@ -2,6 +2,7 @@
 //@include "timeout.js"
 //@include "env.js"
 //@include "dir.js"
+//@include "array.js"
 
 var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
     var $ = this;
@@ -399,25 +400,24 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     }
 
     $.isNotSupportedExtension = function(ext) {
-        switch(ext) {
-            case 'jpg':
-            case 'jpeg':
-            case 'eps':
-            case 'tiff':
-            case 'tif':       
-            case 'png':
-            case 'gif':
-            case 'jp2':
-            case 'pict':
-            case 'bmp':
-            case 'qtif':
-            case 'psd':
-            case 'sgi':
-            case 'tga':        
-                return false;
-            default:
-                return true;
-        }
+        var exts = [
+            'jpg',
+            'jpeg',
+            'eps',
+            'tiff',
+            'tif',
+            'png',
+            'gif',
+            'jp2',
+            'pict',
+            'bmp',
+            'qtif',
+            'psd',
+            'sgi',
+            'tga'
+        ];
+
+        return exts.indexOf(ext) != -1;
     }
 
     $.saveGraphicToImage = function(graphic, imageDirectory) {
