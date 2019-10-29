@@ -1,0 +1,54 @@
+//@include "json2.js"
+//@include "error.js"
+//@include "Array.js"
+
+var LogDialog = function(logFilePath) { 
+    var $ = this;
+    $.defaultDialogSize = [300,100];
+
+    $.window = new Window('dialog', 'Logs');
+    $.getLogsContent = function() {
+        var lines = [];
+        var logFile = new File(logFilePath);
+        if(!logFile.exists) {
+            return 'There are no logs';
+        }
+
+        logFile.open('r');
+        do {
+            lines.push(logFile.readln());
+        } while(!logFile.eof);
+        logFile.close();
+
+        return lines.reverse().join('\n');
+    }
+    $.renderWindow = function() {
+        // Log box
+        // alert(logFilePath);
+        $.window.boxGroup= $.window.add('group');
+        $.window.boxGroup.orientation = 'row';
+        $.window.boxGroup.box = $.window.boxGroup.add('edittext', [0, 0, 400, 400], $.getLogsContent(), {multiline: true,  readonly: true});
+
+        // Panel buttons
+        $.window.buttonsBarGroup = $.window.add('group', undefined, 'buttons');
+        $.window.buttonsBarGroup.orientation = 'row';
+        $.window.buttonsBarGroup.alignChildren = 'bottom';    
+        $.window.buttonsBarGroup.cancelBtn = $.window.buttonsBarGroup.add('button', undefined, 'Close');
+        // $.window.buttonsBarGroup.saveBtn = $.window.buttonsBarGroup.add('button', undefined, 'Save');
+        $.window.buttonsBarGroup.cancelBtn.onClick = function() {
+            $.window.close();
+        }
+        $.window.show();
+    }
+
+    $.show = function() {
+        try {
+            $.window.orientation = 'column';
+            $.window.alignment = 'right';
+            $.window.preferredSize = $.defaultDialogSize;
+            $.renderWindow()
+        } catch(e) {
+            logError(e);
+        }
+    };
+}

@@ -97,6 +97,17 @@ var CanvasflowPlugin = function() {
                 logError(e);
             }
         });
+
+        var canvasflowScriptActionLogs = app.scriptMenuActions.add('&Logs');  
+        canvasflowScriptActionLogs.eventListeners.add('onInvoke', function() {  
+            try {
+                var logFilePath = getBasePath() + '/cf-indesign/canvasflow.log';
+                var logDialog = new LogDialog(logFilePath);
+                logDialog.show();
+            } catch(e) {
+                alert(e.message);
+            }
+        });
     
         var canvasflowScriptMenu = null;
         try {  
@@ -111,6 +122,7 @@ var CanvasflowPlugin = function() {
         canvasflowScriptMenu.menuSeparators.add(LocationOptions.AT_END);
         canvasflowScriptMenu.menuItems.add(canvasflowScriptActionBuild);
         canvasflowScriptMenu.menuSeparators.add(LocationOptions.AT_END);
+        canvasflowScriptMenu.menuItems.add(canvasflowScriptActionLogs);
         canvasflowScriptMenu.menuItems.add(canvasflowScriptActionAbout);
     }
 }

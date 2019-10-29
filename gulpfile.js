@@ -21,6 +21,7 @@ function concatenate() {
         './modules/Logger.js',
         './modules/http.js',
         './modules/CanvasflowApi.js',
+        './modules/LogDialog.js',
         './modules/AboutDialog.js',
         './modules/ScriptBuilder.js',
         './modules/Builder.js',
