@@ -1,8 +1,13 @@
-//@include "./../modules/CanvasflowLogger.js"
+//@include "./../modules/env.js"
+//@include "./../modules/LogDialog.js"
 
-var logFilePath = getBasePath() + '/canvaflow_debug_log.log';
+var logFilePath = getBasePath() + '/cf-indesign/canvasflow.log';
 
-var logger = new CanvasflowLogger(logFilePath, true);
+/*var logger = new Logger(logFilePath, true);
 logger.log((new Date()).getTime(), 'test func');
 logger.log((new Date()).getTime(), 'test func2');
-alert('Done')
+alert('Done')*/
+
+/*var logDialog = new LogDialog(logFilePath);
+logDialog.show();*/
+alert(app.activeDocument.filePath.displayName);
