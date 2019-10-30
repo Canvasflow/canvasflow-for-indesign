@@ -65,4 +65,12 @@ var Logger = function(logFilePath, os, version) {
     $.log = function(ms, name) {
         $.file.writeln(ms + ' - ' + name);
     }
+
+    $.logError = function(e) {
+        $.file.writeln('--------- ERROR ---------');
+        $.file.writeln('Message: "' + e.message + '"');
+        $.file.writeln('Line: ' + e.line);
+        $.file.writeln('\nStack:\n' + e.getStack());
+        $.file.writeln('\nJSON:\n' + e.toJson());
+    }
 }

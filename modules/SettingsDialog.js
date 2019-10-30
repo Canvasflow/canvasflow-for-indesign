@@ -4,7 +4,7 @@
 //@include "CanvasflowApi.js"
 //@include "Settings.js"
 
-var SettingsDialog = function(canvasflowSettingsPath, internal) {
+var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
     var $ = this;
     $.canvasflowSettings = new Settings(canvasflowSettingsPath);
     $.settingsDialog = new Window('dialog', 'Canvasflow Settings');
@@ -160,7 +160,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal) {
             $.canvasflowApi = new CanvasflowApi('http://' + $.settings.endpoint + '/v2');
             settingsDialog.buttonsBarGroup.saveBtn.visible = false;
         } catch(e) {
-            logError(e);
+            logger.logError(e);
         }
     }
 
@@ -382,7 +382,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal) {
                 $.settingsDialog.pagesGroup.visible = true;
                 $.settingsDialog.buttonsBarGroup.saveBtn.visible = true;
             } catch(e) {
-                logError(e);
+                logger.logError(e);
             }
         }
         $.settingsDialog.apiKeyGroup.visible = true;
@@ -522,7 +522,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal) {
                 $.canvasflowSettings.save($.settings);
                 $.settingsDialog.close();
             }catch(e) {
-                logError(e);
+                logger.logError(e);
             }
             
         }
@@ -534,14 +534,10 @@ var SettingsDialog = function(canvasflowSettingsPath, internal) {
     };
 
     $.show = function() {
-        try {
-            $.settingsDialog.orientation = 'column';
-            $.settingsDialog.alignment = 'right';
-            $.settingsDialog.preferredSize = $.defaultDialogSize;
-            $.renderWindow()
-        } catch(e) {
-            logError(e);
-        }
+        $.settingsDialog.orientation = 'column';
+        $.settingsDialog.alignment = 'right';
+        $.settingsDialog.preferredSize = $.defaultDialogSize;
+        $.renderWindow()
     };
 }
 

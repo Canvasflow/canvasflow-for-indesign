@@ -16,10 +16,17 @@ var CanvasflowPlugin = function() {
                 alert('Please run the Install command, help please refer to the help documentation');
                 return ;
             }
-            logger.log((new Date()).getTime(), '-----------     START     -----------');
-            var settingsDialog = new SettingsDialog(settingsFilePath, isInternal);
-            settingsDialog.show();
-            logger.log((new Date()).getTime(), '-----------     END     -----------');
+
+            try {
+                var logger = new Logger(logFilePath, osName, version);
+                logger.start('Settings');
+                var settingsDialog = new SettingsDialog(settingsFilePath, isInternal, logger);
+                settingsDialog.show();
+                logger.end();
+            } catch(e) {
+                logger.end(e);
+                alert(e.message);
+            }
         }); 
         
         var canvasflowScriptActionPublish = app.scriptMenuActions.add('&Publish');  
@@ -86,8 +93,7 @@ var CanvasflowPlugin = function() {
                 }
             } catch(e) {
                 logger.end(e);
-                alert(e.message)
-                // logError(e);
+                alert(e.message);
             }
         });
 
