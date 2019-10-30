@@ -59,9 +59,9 @@ var CanvasflowPlugin = function() {
                 if(!!app.activeDocument) {
                     
                     var settings = new Settings(settingsFilePath);
-                    var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os);
+                    var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os, logger);
                     var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');
-                    var publisher = new Publisher(settings, settingsData.endpoint, builder, canvasflowApi);
+                    var publisher = new Publisher(settings, settingsData.endpoint, builder, canvasflowApi, logger);
                     
                     logger.start('Publish', app.activeDocument);
                     publisher.publish();

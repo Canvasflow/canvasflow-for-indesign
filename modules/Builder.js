@@ -430,19 +430,19 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
 
         if($.isNotSupportedExtension(ext)) {
             if(!!logger) {
-                logger.log((new Date()).getTime(), 'The image extension is not valid: "' + fileName + '", extension: ' + ext);
+                logger.log('The image extension is not valid: "' + fileName + '", extension: ' + ext, 'timestamp');
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
         if(!originalImageFile.exists) {
             if(!!logger) {
-                logger.log((new Date()).getTime(), 'Image does not exist: "' + fileName + '"');
+                logger.log('Image does not exist: "' + fileName + '"', 'timestamp');
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
-        logger.log((new Date()).getTime(), 'Image exists "' + fileName +'" and should be processed by the script');
+        logger.log('Image exists "' + fileName +'" and should be processed by the script', 'timestamp');
 
         var originalImageSize = originalImageFile.length;
 

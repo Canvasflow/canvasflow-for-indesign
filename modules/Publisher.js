@@ -261,13 +261,16 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                     alert('Build cancelled');
                     return;
                 }
-                var publishStartTime = (new Date()).getTime();
+                var now = new Date();
+                var publishStartTime = now.getTime();
                 if($.uploadZip(zipFilePath)) {
                     new File(zipFilePath).remove()
+                    now = new Date();
                     alert('Success \nThe file has been published to Canvasflow');
-                    logger.log((new Date()).getTime() - publishStartTime, 'Publishing')
+                    logger.log('Publishing time: ' + (now.getTime() - publishStartTime) / 1000 + ' seconds', 'timestamp')
                 } else {
-                    logger.log((new Date()).getTime() - publishStartTime, 'Publishing with error')
+                    now = new Date();
+                    logger.log('Publishing with error: ' + (now.getTime() - publishStartTime) / 1000 + ' seconds', 'timestamp')
                     throw new Error('Error uploading the content, please try again');
                 }
             }

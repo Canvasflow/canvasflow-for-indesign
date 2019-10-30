@@ -22,8 +22,8 @@ var Logger = function(logFilePath, os, version) {
     constructor(logFilePath, os, version);
 
     pad = function(num) {
-        var s = "000000000" + num;
-        return s.substr(s.length-2);
+        var s = '000000000' + num;
+        return s.substr(s.length - 2);
     }
 
     $.start = function(action, document) {
@@ -41,7 +41,7 @@ var Logger = function(logFilePath, os, version) {
         $.file.writeln('Action: "' + action + '"');
         $.file.writeln('OS: "' + $.os + '"');
         $.file.writeln('Version: "' + $.version + '"');
-        $.file.writeln('Start time: "' + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + '"');
+        $.file.writeln('Start time: "' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) + '"');
         $.file.writeln('---------------------------');
     }
 
@@ -56,14 +56,37 @@ var Logger = function(logFilePath, os, version) {
         var now = new Date();
         $.endTime = now;
         $.file.writeln('---------------------------');
-        $.file.writeln('End time: "' + pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds()) + '"');
+        $.file.writeln('End time: "' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) + '"');
         $.file.writeln('Total time: ' + Math.abs(($.endTime - $.startTime) / 1000) + ' seconds');
         $.file.writeln('---------- END ----------');
         $.file.close();
     }
 
-    $.log = function(ms, name) {
-        $.file.writeln(ms + ' - ' + name);
+    $.log = function(content, type, separator) {
+        var prefix = '';
+        if(!separator) {
+            separator = ' | ';
+        }
+
+        var now = new Date();
+        var date = now.getFullYear()+'-'+pad((now.getMonth()+1))+'-'+pad(now.getDate());
+        var time = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        var timestamp = date + ' ' + time;
+
+        switch(type) {
+            case 'timestamp': 
+                prefix = timestamp + separator;
+                break;
+            case 'time': 
+                prefix = time + separator;
+                break;
+            case 'date': 
+                prefix = date + separator;
+                break;    
+            default: 
+                prefix = '';
+        }
+        $.file.writeln(prefix + content);
     }
 
     $.logError = function(e) {
