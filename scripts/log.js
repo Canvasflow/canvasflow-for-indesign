@@ -8,5 +8,6 @@ logger.log((new Date()).getTime(), 'test func');
 logger.log((new Date()).getTime(), 'test func2');
 alert('Done')*/
 
-var logDialog = new LogDialog(logFilePath);
-logDialog.show();
+/*var logDialog = new LogDialog(logFilePath);
+logDialog.show();*/
+alert(app.activeDocument.filePath.displayName);

@@ -33,10 +33,17 @@ var LogDialog = function(logFilePath) {
         $.window.buttonsBarGroup = $.window.add('group', undefined, 'buttons');
         $.window.buttonsBarGroup.orientation = 'row';
         $.window.buttonsBarGroup.alignChildren = 'bottom';    
-        $.window.buttonsBarGroup.cancelBtn = $.window.buttonsBarGroup.add('button', undefined, 'Close');
-        // $.window.buttonsBarGroup.saveBtn = $.window.buttonsBarGroup.add('button', undefined, 'Save');
-        $.window.buttonsBarGroup.cancelBtn.onClick = function() {
+        $.window.buttonsBarGroup.closeBtn = $.window.buttonsBarGroup.add('button', undefined, 'Close');
+        
+        $.window.buttonsBarGroup.closeBtn.onClick = function() {
             $.window.close();
+        }
+        var logFile = new File(logFilePath);
+        if(logFile.exists) {
+            $.window.buttonsBarGroup.openBtn = $.window.buttonsBarGroup.add('button', undefined, 'Open');
+            $.window.buttonsBarGroup.openBtn.onClick = function() {
+                logFile.execute();
+            }
         }
         $.window.show();
     }

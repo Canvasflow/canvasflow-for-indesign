@@ -1,3 +1,4 @@
+var osName = $.os;
 var CanvasflowPlugin = function() {
     var $ = this;
 
@@ -61,17 +62,17 @@ var CanvasflowPlugin = function() {
         });
 
         var canvasflowScriptActionBuild = app.scriptMenuActions.add('&Build');  
-        canvasflowScriptActionBuild.eventListeners.add('onInvoke', function() {  
+        canvasflowScriptActionBuild.eventListeners.add('onInvoke', function() {
+            var logger = new Logger(logFilePath, osName, version);
             try {
                 if (app.documents.length != 0){
                     var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.')
                     if(response) {
                         var settings = new Settings(settingsFilePath);
-                        var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os);
-
-                        logger.log((new Date()).getTime(), '-----------     START     -----------');
+                        var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os, logger);
+                        logger.start('Build', app.activeDocument);
                         var buildFile = new File(builder.build());
-                        logger.log((new Date()).getTime(), '-----------     END     -----------');
+                        logger.end();
 
                         if(builder.isBuildSuccess) {
                             alert('Build Completed\n' + buildFile.displayName);
@@ -84,7 +85,9 @@ var CanvasflowPlugin = function() {
                     alert ('Please select an article to build');
                 }
             } catch(e) {
-                logError(e);
+                logger.end(e);
+                alert(e.message)
+                // logError(e);
             }
         });
 
@@ -127,5 +130,5 @@ var CanvasflowPlugin = function() {
     }
 }
 
-var canvasflowPlugin = new CanvasflowPlugin();
+var canvasflowPlugin = new CanvasflowPlugin($.os);
 canvasflowPlugin.install();

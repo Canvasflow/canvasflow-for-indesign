@@ -12,6 +12,15 @@ Error.prototype.toJson = function() {
     })
 }
 
+Error.prototype.getStack = function() {
+    if (typeof this.stack === "undefined" || this.stack === null) {
+        this.stack = "placeholder";
+        // The previous line is needed because the next line may indirectly call this method.
+        this.stack = $.stack;
+    }
+    return this.stack;
+}
+
 Error.prototype.toLog = function(logPath) {
     if (typeof this.stack === "undefined" || this.stack === null) {
         this.stack = "placeholder";
@@ -35,5 +44,4 @@ function logError(e) {
     file.write(e.toJson());
     file.close();
     e.toLog(getBasePath() + '/cf-indesign/canvasflow_error.log')
-    alert(e.toJson())
 }

@@ -5,7 +5,7 @@
 //@include "Array.js"
 //@include "ScriptBuilder.js"
 
-var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
+var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os, logger) {
     var $ = this;
 
     $.resizeCommandFilePath = resizeCommandFilePath || '';
@@ -355,6 +355,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                 data.push({
                     type: 'TextFrame',
                     id: textFrame.id,
+                    label: textFrame.label,
                     storyId: StoryID,
                     next: next,
                     previous: previous,
@@ -491,6 +492,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                     data.push({
                         type: 'Image',
                         id: graphic.id,
+                        label: graphic.label,
                         content: imagePath,
                         width: position.width,
                         height: position.height,
