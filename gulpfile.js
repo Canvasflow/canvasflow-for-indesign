@@ -10,22 +10,24 @@ const buildPath = process.env.BUILD_PATH || path.join(__dirname, 'build');
 const package = require('./package.json');
 
 function concatenate() {
-    
     return gulp.src([
         './modules/json2.js', 
+        './modules/Array.js', 
         './modules/env.js',
         './modules/dir.js',
         './modules/error.js',
         './modules/variables.js',
         './modules/timeout.js',
-        './modules/CanvasflowLogger.js',
+        './modules/Logger.js',
         './modules/http.js',
-        './modules/api.js',
-        './modules/CanvasflowAbout.js',
-        './modules/CanvasflowBuild.js',
-        './modules/CanvasflowSettings.js',
-        './modules/CanvasflowDialog.js',
-        './modules/CanvasflowPublish.js',
+        './modules/CanvasflowApi.js',
+        './modules/LogDialog.js',
+        './modules/AboutDialog.js',
+        './modules/ScriptBuilder.js',
+        './modules/Builder.js',
+        './modules/Settings.js',
+        './modules/SettingsDialog.js',
+        './modules/Publisher.js',
         './modules/main.js',
     ])
     .pipe(concat('Canvasflow.jsx'))
@@ -46,4 +48,13 @@ function prependEngine(cb) {
     fs.writeFileSync(filePath, `#targetengine "session" \n\nvar version='${package.version}'; \n\n ${fileContent}`)
     cb();
 }
-exports.default = gulp.series(concatenate, prependEngine);
+
+const compile = gulp.series(concatenate, prependEngine);
+// exports.default = compile;
+
+gulp.task('default', compile);
+gulp.task('compile', compile);
+gulp.task('watch', function () {
+    return gulp.watch('modules/**' , compile);
+});
+

@@ -2,12 +2,15 @@
 //@include "timeout.js"
 //@include "env.js"
 //@include "dir.js"
+//@include "Array.js"
+//@include "ScriptBuilder.js"
 
-var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os) {
+var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommandFilePath, os, logger) {
     var $ = this;
 
     $.resizeCommandFilePath = resizeCommandFilePath || '';
     $.convertCommandFilePath = convertCommandFilePath || '';
+    $.doc = app.activeDocument;
     
     $.os = os;
     $.imagesToResize = [];
@@ -51,8 +54,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         return uuid.substring(0, uuid.length / 2);
     }
 
-    $.getDocumentID = function(doc) {
-        var uuid = $.getUUIDFromDocument(doc);
+    $.getDocumentID = function() {
+        var uuid = $.getUUIDFromDocument($.doc);
         if(!uuid) {
             var dt = new Date().getTime();
             var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -61,7 +64,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 return (c=='x' ? r :(r&0x3|0x8)).toString(16);
             });
             uuid = uuid.substring(0, uuid.length / 2);
-            doc.insertLabel("CANVASFLOW-ID", uuid);
+            $.doc.insertLabel('CANVASFLOW-ID', uuid);
+            $.doc.save();
         }
 
         return uuid;
@@ -90,23 +94,14 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         }
     }
 
-    $.appendTextBoxes = function (textFrames, textBoxes) {
-        if(textBoxes.length > 0) {
-            for(var i = 0; i < textBoxes.length; i++) {
-                var textBox = textBoxes[i];
-                for(var j = 0; j < textBox.textFrames.length; j++) {
-                    textFrames.push(textBox.textFrames[j]);
-                }
-            }
-        }
-    }
-
-    $.appendGroups = function (textFrames, groups) {
-        if(groups.length > 0) {
-            for(var i = 0; i < groups.length; i++) {
-                var group = groups[i];
-                for(var j = 0; j < group.textFrames.length; j++) {
-                    textFrames.push(group.textFrames[j]);
+    $.appendToTextFrames = function (textFrames, elements) {
+        if(elements.length > 0) {
+            for(var i = 0; i < elements.length; i++) {
+                var element = elements[i];
+                if(!!element.textFrames) {
+                    for(var j = 0; j < element.textFrames.length; j++) {
+                        textFrames.push(element.textFrames[j]);
+                    }
                 }
             }
         }
@@ -335,13 +330,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             textFrames.push(page.textFrames[i]);
         }
 
-        if(page.textBoxes.length > 0) {
-            $.appendTextBoxes(textFrames, page.textBoxes)
-        }
-
-        if(page.groups.length > 0) {
-            $.appendGroups(textFrames, page.groups)
-        }
+        $.appendToTextFrames(textFrames, page.textBoxes);
+        $.appendToTextFrames(textFrames, page.groups);
 
         for (var i = 0; i < textFrames.length; i++) {
             var textFrame = textFrames[i];
@@ -363,8 +353,9 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
                 } catch(e) {}
 
                 data.push({
-                    type: "TextFrame",
+                    type: 'TextFrame',
                     id: textFrame.id,
+                    label: textFrame.label,
                     storyId: StoryID,
                     next: next,
                     previous: previous,
@@ -399,25 +390,24 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     }
 
     $.isNotSupportedExtension = function(ext) {
-        switch(ext) {
-            case 'jpg':
-            case 'jpeg':
-            case 'eps':
-            case 'tiff':
-            case 'tif':       
-            case 'png':
-            case 'gif':
-            case 'jp2':
-            case 'pict':
-            case 'bmp':
-            case 'qtif':
-            case 'psd':
-            case 'sgi':
-            case 'tga':        
-                return false;
-            default:
-                return true;
-        }
+        var exts = [
+            'jpg',
+            'jpeg',
+            'eps',
+            'tiff',
+            'tif',
+            'png',
+            'gif',
+            'jp2',
+            'pict',
+            'bmp',
+            'qtif',
+            'psd',
+            'sgi',
+            'tga'
+        ];
+
+        return exts.indexOf(ext) === -1;
     }
 
     $.saveGraphicToImage = function(graphic, imageDirectory) {
@@ -440,19 +430,19 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
 
         if($.isNotSupportedExtension(ext)) {
             if(!!logger) {
-                logger.log((new Date()).getTime(), 'The image extension is not valid: "' + fileName + '", extension: ' + ext);
+                logger.log('The image extension is not valid: "' + fileName + '", extension: ' + ext, 'timestamp');
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
         if(!originalImageFile.exists) {
             if(!!logger) {
-                logger.log((new Date()).getTime(), 'Image does not exist: "' + fileName + '"');
+                logger.log('Image does not exist: "' + fileName + '"', 'timestamp');
             }
             return $.exportImageRepresentation(graphic, imageDirectory, id);
         }
 
-        logger.log((new Date()).getTime(), 'Image exists "' + fileName +'" and should be processed by the script');
+        logger.log('Image exists "' + fileName +'" and should be processed by the script', 'timestamp');
 
         var originalImageSize = originalImageFile.length;
 
@@ -496,35 +486,18 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         if(graphics.length > 0) {
             for (var i = 0; i < graphics.length; i++) {
                 var graphic = graphics[i];
-                if(graphic.isValid) {
-                    var imagePath;
+                if(graphic.isValid && graphic.visible) {
+                    var imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                     var position = $.getItemPosition(graphic.parent.geometricBounds);
-                    var imageExist = $.checkIfGraphicImageExist(graphic);
-                    if(imageExist) {
-                        if(graphic.visible) {
-                            imagePath = $.saveGraphicToImage(graphic, imageDirectory);
-                            data.push({
-                                type: "Image",
-                                id: graphic.id,
-                                content: imagePath,
-                                width: position.width,
-                                height: position.height,
-                                position: position
-                            });
-                        }
-                    } else {
-                        if(graphic.visible) {
-                            imagePath = $.saveGraphicToImage(graphic, imageDirectory);
-                            data.push({
-                                type: "Image",
-                                id: graphic.id,
-                                content: imagePath,
-                                width: position.width,
-                                height: position.height,
-                                position: position
-                            });
-                        }
-                    }
+                    data.push({
+                        type: 'Image',
+                        id: graphic.id,
+                        label: graphic.label,
+                        content: imagePath,
+                        width: position.width,
+                        height: position.height,
+                        position: position
+                    });
                 }
             }
         }
@@ -541,112 +514,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         }
     }
     $.getResizeImagesScriptContent = function(files) {
-        var lines = [];
-        if($.os === 'dos') {
-            var basePath = 'userprofile';
-            if(!!getEnv('CF_USER_BASE_PATH')) {
-                basePath = 'cf_user_base_path';
-            }
-            lines.push(
-                '@echo off',
-                'setlocal enabledelayedexpansion'
-            )
-            for(var i = 0; i < files.length; i++) {
-                lines.push('set Files['+i+']="'+files[i]+'"')
-            }
-            lines.push(
-                'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
-                '\tset original_image=!Files[%%n]!',
-                '\tset ext=""',
-                '\tset parent_dir=""',
-                '\tset filename=""',
-                '\tfor %%i in (!original_image!) do set ext=%%~xi',
-                '\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
-                '\tfor %%f in (!original_image!) do set filename=%%~nf',
-
-                '\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
-
-                '\tset image_width=""',
-                '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
-                '\tset image_width=!image_width:\'=!',
-
-                '\tset target_filename="!parent_dir!!filename!.jpg"',
-                '\tif !image_width! gtr 2048 (',
-                '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image! !target_filename!',
-                '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] -quality 50 !target_filename!',
-                '\t\t)',
-                '\t) else (',
-                '\t\tif "!ext!" neq ".tif" (',
-                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
-                '\t\t) else (',
-                '\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] -quality 50 !target_filename!',
-                '\t\t)',
-                '\t)',
-
-                '\tif "!ext!" neq ".jpg" (',
-                '\t\tdel "!parent_dir!!filename!!ext!"',
-                '\t)',
-
-                ')',
-                'del %' + basePath + '%\\' + $.baseDirName + '\\canvasflow_resizing.lock'        
-            )
-        } else {
-            lines = [
-                "CYAN='\033[1;36m'",
-                "NC='\033[0m'",
-                "GREEN='\033[1;32m'",
-                "YELLOW='\033[0;33m'",
-                "RED='\033[0;31m'",
-                'clear',
-                'files=( ' + files.join(' ') + ' )',
-                'total_of_images=${#files[@]}',
-                'processed_images=0',
-                'for file in "${files[@]}"',
-                '\tdo :',
-                '\t\text="${file#*.}"',
-                '\t\tprocessed_images=$((processed_images+1))',
-                '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
-                '\t\tif ((percentage < 100)); then',
-                '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
-                '\t\telse',
-                '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
-                '\t\tfi',
-                '\t\tif [[ $ext == "eps" ]]; then',
-                '\t\t\ttransform_to_pdf="pstopdf \\\"${file}\\\""',
-                '\t\t\teval $transform_to_pdf',
-                '\t\t\tremove_command="rm \\\"${file}\\\""',
-                '\t\t\teval $remove_command',
-                '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
-                '\t\t\text="pdf"',
-                '\t\tfi',
-                '\t\tclear',
-                '\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
-                '\t\tfilename=$(basename -- \"$file\")',
-                '\t\tfilename="${filename%.*}"',
-                '\t\timage_width="$({ sips -g pixelWidth \"$file\" || echo 0; } | tail -1 | sed \'s/[^0-9]*//g\')"',
-                '\t\tif [ "$image_width" -gt "2048" ]; then',
-                '\t\t\tparent_filename="$(dirname "${file})")"',
-                '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
-                '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --resampleWidth 2048 -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
-                '\t\t\teval $resize_command > /dev/null 2>&1',
-                '\t\telse',
-                '\t\t\tparent_filename="$(dirname "${file})")"',
-                '\t\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
-                '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
-                '\t\t\teval $resize_command > /dev/null 2>&1',
-                '\t\tfi',
-                '\t\tif [[ $ext != "jpeg" ]] && [[ $ext != "jpg" ]]; then',
-                '\t\t\tremove_command="rm \\\"${file}\\\""',
-                '\t\t\teval $remove_command',
-                '\t\tfi',
-                'done',
-                'rm -f ' + $.resizingImageLockFilePath
-            ];
-        }
-
-        return lines;
+        var scriptBuilder = new ScriptBuilder($.os, $.baseDirName);
+        return scriptBuilder.getResizeImageScript(files, $.resizingImageLockFilePath);
     }
 
     $.resizeImages = function(imageFiles) {
@@ -674,101 +543,8 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
     }
 
     $.getConvertImagesScriptContent = function(files) {
-        var lines = [];
-        if($.os === 'dos') {
-            var basePath = 'userprofile';
-            if(!!getEnv('CF_USER_BASE_PATH')) {
-                basePath = 'cf_user_base_path';
-            }
-            lines.push(
-                '@echo off',
-                'setlocal enabledelayedexpansion'
-            )
-            for(var i = 0; i < files.length; i++) {
-                lines.push('set Files['+i+']="'+files[i]+'"')
-            }
-            lines.push(
-                'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
-                '\tset original_image=!Files[%%n]!',
-                '\tset ext=""',
-                '\tset parent_dir=""',
-                '\tset filename=""',
-
-                '\tfor %%i in (!original_image!) do set ext=%%~xi',
-                '\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
-                '\tfor %%f in (!original_image!) do set filename=%%~nf',
-
-                '\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
-
-                '\tset image_width=""',
-                '\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
-                '\tset image_width=!image_width:\'=!',
-
-                '\tset target_filename="!parent_dir!!filename!.jpg"',
-                '\tif "!ext!" neq ".tif" (',
-                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
-                '\t) else (',
-                '\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!',
-                '\t)',
-
-                '\tif "!ext!" neq ".jpg" (',
-                '\t\tdel "!parent_dir!!filename!!ext!"',
-                '\t)',
-
-                ')',
-            
-                'del %' + basePath + '%\\' + $.baseDirName + '\\canvasflow_convert.lock'
-            )
-        } else {
-            lines = [
-                "CYAN='\033[1;36m'",
-                "NC='\033[0m'",
-                "GREEN='\033[1;32m'",
-                "YELLOW='\033[0;33m'",
-                "RED='\033[0;31m'",
-    
-                'clear',
-                'files=( ' + files.join(' ') + ' )',
-                'total_of_images=${#files[@]}',
-                'processed_images=0',
-                'for file in "${files[@]}"',
-                '\tdo :',
-                '\t\tprocessed_images=$((processed_images+1))',
-    
-                '\t\tpercentage=$(($((processed_images * 100))/total_of_images))',
-                '\t\tif ((percentage < 100)); then',
-                '\t\t\tpercentage="${YELLOW}${percentage}%${NC}"',
-                '\t\telse',
-                '\t\t\tpercentage="${GREEN}${percentage}%${NC}"',
-                '\t\tfi',
-
-                '\t\text="${file#*.}"',
-    
-                '\t\tif [[ $ext == "eps" ]]; then',
-                '\t\t\ttransform_to_pdf="echo \'\\\"${file}\\\"\'  | xargs -n1 pstopdf"',
-                '\t\t\teval $transform_to_pdf',
-                '\t\t\tremove_command="rm \\\"${file}\\\""',
-                '\t\t\teval $remove_command',
-                '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
-                '\t\t\text="pdf"',
-                '\t\tfi',
-    
-                '\t\techo "Converting images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
-                '\t\tfilename=$(basename -- \"$file\")',
-                '\t\tfilename="${filename%.*}"',
-                '\t\tparent_filename="$(dirname "${file})")"',
-                '\t\ttarget_filename="${parent_filename}/${filename}.jpg"',
-                '\t\tconvert_command="sips -s format jpeg \\\"${file}\\\" --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' --out \\\"${target_filename}\\\""',
-                '\t\teval $convert_command > /dev/null 2>&1',
-                '\t\tclear',
-                '\t\tremove_command="rm \\\"${file}\\\""',
-                '\t\teval $remove_command',
-                'done',
-                'rm -f ' + $.convertImageLockFilePath
-            ]
-        }
-
-        return lines;
+        var scriptBuilder = new ScriptBuilder($.os, $.baseDirName);
+        return scriptBuilder.getConvertImageScript(files, $.resizingImageLockFilePath);
     }
 
     $.convertImages = function(imageFiles) {
@@ -1020,7 +796,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var baseDirectory = app.activeDocument.filePath + '/';
         $.filePath = baseDirectory + app.activeDocument.name;
         var ext = app.activeDocument.name.split('.').pop();
-        $.baseDirectory = baseDirectory + app.activeDocument.name.replace("." + ext, '');
+        $.baseDirectory = baseDirectory + app.activeDocument.name.replace('.' + ext, '');
 
         $.createExportFolder();
 
@@ -1039,7 +815,7 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
         var zeroPoint =  document.zeroPoint;
         document.zeroPoint = [0, 0];
             
-        $.uuid = $.getDocumentID(document);
+        $.uuid = $.getDocumentID();
         var response = {
             pages: []
         };
@@ -1058,16 +834,18 @@ var CanvasflowBuild = function(canvasflowSettings, resizeCommandFilePath, conver
             }
         }
 
+        var totalOfPages = pages.length;
+
         // This set the document to pixels
         app.activeDocument.viewPreferences.horizontalMeasurementUnits = 2054187384;
         app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
+
         var w = new Window ('palette', 'Processing pages');
-        w.progressBar = w.add('progressbar', undefined, 0, pages.length);
-        w.progressText = w.add('statictext', [0, 0, 100, 20], 'Page 0 of '+ pages.length);
+        w.progressBar = w.add('progressbar', undefined, 0, totalOfPages);
+        w.progressText = w.add('statictext', [0, 0, 100, 20], 'Page 0 of '+ totalOfPages);
         w.progressBar.preferredSize.width = 300;
         w.show();
-        var totalOfPages = pages.length;
-
+        
         do {
             var pageIndex = pages.shift() - 1;
             var page = document.pages[pageIndex];

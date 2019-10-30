@@ -1,6 +1,6 @@
 var apiKeySetting = 1;
 var isInternal = true;
-var canvasflowSettingsKey = "CanvasflowSettings";
+var canvasflowSettingsKey = 'Settings';
 var baseDirName = 'cf-indesign';
 
 var os = 'unix';
