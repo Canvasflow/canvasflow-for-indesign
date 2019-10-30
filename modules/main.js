@@ -36,6 +36,7 @@ var CanvasflowPlugin = function() {
                 alert('Please open Settings first and register the api key');
                 return ;
             }
+            var logger = new Logger(logFilePath, osName, version);
             try {
                 settingsFile.open('r');
                 var settingsData = JSON.parse(settingsFile.read());
@@ -55,16 +56,22 @@ var CanvasflowPlugin = function() {
                     return;
                 }
 
-                var settings = new Settings(settingsFilePath);
-                var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os);
-                var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');
-                var publisher = new Publisher(settings, settingsData.endpoint, builder, canvasflowApi);
-                
-                logger.log((new Date()).getTime(), '-----------     START     -----------');
-                publisher.publish();
-                logger.log((new Date()).getTime(), '-----------     END     -----------');
+                if(!!app.activeDocument) {
+                    
+                    var settings = new Settings(settingsFilePath);
+                    var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os);
+                    var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');
+                    var publisher = new Publisher(settings, settingsData.endpoint, builder, canvasflowApi);
+                    
+                    logger.start('Publish', app.activeDocument);
+                    publisher.publish();
+                    logger.end();
+                } else {
+                    alert ('Please select an article to Publish');
+                }               
             } catch(e) {
-                logError(e);
+                logger.end(e);
+                alert(e.message);
             }
         });
 
@@ -103,7 +110,7 @@ var CanvasflowPlugin = function() {
                 var aboutDialog = new AboutDialog(version);
                 aboutDialog.show();
             } catch(e) {
-                logError(e);
+                alert(e.message);
             }
         });
 

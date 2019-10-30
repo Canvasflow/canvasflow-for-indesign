@@ -2,7 +2,7 @@
 //@include "api.js"
 //@include "Builder.js"
 
-var Publisher = function(canvasflowSettings, host, builder, canvasflowApi) {
+var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logger) {
     var $ = this;
     $.baseDirectory = '';
     $.filePath = '';
