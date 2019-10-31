@@ -65,7 +65,11 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
             });
             uuid = uuid.substring(0, uuid.length / 2);
             $.doc.insertLabel('CANVASFLOW-ID', uuid);
-            $.doc.save();
+            try {
+                $.doc.save();
+            } catch(e) {
+                throw new Error('Please save the document before building the file');
+            }   
         }
 
         return uuid;
