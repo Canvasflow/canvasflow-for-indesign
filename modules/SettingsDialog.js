@@ -468,7 +468,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.settings.StyleID = '' + $.styles[$.settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
         }
 
-        // API KEY
+        // Pages
         $.settingsDialog.pagesGroup = $.settingsDialog.add('group');
         $.settingsDialog.pagesGroup.orientation = 'row';
         $.settingsDialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
