@@ -151,12 +151,15 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return !!matches.length ? matches[0] : null;
     }
 
-    $.getIssue = function() {
+    $.getIssues = function() {
         var apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
-        var IssueID = $.savedSettings.IssueID;
 
-        var issues = $.canvasflowApi.getIssues(apiKey, PublicationID);
+        return $.canvasflowApi.getIssues(apiKey, PublicationID);
+    }
+
+    $.getIssue = function(issues) {
+        var IssueID = $.savedSettings.IssueID;
         var matches = issues.filter(function(issue) {
             return issue.id == IssueID;
         });
@@ -249,11 +252,16 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
         // Issue
         if(publication.type === 'issue') {
-            var issue = $.getIssue();
+            var issues = $.getIssues();
+            var issue = $.getIssue(issues);
             dialog.issueGroup = dialog.add('group');
             dialog.issueGroup.orientation = 'row';
             dialog.issueGroup.add('statictext', defaultLabelDim, 'Issue');
-            dialog.issueGroup.add('statictext', defaultValueDim, issue.name);
+            dialog.issueGroup.dropDown = $.createDropDownList(dialog.issueGroup, $.getItemsName(issues));
+            dialog.issueGroup.dropDown.selection = $.getSelectedIndex(issues, issue.id);
+            dialog.issueGroup.dropDown.onChange = function() {
+                $.savedSettings.IssueID = '' + issues[dialog.issueGroup.dropDown.selection.index].id;
+            }
         }
         
         // Style
