@@ -341,6 +341,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.pagesGroup.orientation = 'row';
         dialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
         dialog.pagesGroup.pages = dialog.pagesGroup.add('edittext', defaultValueDim, !!$.savedSettings.pages ? $.savedSettings.pages : '');
+        dialog.pagesGroup.pages.helpTip = 'If no value is entered all pages will be published';
 
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';
