@@ -185,16 +185,16 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         // Intro
-        var intro = 'You are about to publish the current document to Canvasflow. \n\nPlease confirm the following details are correct:';
+        var intro = 'You are about to publish the current document. \n\nPlease confirm details are correct:';
         dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 70], intro, {multiline: true});
         dialog.introGroup.orientation = 'row:top';
         dialog.introGroup.alignment = 'left';
 
         // External ID
-        dialog.externalIDGroup = dialog.add('group');
+        /*dialog.externalIDGroup = dialog.add('group');
         dialog.externalIDGroup.orientation = 'row';
         dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
-        dialog.externalIDGroup.add('statictext', defaultValueDim, $.builder.getDocumentID());
+        dialog.externalIDGroup.add('statictext', defaultValueDim, $.builder.getDocumentID());*/
 
         // Publication
         var publication = $.getPublication();
@@ -202,6 +202,13 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.publicationGroup.orientation = 'row';
         dialog.publicationGroup.add('statictext', defaultLabelDim, 'Publication');
         dialog.publicationGroup.add('statictext', defaultValueDim, publication.name);
+
+        // Separator
+        dialog.separator = dialog.add('panel');
+        dialog.separator.visible = true;
+        dialog.separator.alignment = 'left';
+        dialog.separator.size = [labelWidth * 2, 1]
+        dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;
 
         // Issue
         if(publication.type === 'issue') {
