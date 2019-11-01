@@ -278,11 +278,23 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         // dialog.styleGroup.add('statictext', defaultValueDim, style.name);
 
         // Creation Mode
+        var creationModeOptions = ['Document', 'Page'];
         dialog.creationModeGroup = dialog.add('group');
         dialog.creationModeGroup.orientation = 'row';
         dialog.creationModeGroup.add('statictext', defaultLabelDim, 'Article Creation');
-        var creationMode = $.savedSettings.creationMode[0].toUpperCase() +  $.savedSettings.creationMode.slice(1); 
-        dialog.creationModeGroup.add('statictext', defaultValueDim, creationMode);
+        dialog.creationModeGroup.dropDown = $.createDropDownList(dialog.creationModeGroup, creationModeOptions);
+        if($.savedSettings.creationMode === 'document') {
+            dialog.creationModeGroup.dropDown.selection = 0;
+        } else {
+            dialog.creationModeGroup.dropDown.selection = 1;
+        }
+        dialog.creationModeGroup.dropDown.onChange = function() {
+            if(dialog.creationModeGroup.dropDown.selection.index === 0) {
+                $.savedSettings.creationMode = 'document';
+            } else {
+                $.savedSettings.creationMode = 'page';
+            }
+        }
 
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';
