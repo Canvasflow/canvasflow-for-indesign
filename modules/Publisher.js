@@ -14,6 +14,10 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
     $.builder = builder;
     $.boundary = Math.random().toString().substr(2);
 
+    $.valuesWidth = 200;
+
+    $.defaultValueDim = [0, 0, $.valuesWidth, 20];
+
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
     $.createTextFormParam = function(property, value){
@@ -64,6 +68,9 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         f.close();
 
         var articleName = f.displayName.replace('.zip', '');
+
+        alert(JSON.stringify($.savedSettings));
+        return true;
     
         apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
@@ -156,16 +163,39 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return !!matches.length ? matches[0] : null;
     }
 
-    $.getStyle = function() {
+    $.getStyles = function() {
         var apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
-        var StyleID = $.savedSettings.StyleID;
+        return $.canvasflowApi.getStyles(apiKey, PublicationID);
+    }
 
-        var styles = $.canvasflowApi.getStyles(apiKey, PublicationID);
+    $.getStyle = function(styles) {
+        var StyleID = $.savedSettings.StyleID;
         var matches = styles.filter(function(style) {
             return style.id == StyleID;
         });
         return !!matches.length ? matches[0] : null;
+    }
+
+    $.createDropDownList = function(dropDownGroup, items) {
+        return dropDownGroup.add('dropdownlist', [0, 0, $.valuesWidth, 20], undefined, {items: !!items ? items : []});
+    }
+
+    $.getItemsName = function(items) {
+        var response = [];
+        for(var i=0;i<items.length;i++) {
+            response.push(items[i].name);
+        }
+        return response;
+    }
+
+    $.getSelectedIndex = function(items, id) {
+        for(var i=0; i < items.length; i++) {
+            if(items[i].id == id) {
+                return i;
+            }
+        }
+        return 0;
     }
 
     $.displayConfirmDialog = function() {
@@ -174,11 +204,11 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.alignment = 'right';
         dialog.preferredSize = [300,100];
 
-        var valuesWidth = 200;
+        var valuesWidth = $.valuesWidth;
         var labelWidth = 150;
 
         var defaultLabelDim = [0, 0, labelWidth, 20];
-        var defaultValueDim = [0, 0, labelWidth, 20];
+        var defaultValueDim = [0, 0, valuesWidth, 20];
 
         var endpoint = $.savedSettings.endpoint;
 
@@ -196,6 +226,13 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
         dialog.externalIDGroup.add('statictext', defaultValueDim, $.builder.getDocumentID());*/
 
+        // Separator
+        /*dialog.separator = dialog.add('panel');
+        dialog.separator.visible = true;
+        dialog.separator.alignment = 'center';
+        dialog.separator.size = [(labelWidth +  valuesWidth) * 1.035, 1]
+        dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;*/
+        
         // Publication
         var publication = $.getPublication();
         dialog.publicationGroup = dialog.add('group');
@@ -206,8 +243,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         // Separator
         dialog.separator = dialog.add('panel');
         dialog.separator.visible = true;
-        dialog.separator.alignment = 'left';
-        dialog.separator.size = [labelWidth * 2, 1]
+        dialog.separator.alignment = 'center';
+        dialog.separator.size = [(labelWidth +  valuesWidth) * 1.035, 1]
         dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;
 
         // Issue
@@ -220,11 +257,17 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         }
         
         // Style
-        var style = $.getStyle();
+        var styles = $.getStyles();
+        var style = $.getStyle(styles);
         dialog.styleGroup = dialog.add('group');
         dialog.styleGroup.orientation = 'row';
         dialog.styleGroup.add('statictext', defaultLabelDim, 'Style');
-        dialog.styleGroup.add('statictext', defaultValueDim, style.name);
+        dialog.styleGroup.dropDown = $.createDropDownList(dialog.styleGroup, $.getItemsName(styles));
+        dialog.styleGroup.dropDown.selection = $.getSelectedIndex(styles, style.id);
+        dialog.styleGroup.dropDown.onChange = function() {
+            $.savedSettings.StyleID = '' + styles[dialog.styleGroup.dropDown.selection.index].id;
+        }
+        // dialog.styleGroup.add('statictext', defaultValueDim, style.name);
 
         // Creation Mode
         dialog.creationModeGroup = dialog.add('group');
