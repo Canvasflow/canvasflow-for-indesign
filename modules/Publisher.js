@@ -69,12 +69,12 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
         var articleName = f.displayName.replace('.zip', '');
 
-        alert(JSON.stringify($.savedSettings));
-        return true;
+        /*alert(JSON.stringify($.savedSettings));
+        return true;*/
     
         apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
-        var IssueID = $.savedSettings.IssueID;
+        var IssueID = $.savedSettings.IssueID || '';
         var StyleID = $.savedSettings.StyleID;
         var creationMode = $.savedSettings.creationMode || 'document';
         var contentOrder = $.savedSettings.contentOrder || 'natural';
@@ -201,6 +201,46 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return 0;
     }
 
+    $.isValidPagesRangeSyntax = function(input) {
+        results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
+        var lowerRange = parseInt(results[1]);
+        var higherRange = parseInt(results[3]);
+        var totalOfPages = document.pages.length;
+
+        if(!lowerRange) {
+            alert('The lower range should be bigger than 0');
+            return false;
+        }
+
+        if(!higherRange) {
+            alert('The higher range should be bigger than 0');
+            return false;
+        }
+
+        if(lowerRange > higherRange) {
+            alert('The lower range should be smaller than the higher range');
+            return false;
+        }
+
+        if(lowerRange > totalOfPages) {
+            alert('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+            return false;
+        }
+
+        return true;
+    }
+
+    $.isValidPagesSyntax = function(input) {
+        if(!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
+            return $.isValidPagesRangeSyntax(input);
+        } else if(!!/^(\d)+(,\d+)*$/.exec(input)) {
+            return true;
+        }
+
+        alert('The range for pages has an invalid syntax');
+        return false;
+    }
+
     $.displayConfirmDialog = function() {
         var dialog = new Window('dialog', 'Publish to Canvasflow', undefined, {closeButton: false});
         dialog.orientation = 'column';
@@ -222,19 +262,6 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 70], intro, {multiline: true});
         dialog.introGroup.orientation = 'row:top';
         dialog.introGroup.alignment = 'left';
-
-        // External ID
-        /*dialog.externalIDGroup = dialog.add('group');
-        dialog.externalIDGroup.orientation = 'row';
-        dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
-        dialog.externalIDGroup.add('statictext', defaultValueDim, $.builder.getDocumentID());*/
-
-        // Separator
-        /*dialog.separator = dialog.add('panel');
-        dialog.separator.visible = true;
-        dialog.separator.alignment = 'center';
-        dialog.separator.size = [(labelWidth +  valuesWidth) * 1.035, 1]
-        dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;*/
         
         // Publication
         var publication = $.getPublication();
@@ -296,6 +323,25 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
             }
         }
 
+        // Article Content Order
+        var contentOrderOptions = ['Natural'];
+        dialog.contentOrderGroup = dialog.add('group');
+        dialog.contentOrderGroup.orientation = 'row';
+        dialog.contentOrderGroup.add('statictext', defaultLabelDim, 'Content Ordering');
+        dialog.contentOrderGroup.dropDown = $.createDropDownList(dialog.contentOrderGroup, contentOrderOptions);
+        dialog.contentOrderGroup.dropDown.selection = 0;
+        dialog.contentOrderGroup.dropDown.enabled = true;
+        $.savedSettings.contentOrder = 'natural';
+        dialog.contentOrderGroup.dropDown.onChange = function() {
+            $.savedSettings.contentOrder = 'natural';
+        }
+
+        // Pages
+        dialog.pagesGroup = dialog.add('group');
+        dialog.pagesGroup.orientation = 'row';
+        dialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
+        dialog.pagesGroup.pages = dialog.pagesGroup.add('edittext', defaultValueDim, !!$.savedSettings.pages ? $.savedSettings.pages : '');
+
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';
         dialog.buttonsBarGroup.alignChildren = 'bottom';    
@@ -303,6 +349,15 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.buttonsBarGroup.saveBtn = dialog.buttonsBarGroup.add('button', undefined, 'OK');
 
         dialog.buttonsBarGroup.saveBtn.onClick = function() {
+            var pages = dialog.pagesGroup.pages.text;
+                
+            if(!!pages.length) {
+                if(!$.isValidPagesSyntax(pages)) {
+                    return;
+                }
+            }
+
+            $.savedSettings.pages = pages;
             dialog.close(1);
         }
 
