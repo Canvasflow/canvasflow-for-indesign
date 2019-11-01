@@ -14,6 +14,10 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
     $.builder = builder;
     $.boundary = Math.random().toString().substr(2);
 
+    $.valuesWidth = 200;
+
+    $.defaultValueDim = [0, 0, $.valuesWidth, 20];
+
     $.savedSettings = canvasflowSettings.getSavedSettings();
 
     $.createTextFormParam = function(property, value){
@@ -64,10 +68,13 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         f.close();
 
         var articleName = f.displayName.replace('.zip', '');
+
+        /*alert(JSON.stringify($.savedSettings));
+        return true;*/
     
         apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
-        var IssueID = $.savedSettings.IssueID;
+        var IssueID = $.savedSettings.IssueID || '';
         var StyleID = $.savedSettings.StyleID;
         var creationMode = $.savedSettings.creationMode || 'document';
         var contentOrder = $.savedSettings.contentOrder || 'natural';
@@ -144,28 +151,94 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return !!matches.length ? matches[0] : null;
     }
 
-    $.getIssue = function() {
+    $.getIssues = function() {
         var apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
-        var IssueID = $.savedSettings.IssueID;
 
-        var issues = $.canvasflowApi.getIssues(apiKey, PublicationID);
+        return $.canvasflowApi.getIssues(apiKey, PublicationID);
+    }
+
+    $.getIssue = function(issues) {
+        var IssueID = $.savedSettings.IssueID;
         var matches = issues.filter(function(issue) {
             return issue.id == IssueID;
         });
         return !!matches.length ? matches[0] : null;
     }
 
-    $.getStyle = function() {
+    $.getStyles = function() {
         var apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
-        var StyleID = $.savedSettings.StyleID;
+        return $.canvasflowApi.getStyles(apiKey, PublicationID);
+    }
 
-        var styles = $.canvasflowApi.getStyles(apiKey, PublicationID);
+    $.getStyle = function(styles) {
+        var StyleID = $.savedSettings.StyleID;
         var matches = styles.filter(function(style) {
             return style.id == StyleID;
         });
         return !!matches.length ? matches[0] : null;
+    }
+
+    $.createDropDownList = function(dropDownGroup, items) {
+        return dropDownGroup.add('dropdownlist', [0, 0, $.valuesWidth, 20], undefined, {items: !!items ? items : []});
+    }
+
+    $.getItemsName = function(items) {
+        var response = [];
+        for(var i=0;i<items.length;i++) {
+            response.push(items[i].name);
+        }
+        return response;
+    }
+
+    $.getSelectedIndex = function(items, id) {
+        for(var i=0; i < items.length; i++) {
+            if(items[i].id == id) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    $.isValidPagesRangeSyntax = function(input) {
+        results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
+        var lowerRange = parseInt(results[1]);
+        var higherRange = parseInt(results[3]);
+        var totalOfPages = document.pages.length;
+
+        if(!lowerRange) {
+            alert('The lower range should be bigger than 0');
+            return false;
+        }
+
+        if(!higherRange) {
+            alert('The higher range should be bigger than 0');
+            return false;
+        }
+
+        if(lowerRange > higherRange) {
+            alert('The lower range should be smaller than the higher range');
+            return false;
+        }
+
+        if(lowerRange > totalOfPages) {
+            alert('The lower range "' + lowerRange + '" should be smaller than the total of pages "' + totalOfPages + '"');
+            return false;
+        }
+
+        return true;
+    }
+
+    $.isValidPagesSyntax = function(input) {
+        if(!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
+            return $.isValidPagesRangeSyntax(input);
+        } else if(!!/^(\d)+(,\d+)*$/.exec(input)) {
+            return true;
+        }
+
+        alert('The range for pages has an invalid syntax');
+        return false;
     }
 
     $.displayConfirmDialog = function() {
@@ -174,28 +247,22 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.alignment = 'right';
         dialog.preferredSize = [300,100];
 
-        var valuesWidth = 200;
+        var valuesWidth = $.valuesWidth;
         var labelWidth = 150;
 
         var defaultLabelDim = [0, 0, labelWidth, 20];
-        var defaultValueDim = [0, 0, labelWidth, 20];
+        var defaultValueDim = [0, 0, valuesWidth, 20];
 
         var endpoint = $.savedSettings.endpoint;
 
         $.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
 
         // Intro
-        var intro = 'You are about to publish the current document to Canvasflow. \n\nPlease confirm the following details are correct:';
+        var intro = 'You are about to publish the current document. \n\nPlease confirm details are correct:';
         dialog.introGroup = dialog.add('statictext', [0, 0, valuesWidth * 1.5, 70], intro, {multiline: true});
         dialog.introGroup.orientation = 'row:top';
         dialog.introGroup.alignment = 'left';
-
-        // External ID
-        dialog.externalIDGroup = dialog.add('group');
-        dialog.externalIDGroup.orientation = 'row';
-        dialog.externalIDGroup.add('statictext', defaultLabelDim, 'ID');
-        dialog.externalIDGroup.add('statictext', defaultValueDim, $.builder.getDocumentID());
-
+        
         // Publication
         var publication = $.getPublication();
         dialog.publicationGroup = dialog.add('group');
@@ -203,28 +270,77 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.publicationGroup.add('statictext', defaultLabelDim, 'Publication');
         dialog.publicationGroup.add('statictext', defaultValueDim, publication.name);
 
+        // Separator
+        dialog.separator = dialog.add('panel');
+        dialog.separator.visible = true;
+        dialog.separator.alignment = 'center';
+        dialog.separator.size = [(labelWidth +  valuesWidth) * 1.035, 1]
+        dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;
+
         // Issue
         if(publication.type === 'issue') {
-            var issue = $.getIssue();
+            var issues = $.getIssues();
+            var issue = $.getIssue(issues);
             dialog.issueGroup = dialog.add('group');
             dialog.issueGroup.orientation = 'row';
             dialog.issueGroup.add('statictext', defaultLabelDim, 'Issue');
-            dialog.issueGroup.add('statictext', defaultValueDim, issue.name);
+            dialog.issueGroup.dropDown = $.createDropDownList(dialog.issueGroup, $.getItemsName(issues));
+            dialog.issueGroup.dropDown.selection = $.getSelectedIndex(issues, issue.id);
+            dialog.issueGroup.dropDown.onChange = function() {
+                $.savedSettings.IssueID = '' + issues[dialog.issueGroup.dropDown.selection.index].id;
+            }
         }
         
         // Style
-        var style = $.getStyle();
+        var styles = $.getStyles();
+        var style = $.getStyle(styles);
         dialog.styleGroup = dialog.add('group');
         dialog.styleGroup.orientation = 'row';
         dialog.styleGroup.add('statictext', defaultLabelDim, 'Style');
-        dialog.styleGroup.add('statictext', defaultValueDim, style.name);
+        dialog.styleGroup.dropDown = $.createDropDownList(dialog.styleGroup, $.getItemsName(styles));
+        dialog.styleGroup.dropDown.selection = $.getSelectedIndex(styles, style.id);
+        dialog.styleGroup.dropDown.onChange = function() {
+            $.savedSettings.StyleID = '' + styles[dialog.styleGroup.dropDown.selection.index].id;
+        }
+        // dialog.styleGroup.add('statictext', defaultValueDim, style.name);
 
         // Creation Mode
+        var creationModeOptions = ['Document', 'Page'];
         dialog.creationModeGroup = dialog.add('group');
         dialog.creationModeGroup.orientation = 'row';
         dialog.creationModeGroup.add('statictext', defaultLabelDim, 'Article Creation');
-        var creationMode = $.savedSettings.creationMode[0].toUpperCase() +  $.savedSettings.creationMode.slice(1); 
-        dialog.creationModeGroup.add('statictext', defaultValueDim, creationMode);
+        dialog.creationModeGroup.dropDown = $.createDropDownList(dialog.creationModeGroup, creationModeOptions);
+        if($.savedSettings.creationMode === 'document') {
+            dialog.creationModeGroup.dropDown.selection = 0;
+        } else {
+            dialog.creationModeGroup.dropDown.selection = 1;
+        }
+        dialog.creationModeGroup.dropDown.onChange = function() {
+            if(dialog.creationModeGroup.dropDown.selection.index === 0) {
+                $.savedSettings.creationMode = 'document';
+            } else {
+                $.savedSettings.creationMode = 'page';
+            }
+        }
+
+        // Article Content Order
+        var contentOrderOptions = ['Natural'];
+        dialog.contentOrderGroup = dialog.add('group');
+        dialog.contentOrderGroup.orientation = 'row';
+        dialog.contentOrderGroup.add('statictext', defaultLabelDim, 'Content Ordering');
+        dialog.contentOrderGroup.dropDown = $.createDropDownList(dialog.contentOrderGroup, contentOrderOptions);
+        dialog.contentOrderGroup.dropDown.selection = 0;
+        dialog.contentOrderGroup.dropDown.enabled = true;
+        $.savedSettings.contentOrder = 'natural';
+        dialog.contentOrderGroup.dropDown.onChange = function() {
+            $.savedSettings.contentOrder = 'natural';
+        }
+
+        // Pages
+        dialog.pagesGroup = dialog.add('group');
+        dialog.pagesGroup.orientation = 'row';
+        dialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
+        dialog.pagesGroup.pages = dialog.pagesGroup.add('edittext', defaultValueDim, !!$.savedSettings.pages ? $.savedSettings.pages : '');
 
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';
@@ -233,6 +349,15 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.buttonsBarGroup.saveBtn = dialog.buttonsBarGroup.add('button', undefined, 'OK');
 
         dialog.buttonsBarGroup.saveBtn.onClick = function() {
+            var pages = dialog.pagesGroup.pages.text;
+                
+            if(!!pages.length) {
+                if(!$.isValidPagesSyntax(pages)) {
+                    return;
+                }
+            }
+
+            $.savedSettings.pages = pages;
             dialog.close(1);
         }
 
