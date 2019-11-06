@@ -249,14 +249,14 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
     $.displayPublications = function(settingsDialog) {
         $.publications = $.getPublications($.settings.apiKey);
         if($.publications.length === 0) {
-            throw new Error('No publications were found');
+            throw new Error('Error\n You have no Publications in your Canvasflow account. Please create a publication and try again.');
         }
 
         var selectedPublication = $.publications[0];
         if(!!$.settings.PublicationID) {
             selectedPublication = $.getItemByID($.publications, $.settings.PublicationID);
             if(selectedPublication === null) {
-                alert('Warning \nThe currently selected Publication no longer exists in your Canvasflow account.  The first Publication in the account has been automatically chosen.');
+                alert('Warning \nThe currently selected Publication no longer exists in your Canvasflow account. The first Publication in the account has been automatically chosen.');
                 selectedPublication = $.publications[0];
                 $.settings.IssueID = '';
                 $.settings.StyleID = '';

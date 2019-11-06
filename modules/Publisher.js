@@ -136,8 +136,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                 return false;
             }
         } else {
-            alert('I couldn\'t connect to the server');
-            return false;
+            throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
         }
     }
 
@@ -146,6 +145,9 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         var PublicationID = $.savedSettings.PublicationID;
 
         var publications = $.canvasflowApi.getPublications(apiKey);
+        if(!publications.length) {
+            throw new Error('Error \nYou have no Publications in your Canvasflow account. Please create a publication and try again.')
+        }
         var matches = publications.filter(function(publication) {
             return publication.id == PublicationID;
         });
@@ -153,8 +155,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
             return matches[0];
         }
 
-        throw new Error('The currently selected Publication does not exist. Please go to Settings and review the data');
-        // return publications[0];
+        throw new Error('Error \nThe currently selected Publication does not exist. Please open "Settings" and select a Publication.');
     }
 
     $.getIssues = function() {
@@ -399,7 +400,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
     $.publish = function() {
         if(canvasflowApi.getHealth() === null) {
-            throw new Error('Canvasflow Service not currently available');
+            throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
         }
 
         if (app.documents.length != 0){
