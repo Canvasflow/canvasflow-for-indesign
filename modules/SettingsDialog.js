@@ -255,6 +255,12 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         var selectedPublication = $.publications[0];
         if(!!$.settings.PublicationID) {
             selectedPublication = $.getItemByID($.publications, $.settings.PublicationID);
+            if(selectedPublication === null) {
+                alert('Warning \nThe currently selected Publication no longer exists in your Canvasflow account.  The first Publication in the account has been automatically chosen.');
+                selectedPublication = $.publications[0];
+                $.settings.IssueID = '';
+                $.settings.StyleID = '';
+            }
         }
 
         $.settings.PublicationID = selectedPublication.id;

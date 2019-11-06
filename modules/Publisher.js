@@ -149,7 +149,12 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         var matches = publications.filter(function(publication) {
             return publication.id == PublicationID;
         });
-        return !!matches.length ? matches[0] : null;
+        if(!!matches.length) {
+            return matches[0];
+        }
+
+        throw new Error('The currently selected Publication does not exist. Please go to Settings and review the data');
+        // return publications[0];
     }
 
     $.getIssues = function() {
@@ -269,7 +274,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.publicationGroup = dialog.add('group');
         dialog.publicationGroup.orientation = 'row';
         dialog.publicationGroup.add('statictext', defaultLabelDim, 'Publication');
-        dialog.publicationGroup.add('statictext', defaultValueDim, publication.name);
+        var publicationNameValue = dialog.publicationGroup.add('statictext', defaultValueDim, publication.name);
+        publicationNameValue.helpTip = 'The currently connected publication.';
 
         // Separator
         dialog.separator = dialog.add('panel');
@@ -282,7 +288,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.articleNameGroup = dialog.add('group');
         dialog.articleNameGroup.orientation = 'row';
         dialog.articleNameGroup.add('statictext', defaultLabelDim, 'Name');
-        dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
+        var articleNameValue = dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
+        articleNameValue.helpTip = 'The name of the published article. If left empty will default to the InDesign filename.';
         // dialog.articleNameGroup.pages.helpTip = '';
 
         // Issue
@@ -294,6 +301,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
             dialog.issueGroup.add('statictext', defaultLabelDim, 'Issue');
             dialog.issueGroup.dropDown = $.createDropDownList(dialog.issueGroup, $.getItemsName(issues));
             dialog.issueGroup.dropDown.selection = $.getSelectedIndex(issues, issue.id);
+            dialog.issueGroup.dropDown.helpTip = 'The Issue the article will be published to.';
             dialog.issueGroup.dropDown.onChange = function() {
                 $.savedSettings.IssueID = '' + issues[dialog.issueGroup.dropDown.selection.index].id;
             }
@@ -307,6 +315,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.styleGroup.add('statictext', defaultLabelDim, 'Style');
         dialog.styleGroup.dropDown = $.createDropDownList(dialog.styleGroup, $.getItemsName(styles));
         dialog.styleGroup.dropDown.selection = $.getSelectedIndex(styles, style.id);
+        dialog.styleGroup.dropDown.helpTip = 'The Style applied when published.';
         dialog.styleGroup.dropDown.onChange = function() {
             $.savedSettings.StyleID = '' + styles[dialog.styleGroup.dropDown.selection.index].id;
         }
@@ -318,6 +327,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.creationModeGroup.orientation = 'row';
         dialog.creationModeGroup.add('statictext', defaultLabelDim, 'Article Creation');
         dialog.creationModeGroup.dropDown = $.createDropDownList(dialog.creationModeGroup, creationModeOptions);
+        dialog.creationModeGroup.dropDown.helpTip = 'Whether a single or multiple articles will be created.';
         if($.savedSettings.creationMode === 'document') {
             dialog.creationModeGroup.dropDown.selection = 0;
         } else {
@@ -337,6 +347,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.contentOrderGroup.orientation = 'row';
         dialog.contentOrderGroup.add('statictext', defaultLabelDim, 'Content Ordering');
         dialog.contentOrderGroup.dropDown = $.createDropDownList(dialog.contentOrderGroup, contentOrderOptions);
+        dialog.contentOrderGroup.helpTip = 'The order in which content will be processed.';
         dialog.contentOrderGroup.dropDown.selection = 0;
         dialog.contentOrderGroup.dropDown.enabled = true;
         $.savedSettings.contentOrder = 'natural';
@@ -349,7 +360,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.pagesGroup.orientation = 'row';
         dialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
         dialog.pagesGroup.pages = dialog.pagesGroup.add('edittext', defaultValueDim, !!$.savedSettings.pages ? $.savedSettings.pages : '');
-        dialog.pagesGroup.pages.helpTip = 'If no value is entered all pages will be published';
+        dialog.pagesGroup.pages.helpTip = 'Pages to be published. If empty, all pages are published.';
 
         // Separator
         dialog.separator = dialog.add('panel');
