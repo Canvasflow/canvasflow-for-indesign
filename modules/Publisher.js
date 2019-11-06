@@ -13,6 +13,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
     $.pagesRange = null;
     $.builder = builder;
     $.boundary = Math.random().toString().substr(2);
+    $.articleName = '';
 
     $.valuesWidth = 200;
 
@@ -67,7 +68,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         var fContent = f.read();
         f.close();
 
-        var articleName = f.displayName.replace('.zip', '');
+        var articleName = $.articleName;
 
         /*alert(JSON.stringify($.savedSettings));
         return true;*/
@@ -277,6 +278,13 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.separator.size = [(labelWidth +  valuesWidth) * 1.035, 1]
         dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;
 
+        // Name
+        dialog.articleNameGroup = dialog.add('group');
+        dialog.articleNameGroup.orientation = 'row';
+        dialog.articleNameGroup.add('statictext', defaultLabelDim, 'Name');
+        dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
+        // dialog.articleNameGroup.pages.helpTip = '';
+
         // Issue
         if(publication.type === 'issue') {
             var issues = $.getIssues();
@@ -343,6 +351,13 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.pagesGroup.pages = dialog.pagesGroup.add('edittext', defaultValueDim, !!$.savedSettings.pages ? $.savedSettings.pages : '');
         dialog.pagesGroup.pages.helpTip = 'If no value is entered all pages will be published';
 
+        // Separator
+        dialog.separator = dialog.add('panel');
+        dialog.separator.visible = true;
+        dialog.separator.alignment = 'center';
+        dialog.separator.size = [(labelWidth +  valuesWidth) * 1.035, 1]
+        dialog.separator.minimumSize.height = dialog.separator.maximumSize.height = 1;
+
         dialog.buttonsBarGroup = dialog.add('group');
         dialog.buttonsBarGroup.orientation = 'row';
         dialog.buttonsBarGroup.alignChildren = 'bottom';    
@@ -357,6 +372,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                     return;
                 }
             }
+
+            $.articleName = !!dialog.articleNameGroup.articleName.text ? dialog.articleNameGroup.articleName.text : app.activeDocument.filePath.displayName;
 
             $.savedSettings.pages = pages;
             dialog.close(1);
@@ -376,12 +393,14 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
         if (app.documents.length != 0){
             var zipFilePath = '';
+            $.articleName = app.activeDocument.filePath.displayName;
             var response = $.displayConfirmDialog();
             if(!!response) {
                 var baseDirectory = app.activeDocument.filePath + '/';
                 $.filePath = baseDirectory + app.activeDocument.name;
                 var ext = app.activeDocument.name.split('.').pop();
                 $.baseDirectory = baseDirectory + app.activeDocument.name.replace('.' + ext, '');
+                builder.savedSettings = $.savedSettings;
                 zipFilePath = builder.build();
                 if(!builder.isBuildSuccess) {
                     alert('Build cancelled');
@@ -389,6 +408,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                 }
                 var now = new Date();
                 var publishStartTime = now.getTime();
+                
                 if($.uploadZip(zipFilePath)) {
                     new File(zipFilePath).remove()
                     now = new Date();
