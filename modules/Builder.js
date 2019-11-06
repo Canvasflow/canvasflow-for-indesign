@@ -548,7 +548,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
 
     $.getConvertImagesScriptContent = function(files) {
         var scriptBuilder = new ScriptBuilder($.os, $.baseDirName);
-        return scriptBuilder.getConvertImageScript(files, $.resizingImageLockFilePath);
+        return scriptBuilder.getConvertImageScript(files, $.convertImageLockFilePath);
     }
 
     $.convertImages = function(imageFiles) {
