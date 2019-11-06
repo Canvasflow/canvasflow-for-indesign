@@ -258,8 +258,10 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             if(selectedPublication === null) {
                 alert('Warning \nThe currently selected Publication no longer exists in your Canvasflow account. The first Publication in the account has been automatically chosen.');
                 selectedPublication = $.publications[0];
+                $.settings.PublicationID = selectedPublication.id;
                 $.settings.IssueID = '';
                 $.settings.StyleID = '';
+                $.canvasflowSettings.save($.settings);
             }
         }
 
@@ -356,7 +358,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
 
         $.canvasflowApi = new CanvasflowApi('http://' + selectedEndpoint.id + '/v2');
         if($.canvasflowApi.getHealth() === null) {
-            throw new Error('Canvasflow Service not currently available');
+            throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
         }
 
         // API KEY
