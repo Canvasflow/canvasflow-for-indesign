@@ -167,10 +167,16 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
     $.getIssue = function(issues) {
         var IssueID = $.savedSettings.IssueID;
-        var matches = issues.filter(function(issue) {
-            return issue.id == IssueID;
-        });
-        return !!matches.length ? matches[0] : null;
+        if(!!IssueID) {
+            var matches = issues.filter(function(issue) {
+                return issue.id == IssueID;
+            });
+    
+            if(!!matches.length) {
+                return matches[0];
+            }
+        }
+        return issues[0];
     }
 
     $.getStyles = function() {
@@ -181,10 +187,16 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
     $.getStyle = function(styles) {
         var StyleID = $.savedSettings.StyleID;
-        var matches = styles.filter(function(style) {
-            return style.id == StyleID;
-        });
-        return !!matches.length ? matches[0] : null;
+        if(!!StyleID) {
+            var matches = styles.filter(function(style) {
+                return style.id == StyleID;
+            });
+    
+            if(!!matches.length) {
+                return matches[0];
+            }
+        }
+        return styles[0];
     }
 
     $.createDropDownList = function(dropDownGroup, items) {
