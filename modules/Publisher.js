@@ -87,6 +87,16 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
             $.uuid = $.builder.getDocumentID();
 
+            logger.log('---------------------------');
+            logger.log('ID: ' + $.uuid);
+            logger.log('PublicationID: ' + PublicationID);
+            logger.log('IssueID: ' + IssueID);
+            logger.log('StyleID: ' + StyleID);
+            logger.log('Creation Mode: ' + creationMode);
+            logger.log('Content Order: ' + contentOrder);
+            logger.log('Article Name: ' + articleName);
+            logger.log('---------------------------');
+
             var form = {
                 file: {
                     contentFile: {
@@ -301,8 +311,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.articleNameGroup = dialog.add('group');
         dialog.articleNameGroup.orientation = 'row';
         dialog.articleNameGroup.add('statictext', defaultLabelDim, 'Name');
-        var articleNameValue = dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
-        articleNameValue.helpTip = 'The name of the published article. If left empty will default to the InDesign filename.';
+        dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
+        dialog.articleNameGroup.articleName.helpTip = 'The name of the published article. If left empty will default to the InDesign filename.';
         // dialog.articleNameGroup.pages.helpTip = '';
 
         // Issue
@@ -397,7 +407,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                 }
             }
 
-            $.articleName = !!dialog.articleNameGroup.articleName.text ? dialog.articleNameGroup.articleName.text : app.activeDocument.filePath.displayName;
+            var ext = app.activeDocument.name.split('.').pop();
+            $.articleName = !!dialog.articleNameGroup.articleName.text ? dialog.articleNameGroup.articleName.text : app.activeDocument.name.replace('.' + ext, '');
 
             $.savedSettings.pages = pages;
             dialog.close(1);
@@ -417,7 +428,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
         if (app.documents.length != 0){
             var zipFilePath = '';
-            $.articleName = app.activeDocument.filePath.displayName;
+            var ext = app.activeDocument.name.split('.').pop();
+            $.articleName = app.activeDocument.name.replace('.' + ext, '');
             var response = $.displayConfirmDialog();
             if(!!response) {
                 var baseDirectory = app.activeDocument.filePath + '/';

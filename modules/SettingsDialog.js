@@ -55,6 +55,10 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         return $.canvasflowApi.getStyles(apiKey, PublicationID);
     };
 
+    $.getTemplates = function(apiKey, PublicationID) {
+        return $.canvasflowApi.getTemplates(apiKey, PublicationID);
+    }
+
     $.getItemIndexByID = function(items, id) {
         for(var i = 0; i< items.length; i++) {
             if(items[i].id == id) {
@@ -218,6 +222,38 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         $.styles = $.getStyles($.settings.apiKey, PublicationID);
         
         if($.styles.length === 0) {
+            alert('This Publication has no Styles. Please create an Style and try again.');
+            return;
+        }
+
+        var selectedStyle = $.styles[0];
+        var selection = 0;
+        if(!!$.settings.StyleID) {
+            selectedStyle = $.getItemByID($.styles, $.settings.StyleID);
+            if(selectedStyle === null) {
+                alert('The currently selected Style does not exist. \nThe first Style in the current Publication has been selected. Please click Save to update the change.');
+                selection = 0;
+                selectedStyle = $.styles[0];
+            } else {
+                selection = $.getItemIndexByID($.styles, selectedStyle.id);
+            }
+        }
+
+        $.settings.StyleID = '' + selectedStyle.id;
+        var stylesNames = $.mapItemsName($.styles);
+
+        settingsDialog.styleDropDownGroup.dropDown.removeAll();
+        for(var i = 0; i < stylesNames.length; i++) {
+            settingsDialog.styleDropDownGroup.dropDown.add('item', stylesNames[i]);
+        }
+        settingsDialog.styleDropDownGroup.dropDown.selection = selection;
+        settingsDialog.styleDropDownGroup.visible = true;
+    }
+
+    $.displayTemplates = function(settingsDialog, PublicationID) {
+        $.templates = $.getTemplates($.settings.apiKey, PublicationID);
+        
+        if($.templates.length === 0) {
             alert('This Publication has no Styles. Please create an Style and try again.');
             return;
         }

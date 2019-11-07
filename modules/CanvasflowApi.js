@@ -30,4 +30,8 @@ var CanvasflowApi = function (host) {
     CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
         return this.http('/styles?secretkey=' + apiKey + '&publicationId=' + PublicationID);
     };
+
+    CanvasflowApi.prototype.getTemplates = function(apiKey, PublicationID) {
+        return this.http('/templates?secretkey=' + apiKey + '&publicationId=' + PublicationID);
+    };
 }

@@ -10,6 +10,7 @@ var Settings = function(settingsPath){
         'StyleID': '',
         'endpoint': '',
         'pages': '',
+        'TemplateID': '-1',
         'creationMode': 'document',
         'contentOrder': 'natural'
     });
@@ -39,6 +40,7 @@ var Settings = function(settingsPath){
             'PublicationID': settings.PublicationID,
             'IssueID': settings.IssueID,
             'StyleID': settings.StyleID,
+            'TemplateID': (settings.TemplateID || '-1'),
             'endpoint': settings.endpoint,
             'pages': (settings.pages || ''),
             'creationMode': (settings.creationMode || 'document'),
