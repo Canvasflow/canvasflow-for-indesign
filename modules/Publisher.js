@@ -95,6 +95,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
             $.uuid = $.builder.getDocumentID();
 
             logger.log('---------------------------');
+            logger.log('Api Key: ' + apiKey);
             logger.log('ID: ' + $.uuid);
             logger.log('PublicationID: ' + PublicationID);
             logger.log('IssueID: ' + IssueID);
