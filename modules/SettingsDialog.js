@@ -274,8 +274,9 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
     $.displayStyles = function(settingsDialog, PublicationID) {
         if($.selectedTemplate.id != '-1') {
             $.settings.StyleID = '' + $.selectedTemplate.StyleID;
-            settingsDialog.styleDropDownGroup.visible = false;
-            return;
+            settingsDialog.styleDropDownGroup.enabled = false;
+        } else {
+            settingsDialog.styleDropDownGroup.enabled = true;
         }
 
         $.styles = $.getStyles($.settings.apiKey, PublicationID);
