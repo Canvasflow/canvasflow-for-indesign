@@ -57,7 +57,6 @@ var CanvasflowPlugin = function() {
                 }
 
                 if(!!app.activeDocument) {
-                    
                     var settings = new Settings(settingsFilePath);
                     var builder = new Builder(settings, resizeCommandFilePath, convertCommandFilePath, os, logger);
                     var canvasflowApi = new CanvasflowApi('http://' + settingsData.endpoint + '/v2');

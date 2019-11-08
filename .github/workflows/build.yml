@@ -1,5 +1,10 @@
 name: Build
-on: [push]
+on:
+  push:
+    branches:    
+      - master
+      - 'release/**'
+      - 'hotfix/**'
 jobs:
   build:
     runs-on: ubuntu-latest

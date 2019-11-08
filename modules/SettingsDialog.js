@@ -19,6 +19,14 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
     $.defaultValueDim = [0, 0, $.valuesWidth, 20];
 
     $.publications = [];
+    $.templateDefault = {
+        id: -1,
+        name: 'None',
+        StyleID: ''
+    }
+    $.templates = [$.templateDefault];
+    $.selectedTemplate;
+
     $.publicationType;
 
     $.endpoints = [
@@ -54,6 +62,10 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
     $.getStyles = function(apiKey, PublicationID) {
         return $.canvasflowApi.getStyles(apiKey, PublicationID);
     };
+
+    $.getTemplates = function(apiKey, PublicationID) {
+        return $.canvasflowApi.getTemplates(apiKey, PublicationID);
+    }
 
     $.getItemIndexByID = function(items, id) {
         for(var i = 0; i< items.length; i++) {
@@ -145,8 +157,11 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             settingsDialog.issueDropDownGroup.visible = false;
         }
 
+        // Reset Template
+        $.displayTemplates(settingsDialog, PublicationID);
+
         // Reset Style
-        $.displayStyles(settingsDialog, PublicationID)
+        $.displayStyles(settingsDialog, PublicationID);
     }
 
     $.onEndpointChange = function(settingsDialog) {
@@ -170,6 +185,20 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         } else {
             $.settingsDialog.buttonsBarGroup.saveBtn.enabled = false;
         }
+    }
+
+    $.onTemplateChange = function() {
+        var selectedTemplate = $.templates[0];
+        if($.settings.TemplateID != '-1') {
+            selectedTemplate = $.getItemByID($.templates, $.settings.TemplateID);
+            if(selectedTemplate === null) {
+                selectedTemplate = $.templates[0];
+            } else {
+                selection = $.getItemIndexByID($.templates, selectedTemplate.id);
+            }
+        }
+        $.selectedTemplate = selectedTemplate;
+        $.displayStyles($.settingsDialog, $.settings.PublicationID);
     }
 
     $.displayIssues = function(settingsDialog, PublicationID) {
@@ -214,7 +243,42 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         settingsDialog.issueDropDownGroup.visible = true;
     }
 
+    $.displayTemplates = function(settingsDialog, PublicationID) {
+        $.templates = [$.templateDefault].concat($.getTemplates($.settings.apiKey, PublicationID));
+
+        var selectedTemplate = $.templates[0];
+        var selection = 0;
+        if($.settings.TemplateID != '-1') {
+            selectedTemplate = $.getItemByID($.templates, $.settings.TemplateID);
+            if(selectedTemplate === null) {
+                selection = 0;
+                selectedTemplate = $.templates[0];
+            } else {
+                selection = $.getItemIndexByID($.templates, selectedTemplate.id);
+            }
+        }
+
+        $.selectedTemplate = selectedTemplate;
+
+        $.settings.TemplateID = '' + selectedTemplate.id;
+        var templatesNames = $.mapItemsName($.templates);
+
+        settingsDialog.templateDropDownGroup.dropDown.removeAll();
+        for(var i = 0; i < templatesNames.length; i++) {
+            settingsDialog.templateDropDownGroup.dropDown.add('item', templatesNames[i]);
+        }
+        settingsDialog.templateDropDownGroup.dropDown.selection = selection;
+        settingsDialog.templateDropDownGroup.visible = true;
+    }
+
     $.displayStyles = function(settingsDialog, PublicationID) {
+        if($.selectedTemplate.id != '-1') {
+            $.settings.StyleID = '' + $.selectedTemplate.StyleID;
+            settingsDialog.styleDropDownGroup.enabled = false;
+        } else {
+            settingsDialog.styleDropDownGroup.enabled = true;
+        }
+
         $.styles = $.getStyles($.settings.apiKey, PublicationID);
         
         if($.styles.length === 0) {
@@ -281,6 +345,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.displayIssues(settingsDialog, $.settings.PublicationID);
         }
 
+        $.displayTemplates(settingsDialog, $.settings.PublicationID);
         $.displayStyles(settingsDialog, $.settings.PublicationID);
     }
 
@@ -435,7 +500,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.settings.IssueID = $.issues[$.settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
         }
 
-        // Add Article Creation Mode 
+        // CREATION MODE
         var creationModeOptions = ['Document', 'Page'];
         $.settingsDialog.creationModeDropDownGroup = $.settingsDialog.add('group', undefined, 'creationMode');
         $.settingsDialog.creationModeDropDownGroup.orientation = 'row';
@@ -466,6 +531,17 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             }
         }
 
+        // TEMPLATES
+        $.settingsDialog.templateDropDownGroup = $.settingsDialog.add('group', undefined, 'templates');
+        $.settingsDialog.templateDropDownGroup.orientation = 'row';
+        $.settingsDialog.templateDropDownGroup.add('statictext', defaultLabelDim, 'Template');
+        $.settingsDialog.templateDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.templateDropDownGroup);
+        $.settingsDialog.templateDropDownGroup.visible = false;
+        $.settingsDialog.templateDropDownGroup.dropDown.onChange = function() {
+            $.settings.TemplateID = '' + $.templates[$.settingsDialog.templateDropDownGroup.dropDown.selection.index].id;
+            $.onTemplateChange();
+        }
+
         // STYLES
         $.settingsDialog.styleDropDownGroup = $.settingsDialog.add('group', undefined, 'styles');
         $.settingsDialog.styleDropDownGroup.orientation = 'row';
@@ -476,7 +552,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.settings.StyleID = '' + $.styles[$.settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
         }
 
-        // Pages
+        // PAGES
         $.settingsDialog.pagesGroup = $.settingsDialog.add('group');
         $.settingsDialog.pagesGroup.orientation = 'row';
         $.settingsDialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
