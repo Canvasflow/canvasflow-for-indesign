@@ -20,6 +20,12 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
     $.defaultValueDim = [0, 0, $.valuesWidth, 20];
 
     $.savedSettings = canvasflowSettings.getSavedSettings();
+    $.templateDefault = {
+        id: -1,
+        name: 'None',
+        StyleID: ''
+    }
+    $.templates = [$.templateDefault];
 
     $.createTextFormParam = function(property, value){
         return '--' + $.boundary + '\r\n'
@@ -76,6 +82,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         apiKey = $.savedSettings.apiKey;
         var PublicationID = $.savedSettings.PublicationID;
         var IssueID = $.savedSettings.IssueID || '';
+        var TemplateID = $.savedSettings.TemplateID;
         var StyleID = $.savedSettings.StyleID;
         var creationMode = $.savedSettings.creationMode || 'document';
         var contentOrder = $.savedSettings.contentOrder || 'natural';
@@ -86,6 +93,17 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
             $.boundary = Math.random().toString().substr(2);
 
             $.uuid = $.builder.getDocumentID();
+
+            logger.log('---------------------------');
+            logger.log('ID: ' + $.uuid);
+            logger.log('PublicationID: ' + PublicationID);
+            logger.log('IssueID: ' + IssueID);
+            logger.log('StyleID: ' + StyleID);
+            logger.log('TemplateID: ' + TemplateID);
+            logger.log('Creation Mode: ' + creationMode);
+            logger.log('Content Order: ' + contentOrder);
+            logger.log('Article Name: ' + articleName);
+            logger.log('---------------------------');
 
             var form = {
                 file: {
@@ -101,6 +119,7 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                     articleName: articleName,
                     publicationId: PublicationID,
                     issueId: IssueID,
+                    templateId: TemplateID,
                     styleId: StyleID,
                     contentType: 'indesign',
                     articleId: $.uuid
@@ -199,6 +218,26 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return styles[0];
     }
 
+    $.getTemplates = function() {
+        var apiKey = $.savedSettings.apiKey;
+        var PublicationID = $.savedSettings.PublicationID;
+        return $.canvasflowApi.getTemplates(apiKey, PublicationID);
+    }
+
+    $.getTemplate = function(templates) {
+        var TemplateID = $.savedSettings.TemplateID;
+        if(!!TemplateID) {
+            var matches = templates.filter(function(template) {
+                return template.id == TemplateID;
+            });
+    
+            if(!!matches.length) {
+                return matches[0];
+            }
+        }
+        return templates[0];
+    }
+
     $.createDropDownList = function(dropDownGroup, items) {
         return dropDownGroup.add('dropdownlist', [0, 0, $.valuesWidth, 20], undefined, {items: !!items ? items : []});
     }
@@ -260,6 +299,26 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return false;
     }
 
+    $.displayStyles = function(settingsDialog) {
+        if($.selectedTemplate.id != '-1') {
+            $.savedSettings.StyleID = '' + $.selectedTemplate.StyleID;
+            settingsDialog.styleGroup.dropDown.selection = $.getSelectedIndex($.styles, $.savedSettings.StyleID);
+            settingsDialog.styleGroup.enabled = false;
+            return;
+        }
+        settingsDialog.styleGroup.enabled = true;
+        $.savedSettings.StyleID = '' + $.styles[settingsDialog.styleGroup.dropDown.selection.index].id;
+    }
+
+    $.onTemplateChange = function(dialog) {
+        var selectedTemplate = $.templates[0];
+        if($.savedSettings.TemplateID != '-1') {
+            selectedTemplate = $.templates[$.getSelectedIndex($.templates, $.savedSettings.TemplateID)];
+        }
+        $.selectedTemplate = selectedTemplate;
+        $.displayStyles(dialog);
+    }
+
     $.displayConfirmDialog = function() {
         var dialog = new Window('dialog', 'Publish to Canvasflow', undefined, {closeButton: false});
         dialog.orientation = 'column';
@@ -301,8 +360,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.articleNameGroup = dialog.add('group');
         dialog.articleNameGroup.orientation = 'row';
         dialog.articleNameGroup.add('statictext', defaultLabelDim, 'Name');
-        var articleNameValue = dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
-        articleNameValue.helpTip = 'The name of the published article. If left empty will default to the InDesign filename.';
+        dialog.articleNameGroup.articleName = dialog.articleNameGroup.add('edittext', defaultValueDim, $.articleName);
+        dialog.articleNameGroup.articleName.helpTip = 'The name of the published article. If left empty will default to the InDesign filename.';
         // dialog.articleNameGroup.pages.helpTip = '';
 
         // Issue
@@ -319,9 +378,31 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                 $.savedSettings.IssueID = '' + issues[dialog.issueGroup.dropDown.selection.index].id;
             }
         }
+
+        // TEMPLATES
+        var templates = [$.templateDefault].concat($.getTemplates());
+        var template = $.getTemplate(templates);
+        $.selectedTemplate = template;
+        $.templates = templates;
+        dialog.templateGroup = dialog.add('group', undefined, 'templates');
+        dialog.templateGroup.orientation = 'row';
+        dialog.templateGroup.add('statictext', defaultLabelDim, 'Template');
+        dialog.templateGroup.dropDown = $.createDropDownList(dialog.templateGroup, $.getItemsName(templates));
+        dialog.templateGroup.dropDown.selection = $.getSelectedIndex(templates, template.id);
+        dialog.templateGroup.dropDown.helpTip = 'The Template applied when published.';
+        dialog.templateGroup.dropDown.onChange = function() {
+            try {
+                $.savedSettings.TemplateID = '' + $.templates[dialog.templateGroup.dropDown.selection.index].id;
+                $.onTemplateChange(dialog);
+            } catch(e) {
+                alert(e.message);
+            }
+            
+        }
         
-        // Style
+        // STYLEs
         var styles = $.getStyles();
+        $.styles = styles;
         var style = $.getStyle(styles);
         dialog.styleGroup = dialog.add('group');
         dialog.styleGroup.orientation = 'row';
@@ -388,6 +469,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         dialog.buttonsBarGroup.cancelBtn = dialog.buttonsBarGroup.add('button', undefined, 'Cancel');
         dialog.buttonsBarGroup.saveBtn = dialog.buttonsBarGroup.add('button', undefined, 'OK');
 
+        $.displayStyles(dialog);
+
         dialog.buttonsBarGroup.saveBtn.onClick = function() {
             var pages = dialog.pagesGroup.pages.text;
                 
@@ -397,7 +480,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                 }
             }
 
-            $.articleName = !!dialog.articleNameGroup.articleName.text ? dialog.articleNameGroup.articleName.text : app.activeDocument.filePath.displayName;
+            var ext = app.activeDocument.name.split('.').pop();
+            $.articleName = !!dialog.articleNameGroup.articleName.text ? dialog.articleNameGroup.articleName.text : app.activeDocument.name.replace('.' + ext, '');
 
             $.savedSettings.pages = pages;
             dialog.close(1);
@@ -417,7 +501,8 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
 
         if (app.documents.length != 0){
             var zipFilePath = '';
-            $.articleName = app.activeDocument.filePath.displayName;
+            var ext = app.activeDocument.name.split('.').pop();
+            $.articleName = app.activeDocument.name.replace('.' + ext, '');
             var response = $.displayConfirmDialog();
             if(!!response) {
                 var baseDirectory = app.activeDocument.filePath + '/';

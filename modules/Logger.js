@@ -34,7 +34,7 @@ var Logger = function(logFilePath, os, version) {
         var currentDate = now.getFullYear()+'-'+pad((now.getMonth()+1))+'-'+pad(now.getDate());
         $.startTime = now;
         if(!!document) {
-            $.file.writeln('Name: "' + document.filePath.displayName + '"');
+            $.file.writeln('Name: "' + app.activeDocument.name + '"');
             $.file.writeln('Path: "' + document.filePath.fsName + '"');
         }
         $.file.writeln('Date: "' + currentDate + '"');
