@@ -37,10 +37,10 @@ var Settings = function(settingsPath){
         file.open('w');
         var content = JSON.stringify({
             'apiKey': settings.apiKey,
-            'PublicationID': settings.PublicationID,
-            'IssueID': settings.IssueID,
-            'StyleID': settings.StyleID,
-            'TemplateID': (settings.TemplateID || '-1'),
+            'PublicationID': '' + settings.PublicationID,
+            'IssueID': '' + settings.IssueID,
+            'StyleID': '' + settings.StyleID,
+            'TemplateID': '' + (settings.TemplateID || '-1'),
             'endpoint': settings.endpoint,
             'pages': (settings.pages || ''),
             'creationMode': (settings.creationMode || 'document'),

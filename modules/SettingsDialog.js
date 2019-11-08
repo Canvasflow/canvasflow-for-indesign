@@ -19,6 +19,14 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
     $.defaultValueDim = [0, 0, $.valuesWidth, 20];
 
     $.publications = [];
+    $.templateDefault = {
+        id: -1,
+        name: 'None',
+        StyleID: ''
+    }
+    $.templates = [$.templateDefault];
+    $.selectedTemplate;
+
     $.publicationType;
 
     $.endpoints = [
@@ -149,8 +157,11 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             settingsDialog.issueDropDownGroup.visible = false;
         }
 
+        // Reset Template
+        $.displayTemplates(settingsDialog, PublicationID);
+
         // Reset Style
-        $.displayStyles(settingsDialog, PublicationID)
+        $.displayStyles(settingsDialog, PublicationID);
     }
 
     $.onEndpointChange = function(settingsDialog) {
@@ -174,6 +185,20 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         } else {
             $.settingsDialog.buttonsBarGroup.saveBtn.enabled = false;
         }
+    }
+
+    $.onTemplateChange = function() {
+        var selectedTemplate = $.templates[0];
+        if($.settings.TemplateID != '-1') {
+            selectedTemplate = $.getItemByID($.templates, $.settings.TemplateID);
+            if(selectedTemplate === null) {
+                selectedTemplate = $.templates[0];
+            } else {
+                selection = $.getItemIndexByID($.templates, selectedTemplate.id);
+            }
+        }
+        $.selectedTemplate = selectedTemplate;
+        $.displayStyles($.settingsDialog, $.settings.PublicationID);
     }
 
     $.displayIssues = function(settingsDialog, PublicationID) {
@@ -218,42 +243,44 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
         settingsDialog.issueDropDownGroup.visible = true;
     }
 
-    $.displayStyles = function(settingsDialog, PublicationID) {
-        $.styles = $.getStyles($.settings.apiKey, PublicationID);
-        
-        if($.styles.length === 0) {
-            alert('This Publication has no Styles. Please create an Style and try again.');
-            return;
-        }
+    $.displayTemplates = function(settingsDialog, PublicationID) {
+        $.templates = [$.templateDefault].concat($.getTemplates($.settings.apiKey, PublicationID));
 
-        var selectedStyle = $.styles[0];
+        var selectedTemplate = $.templates[0];
         var selection = 0;
-        if(!!$.settings.StyleID) {
-            selectedStyle = $.getItemByID($.styles, $.settings.StyleID);
-            if(selectedStyle === null) {
-                alert('The currently selected Style does not exist. \nThe first Style in the current Publication has been selected. Please click Save to update the change.');
+        if($.settings.TemplateID != '-1') {
+            selectedTemplate = $.getItemByID($.templates, $.settings.TemplateID);
+            if(selectedTemplate === null) {
                 selection = 0;
-                selectedStyle = $.styles[0];
+                selectedTemplate = $.templates[0];
             } else {
-                selection = $.getItemIndexByID($.styles, selectedStyle.id);
+                selection = $.getItemIndexByID($.templates, selectedTemplate.id);
             }
         }
 
-        $.settings.StyleID = '' + selectedStyle.id;
-        var stylesNames = $.mapItemsName($.styles);
+        $.selectedTemplate = selectedTemplate;
 
-        settingsDialog.styleDropDownGroup.dropDown.removeAll();
-        for(var i = 0; i < stylesNames.length; i++) {
-            settingsDialog.styleDropDownGroup.dropDown.add('item', stylesNames[i]);
+        $.settings.TemplateID = '' + selectedTemplate.id;
+        var templatesNames = $.mapItemsName($.templates);
+
+        settingsDialog.templateDropDownGroup.dropDown.removeAll();
+        for(var i = 0; i < templatesNames.length; i++) {
+            settingsDialog.templateDropDownGroup.dropDown.add('item', templatesNames[i]);
         }
-        settingsDialog.styleDropDownGroup.dropDown.selection = selection;
-        settingsDialog.styleDropDownGroup.visible = true;
+        settingsDialog.templateDropDownGroup.dropDown.selection = selection;
+        settingsDialog.templateDropDownGroup.visible = true;
     }
 
-    $.displayTemplates = function(settingsDialog, PublicationID) {
-        $.templates = $.getTemplates($.settings.apiKey, PublicationID);
+    $.displayStyles = function(settingsDialog, PublicationID) {
+        if($.selectedTemplate.id != '-1') {
+            $.settings.StyleID = '' + $.selectedTemplate.StyleID;
+            settingsDialog.styleDropDownGroup.visible = false;
+            return;
+        }
+
+        $.styles = $.getStyles($.settings.apiKey, PublicationID);
         
-        if($.templates.length === 0) {
+        if($.styles.length === 0) {
             alert('This Publication has no Styles. Please create an Style and try again.');
             return;
         }
@@ -317,6 +344,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.displayIssues(settingsDialog, $.settings.PublicationID);
         }
 
+        $.displayTemplates(settingsDialog, $.settings.PublicationID);
         $.displayStyles(settingsDialog, $.settings.PublicationID);
     }
 
@@ -471,7 +499,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.settings.IssueID = $.issues[$.settingsDialog.issueDropDownGroup.dropDown.selection.index].id;
         }
 
-        // Add Article Creation Mode 
+        // CREATION MODE
         var creationModeOptions = ['Document', 'Page'];
         $.settingsDialog.creationModeDropDownGroup = $.settingsDialog.add('group', undefined, 'creationMode');
         $.settingsDialog.creationModeDropDownGroup.orientation = 'row';
@@ -502,6 +530,17 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             }
         }
 
+        // TEMPLATES
+        $.settingsDialog.templateDropDownGroup = $.settingsDialog.add('group', undefined, 'templates');
+        $.settingsDialog.templateDropDownGroup.orientation = 'row';
+        $.settingsDialog.templateDropDownGroup.add('statictext', defaultLabelDim, 'Template');
+        $.settingsDialog.templateDropDownGroup.dropDown = $.createDropDownList($.settingsDialog.templateDropDownGroup);
+        $.settingsDialog.templateDropDownGroup.visible = false;
+        $.settingsDialog.templateDropDownGroup.dropDown.onChange = function() {
+            $.settings.TemplateID = '' + $.templates[$.settingsDialog.templateDropDownGroup.dropDown.selection.index].id;
+            $.onTemplateChange();
+        }
+
         // STYLES
         $.settingsDialog.styleDropDownGroup = $.settingsDialog.add('group', undefined, 'styles');
         $.settingsDialog.styleDropDownGroup.orientation = 'row';
@@ -512,7 +551,7 @@ var SettingsDialog = function(canvasflowSettingsPath, internal, logger) {
             $.settings.StyleID = '' + $.styles[$.settingsDialog.styleDropDownGroup.dropDown.selection.index].id;
         }
 
-        // Pages
+        // PAGES
         $.settingsDialog.pagesGroup = $.settingsDialog.add('group');
         $.settingsDialog.pagesGroup.orientation = 'row';
         $.settingsDialog.pagesGroup.add('statictext', defaultLabelDim, 'Publish Pages');
