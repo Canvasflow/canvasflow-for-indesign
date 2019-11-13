@@ -219,6 +219,12 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         return content
     }
 
+    $.isSameFont = function(previousFont, currentFont) {
+        return previousFont.fontFamily === currentFont.fontFamily &&
+            previousFont.fontSize === currentFont.fontSize &&
+            previousFont.fontStyle === currentFont.fontStyle
+    }
+
     $.getSubstrings = function(characters, textFrameID) {
         var data = [];
         var substring = null;
@@ -237,6 +243,16 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                     continue;
                 }
             }
+
+            var fontColor = [0,0,0];
+            try {
+                // fontColor = app.activeDocument.colors.item(character.appliedParagraphStyle.fillColor.name).colorValue;
+                var color = app.activeDocument.colors.item(character.fillColor.name);
+                color.space = ColorSpace.RGB;
+                fontColor = color.colorValue;
+            } catch(e) {
+                fontColor = [0,0,0];
+            }
             
             if(substring == null) {
                 try {
@@ -248,33 +264,35 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                     font: {
                         fontFamily: character.appliedFont.fontFamily,
                         fontSize: character.pointSize,
-                        fontStyle: fontStyle
+                        fontStyle: fontStyle,
+                        fontColor: fontColor
                     }
                 }
                 continue;
             }
 
-            var previousFontStyle = substring.font.fontStyle;
             var currentFontStyle = 'Regular';
             try {
                 currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
             } catch(e) {}
 
-            if(previousFontStyle !== currentFontStyle) {    
+            var currentFont = {
+                fontFamily: character.appliedFont.fontFamily,
+                fontSize: character.pointSize,
+                fontStyle: currentFontStyle,
+                fontColor: fontColor
+            };
+
+            var content = $.getRealCharacter(character.contents);
+            if(!$.isSameFont(substring.font, currentFont)) {    
                 data.push(substring);
                 substring = {
-                    content: character.contents,
-                    font: {
-                        fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize,
-                        fontStyle: currentFontStyle,
-                    }
+                    content: content,
+                    font: currentFont
                 }
 
                 continue;
             }
-
-            var content = $.getRealCharacter(character.contents);
 
             substring.content = substring.content + content;
         }
