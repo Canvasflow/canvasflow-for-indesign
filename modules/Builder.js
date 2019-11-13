@@ -222,7 +222,8 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
     $.isSameFont = function(previousFont, currentFont) {
         return previousFont.fontFamily === currentFont.fontFamily &&
             previousFont.fontSize === currentFont.fontSize &&
-            previousFont.fontStyle === currentFont.fontStyle
+            previousFont.fontStyle === currentFont.fontStyle && 
+            previousFont.fontColor.toString() === currentFont.fontColor.toString()
     }
 
     $.getSubstrings = function(characters, textFrameID) {
@@ -246,49 +247,38 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
 
             var fontColor = [0,0,0];
             try {
-                // fontColor = app.activeDocument.colors.item(character.appliedParagraphStyle.fillColor.name).colorValue;
                 var color = app.activeDocument.colors.item(character.fillColor.name);
                 color.space = ColorSpace.RGB;
                 fontColor = color.colorValue;
             } catch(e) {
                 fontColor = [0,0,0];
             }
+
+            try {
+                fontStyle = character.appliedFont.fontStyleName || 'Regular';
+            } catch(e) {}
+
+            var font = {
+                fontFamily: character.appliedFont.fontFamily,
+                fontSize: character.pointSize,
+                fontStyle: fontStyle,
+                fontColor: fontColor
+            };
             
             if(substring == null) {
-                try {
-                    fontStyle = character.appliedFont.fontStyleName || 'Regular';
-                } catch(e) {}
-                
                 substring = {
                     content: character.contents,
-                    font: {
-                        fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize,
-                        fontStyle: fontStyle,
-                        fontColor: fontColor
-                    }
+                    font: font
                 }
                 continue;
             }
 
-            var currentFontStyle = 'Regular';
-            try {
-                currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
-            } catch(e) {}
-
-            var currentFont = {
-                fontFamily: character.appliedFont.fontFamily,
-                fontSize: character.pointSize,
-                fontStyle: currentFontStyle,
-                fontColor: fontColor
-            };
-
             var content = $.getRealCharacter(character.contents);
-            if(!$.isSameFont(substring.font, currentFont)) {    
+            if(!$.isSameFont(substring.font, font)) {    
                 data.push(substring);
                 substring = {
                     content: content,
-                    font: currentFont
+                    font: font
                 }
 
                 continue;
