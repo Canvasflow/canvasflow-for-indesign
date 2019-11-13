@@ -485,6 +485,16 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         return '' + id + '.' + targetExt;
     }
 
+    $.getVisibleBounds = function(graphic) {
+        var bounds = graphic.visibleBounds;
+        return {
+            xi: bounds[1],
+            yi: bounds[0],
+            xf: bounds[3],
+            yf: bounds[2],
+        }
+    }
+
     $.getImageFromGraphics = function(graphics, data, baseDirectory) {
         var imageDirectory = baseDirectory + '/images';
         if(graphics.length > 0) {
@@ -493,6 +503,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                 if(graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
                     var imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                     var position = $.getItemPosition(graphic.parent.geometricBounds);
+                    var visibleBounds = $.getVisibleBounds(graphic);
                     data.push({
                         type: 'Image',
                         id: graphic.id,
@@ -500,7 +511,8 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                         content: imagePath,
                         width: position.width,
                         height: position.height,
-                        position: position
+                        position: position,
+                        visibleBounds: visibleBounds
                     });
                 }
             }
