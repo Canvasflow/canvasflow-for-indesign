@@ -490,7 +490,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         if(graphics.length > 0) {
             for (var i = 0; i < graphics.length; i++) {
                 var graphic = graphics[i];
-                if(graphic.isValid && graphic.visible) {
+                if(graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
                     var imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                     var position = $.getItemPosition(graphic.parent.geometricBounds);
                     data.push({
