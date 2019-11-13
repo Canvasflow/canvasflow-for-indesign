@@ -219,6 +219,13 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         return content
     }
 
+    $.isSameFont = function(previousFont, currentFont) {
+        return previousFont.fontFamily === currentFont.fontFamily &&
+            previousFont.fontSize === currentFont.fontSize &&
+            previousFont.fontStyle === currentFont.fontStyle && 
+            previousFont.fontColor.toString() === currentFont.fontColor.toString()
+    }
+
     $.getSubstrings = function(characters, textFrameID) {
         var data = [];
         var substring = null;
@@ -237,44 +244,45 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                     continue;
                 }
             }
-            
-            if(substring == null) {
-                try {
-                    fontStyle = character.appliedFont.fontStyleName || 'Regular';
-                } catch(e) {}
-                
-                substring = {
-                    content: character.contents,
-                    font: {
-                        fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize,
-                        fontStyle: fontStyle
-                    }
-                }
-                continue;
+
+            var fontColor = [0,0,0];
+            try {
+                var color = app.activeDocument.colors.item(character.fillColor.name);
+                color.space = ColorSpace.RGB;
+                fontColor = color.colorValue;
+            } catch(e) {
+                fontColor = [0,0,0];
             }
 
-            var previousFontStyle = substring.font.fontStyle;
-            var currentFontStyle = 'Regular';
             try {
-                currentFontStyle = character.appliedFont.fontStyleName || 'Regular';
+                fontStyle = character.appliedFont.fontStyleName || 'Regular';
             } catch(e) {}
 
-            if(previousFontStyle !== currentFontStyle) {    
-                data.push(substring);
+            var font = {
+                fontFamily: character.appliedFont.fontFamily,
+                fontSize: character.pointSize,
+                fontStyle: fontStyle,
+                fontColor: fontColor
+            };
+            
+            if(substring == null) {
                 substring = {
                     content: character.contents,
-                    font: {
-                        fontFamily: character.appliedFont.fontFamily,
-                        fontSize: character.pointSize,
-                        fontStyle: currentFontStyle,
-                    }
+                    font: font
                 }
-
                 continue;
             }
 
             var content = $.getRealCharacter(character.contents);
+            if(!$.isSameFont(substring.font, font)) {    
+                data.push(substring);
+                substring = {
+                    content: content,
+                    font: font
+                }
+
+                continue;
+            }
 
             substring.content = substring.content + content;
         }
@@ -485,14 +493,25 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         return '' + id + '.' + targetExt;
     }
 
+    $.getVisibleBounds = function(graphic) {
+        var bounds = graphic.visibleBounds;
+        return {
+            xi: bounds[1],
+            yi: bounds[0],
+            xf: bounds[3],
+            yf: bounds[2],
+        }
+    }
+
     $.getImageFromGraphics = function(graphics, data, baseDirectory) {
         var imageDirectory = baseDirectory + '/images';
         if(graphics.length > 0) {
             for (var i = 0; i < graphics.length; i++) {
                 var graphic = graphics[i];
-                if(graphic.isValid && graphic.visible) {
+                if(graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
                     var imagePath = $.saveGraphicToImage(graphic, imageDirectory);
                     var position = $.getItemPosition(graphic.parent.geometricBounds);
+                    var visibleBounds = $.getVisibleBounds(graphic);
                     data.push({
                         type: 'Image',
                         id: graphic.id,
@@ -500,7 +519,8 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
                         content: imagePath,
                         width: position.width,
                         height: position.height,
-                        position: position
+                        position: position,
+                        visibleBounds: visibleBounds
                     });
                 }
             }
