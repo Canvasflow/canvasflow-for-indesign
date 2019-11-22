@@ -127,6 +127,11 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         }
     }
 
+    $.cleanSubstrinContent = function(substring) {
+        return substring
+            .replace(/(1396984945)*/, '\u201C');   
+    }
+
     $.getRealCharacter = function(content) {
         if(content == SpecialCharacters.SINGLE_RIGHT_QUOTE) {
             content = '\u2019';
@@ -274,7 +279,8 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
             }
 
             var content = $.getRealCharacter(character.contents);
-            if(!$.isSameFont(substring.font, font)) {    
+            if(!$.isSameFont(substring.font, font)) { 
+                substring.content = $.cleanSubstrinContent(substring.content);   
                 data.push(substring);
                 substring = {
                     content: content,
@@ -288,6 +294,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         }
 
         if(substring !== null) {
+            substring.content = $.cleanSubstrinContent(substring.content);
             data.push(substring);
         }
 
