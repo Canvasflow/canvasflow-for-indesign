@@ -544,9 +544,9 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
             dataFile.writeln(line);
         }
     }
-    $.getResizeImagesScriptContent = function(files) {
+    $.getResizeImagesScriptContent = function(files, shouldDeleteFiles) {
         var scriptBuilder = new ScriptBuilder($.os, $.baseDirName);
-        return scriptBuilder.getResizeImageScript(files, $.resizingImageLockFilePath);
+        return scriptBuilder.getResizeImageScript(files, $.resizingImageLockFilePath, shouldDeleteFiles);
     }
 
     $.resizeImages = function(imageFiles) {
@@ -556,10 +556,17 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         }
     
         var files = [];
+        var shouldDeleteFiles = [];
         for(var i = 0; i < imageFiles.length; i++) {
             if($.os === 'dos') {
                 files.push(imageFiles[i]);
             } else {
+                var shouldDeleteFile = true;
+                var ext = imageFiles[i].split('.').pop().toLowerCase();
+                if(ext === 'jpg') {
+                    shouldDeleteFile = false;
+                }
+                shouldDeleteFiles.push(shouldDeleteFile);
                 files.push('"' + imageFiles[i] + '"');
             }
         }
@@ -567,7 +574,7 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
         dataFile.open('w');
         dataFile.lineFeed = 'Unix';
 
-        $.writeToFileScript(dataFile, $.getResizeImagesScriptContent(files));
+        $.writeToFileScript(dataFile, $.getResizeImagesScriptContent(files, shouldDeleteFiles));
     
         dataFile.execute();
         dataFile.close();
