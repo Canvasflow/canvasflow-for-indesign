@@ -88,7 +88,7 @@ var ScriptBuilder = function(os, baseDirName) {
                 '\t\t\tfile="$(echo ${file} | sed "s/.${ext}/.pdf/")"',
                 '\t\t\text="pdf"',
                 '\t\tfi',
-                // '\t\tclear',
+                '\t\tclear',
                 '\t\techo "Optimizing images ${CYAN}${processed_images}/${total_of_images}${NC} [${percentage}]"',
                 '\t\tfilename=$(basename -- \"$file\")',
                 '\t\tfilename="${filename%.*}"',
