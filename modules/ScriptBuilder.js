@@ -4,7 +4,7 @@ var ScriptBuilder = function(os, baseDirName) {
     
     $.os = os;
     $.baseDirName = baseDirName;
-    $.getResizeImageScript = function(files, resizingImageLockFilePath) {
+    $.getResizeImageScript = function(files, resizingImageLockFilePath, shouldDeleteFiles) {
         var lines = [];
         if($.os === 'dos') {
             var basePath = 'userprofile';
@@ -58,6 +58,7 @@ var ScriptBuilder = function(os, baseDirName) {
             )
         } else {
             lines = [
+                '#!/bin/bash',
                 "CYAN='\033[1;36m'",
                 "NC='\033[0m'",
                 "GREEN='\033[1;32m'",
@@ -65,8 +66,10 @@ var ScriptBuilder = function(os, baseDirName) {
                 "RED='\033[0;31m'",
                 'clear',
                 'files=( ' + files.join(' ') + ' )',
+                'should_delete_files=( ' + shouldDeleteFiles.join(' ') + ' )',
                 'total_of_images=${#files[@]}',
                 'processed_images=0',
+                'index=0',
                 'for file in "${files[@]}"',
                 '\tdo :',
                 '\t\text="${file#*.}"',
@@ -101,10 +104,12 @@ var ScriptBuilder = function(os, baseDirName) {
                 '\t\t\tresize_command="sips -s formatOptions 50 --matchTo \'/System/Library/ColorSync/Profiles/sRGB Profile.icc\' -s format jpeg \\\"${file}\\\" --out \\\"${target_filename}\\\"" ',
                 '\t\t\teval $resize_command > /dev/null 2>&1',
                 '\t\tfi',
-                '\t\tif [[ $ext != "jpeg" ]] && [[ $ext != "jpg" ]]; then',
+                '\t\tshould_delete=${should_delete_files[${index}]}',
+                '\t\tif $should_delete; then',
                 '\t\t\tremove_command="rm \\\"${file}\\\""',
                 '\t\t\teval $remove_command',
                 '\t\tfi',
+                '\t\tindex=${index}+1;',
                 'done',
                 'rm -f ' + resizingImageLockFilePath
             ];
