@@ -128,7 +128,12 @@ var Builder = function(canvasflowSettings, resizeCommandFilePath, convertCommand
     }
 
     $.cleanSubstrinContent = function(substring) {
+        if(typeof substring === 'string') {
+            return substring
+                .replace(/(1396984945)*/, '\u201C');   
+        }
         return substring
+            .toString()
             .replace(/(1396984945)*/, '\u201C');   
     }
 
