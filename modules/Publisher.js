@@ -80,10 +80,10 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
         return true;*/
     
         apiKey = $.savedSettings.apiKey;
-        var PublicationID = $.savedSettings.PublicationID;
+        var PublicationID = $.savedSettings.PublicationID || '';
         var IssueID = $.savedSettings.IssueID || '';
-        var TemplateID = $.savedSettings.TemplateID;
-        var StyleID = $.savedSettings.StyleID;
+        var TemplateID = $.savedSettings.TemplateID || '';
+        var StyleID = $.savedSettings.StyleID || '';
         var creationMode = $.savedSettings.creationMode || 'document';
         var contentOrder = $.savedSettings.contentOrder || 'natural';
     
@@ -118,10 +118,10 @@ var Publisher = function(canvasflowSettings, host, builder, canvasflowApi, logge
                     creationMode: creationMode,
                     contentOrder: contentOrder,
                     articleName: articleName,
-                    publicationId: PublicationID,
-                    issueId: IssueID,
-                    templateId: TemplateID,
-                    styleId: StyleID,
+                    publicationId: PublicationID.trim(),
+                    issueId: IssueID.trim(),
+                    templateId: TemplateID.trim(),
+                    styleId: StyleID.trim(),
                     contentType: 'indesign',
                     articleId: $.uuid
                 }
