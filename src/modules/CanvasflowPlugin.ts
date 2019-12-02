@@ -1,16 +1,24 @@
 var osName = $.os;
-var CanvasflowPlugin = function() {
-    var $ = this;
+class CanvasflowPlugin {
+    osName: string;
+    version: string;
+    title: string;
+    constructor(os: string, version: string) {
+        this.osName = os;
+        this.version = version;
+        this.title = 'Canvasflow';
+    }
 
-    $.install = function() {
+    install() {
         try {
-            app.menus.item('$ID/Main').submenus.item('Canvasflow').remove();
+            app.menus.item('$ID/Main').submenus.item(this.title).remove();
         } catch(e) {
     
         }
-    
+        
+        // @ts-ignore
         var canvasflowScriptActionSettings = app.scriptMenuActions.add('&Settings');  
-        canvasflowScriptActionSettings.eventListeners.add('onInvoke', function() {  
+        canvasflowScriptActionSettings.eventListeners.add('onInvoke', () => {  
             var settingsFile = new File(settingsFilePath);
             if(!settingsFile.parent.exists) {
                 alert('Please run the Install command, help please refer to the help documentation');
@@ -18,7 +26,7 @@ var CanvasflowPlugin = function() {
             }
 
             try {
-                var logger = new Logger(logFilePath, osName, version);
+                var logger = new Logger(logFilePath, osName, this.version);
                 logger.start('Settings');
                 var settingsDialog = new SettingsDialog(settingsFilePath, isInternal, logger);
                 settingsDialog.show();
@@ -29,16 +37,18 @@ var CanvasflowPlugin = function() {
             }
         }); 
         
+        // @ts-ignore
         var canvasflowScriptActionPublish = app.scriptMenuActions.add('&Publish');  
-        canvasflowScriptActionPublish.eventListeners.add('onInvoke', function() {  
+        canvasflowScriptActionPublish.eventListeners.add('onInvoke', () => {  
             var settingsFile = new File(settingsFilePath);
             if(!settingsFile.exists) {
                 alert('Please open Settings first and register the api key');
                 return ;
             }
-            var logger = new Logger(logFilePath, osName, version);
+            var logger = new Logger(logFilePath, osName, this.version);
             try {
                 settingsFile.open('r');
+                // @ts-ignore
                 var settingsData = JSON.parse(settingsFile.read());
 
                 if(!settingsData.endpoint) {
@@ -74,9 +84,10 @@ var CanvasflowPlugin = function() {
             }
         });
 
+        // @ts-ignore
         var canvasflowScriptActionBuild = app.scriptMenuActions.add('&Build');  
-        canvasflowScriptActionBuild.eventListeners.add('onInvoke', function() {
-            var logger = new Logger(logFilePath, osName, version);
+        canvasflowScriptActionBuild.eventListeners.add('onInvoke', () => {
+            var logger = new Logger(logFilePath, osName, this.version);
             try {
                 if (app.documents.length != 0){
                     var response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.')
@@ -103,18 +114,20 @@ var CanvasflowPlugin = function() {
             }
         });
 
+        // @ts-ignore
         var canvasflowScriptActionAbout = app.scriptMenuActions.add('&About');  
-        canvasflowScriptActionAbout.eventListeners.add('onInvoke', function() {  
+        canvasflowScriptActionAbout.eventListeners.add('onInvoke', () =>  {  
             try {
-                var aboutDialog = new AboutDialog(version);
+                var aboutDialog = new AboutDialog(this.version);
                 aboutDialog.show();
             } catch(e) {
                 alert(e.message);
             }
         });
 
+        // @ts-ignore
         var canvasflowScriptActionLogs = app.scriptMenuActions.add('&Logs');  
-        canvasflowScriptActionLogs.eventListeners.add('onInvoke', function() {  
+        canvasflowScriptActionLogs.eventListeners.add('onInvoke', () =>  {  
             try {
                 var logFilePath = getBasePath() + '/cf-indesign/canvasflow.log';
                 var logDialog = new LogDialog(logFilePath);
@@ -126,10 +139,10 @@ var CanvasflowPlugin = function() {
     
         var canvasflowScriptMenu = null;
         try {  
-            canvasflowScriptMenu = app.menus.item('$ID/Main').submenus.item('Canvasflow');  
+            canvasflowScriptMenu = app.menus.item('$ID/Main').submenus.item(this.title);  
             canvasflowScriptMenu.title;  
         } catch (e) {  
-            canvasflowScriptMenu = app.menus.item('$ID/Main').submenus.add('Canvasflow');  
+            canvasflowScriptMenu = app.menus.item('$ID/Main').submenus.add(this.title);  
         }  
     
         canvasflowScriptMenu.menuItems.add(canvasflowScriptActionPublish);
@@ -142,5 +155,6 @@ var CanvasflowPlugin = function() {
     }
 }
 
-var canvasflowPlugin = new CanvasflowPlugin($.os);
+// @ts-ignore
+var canvasflowPlugin = new CanvasflowPlugin($.os, version);
 canvasflowPlugin.install();

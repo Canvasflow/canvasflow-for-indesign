@@ -1,4 +1,3 @@
-//@include "json2.js"
 Error.prototype.toJson = function() {
     if (typeof this.stack === "undefined" || this.stack === null) {
         this.stack = "placeholder";

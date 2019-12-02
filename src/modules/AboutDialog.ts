@@ -1,8 +1,12 @@
-var AboutDialog = function(version) {
-    var $ = this;
-    $.version = version;
+class AboutDialog {
+    version: string;
+    
+    constructor(version) {
+        this.version = version;
+    }
 
-    $.show = function() {
+    show() {
+        // @ts-ignore
         var dialog = new Window('dialog', 'Canvasflow');
         dialog.orientation = 'column';
         dialog.alignment = 'right';
@@ -16,7 +20,7 @@ var AboutDialog = function(version) {
         var fields = [
             {
                 label: 'Version',
-                value: $.version
+                value: this.version
             },
             {
                 label: 'Install path',
@@ -47,7 +51,7 @@ var AboutDialog = function(version) {
         dialog.buttonsBarGroup = dialog.add('group', undefined, 'buttons');
         dialog.buttonsBarGroup.closeBtn = dialog.add('button', undefined, 'Close');
         dialog.buttonsBarGroup.closeBtn.alignment = 'bottom';
-        dialog.buttonsBarGroup.closeBtn.onClick = function () {
+        dialog.buttonsBarGroup.closeBtn.onClick = () => {
             dialog.close();
         }
         dialog.show();
