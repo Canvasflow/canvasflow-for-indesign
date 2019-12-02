@@ -6,14 +6,14 @@ const ts = require('gulp-typescript');
 const strip = require("gulp-strip-comments");
 const beautify = require("gulp-beautify");
 const removeEmptyLines = require("gulp-remove-empty-lines");
-const buildPath = process.env.BUILD_PATH || path.join(__dirname, "dist");
+const buildPath = process.env.BUILD_PATH || path.join(__dirname, "build");
 const package = require("./package.json");
 const tsProject = ts.createProject('tsconfig.json');
 
 function prependEngine(cb) {
     const filePath = path.join(buildPath, "Canvasflow.jsx");
     var fileContent = fs.readFileSync(filePath, "utf-8");
-    fs.writeFileSync(filePath,`#targetengine "session" \n\nvar version='${package.version}'; \n\n ${fileContent}`);
+    fs.writeFileSync(filePath,`//@targetengine "session"\n\nvar version='${package.version}'; \n\n ${fileContent}`);
     cb();
 }
 
@@ -48,7 +48,7 @@ function build() {
           removeComments: true
         })
       )
-      .pipe(gulp.dest('dist'));
+      .pipe(gulp.dest('build'));
 }
 
 const buildTask = gulp.series(build, prependEngine);
