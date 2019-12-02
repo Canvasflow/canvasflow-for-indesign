@@ -1,37 +1,44 @@
 //@include "http.js"
-var CanvasflowApi = function (host) {
-    this.host = host;
+class CanvasflowApi {
+    host: string;
 
-    CanvasflowApi.prototype.http = function(method, ignoreParse){
+    constructor(host) {
+        this.host = host;
+    }
+
+    http(method, ignoreParse?){
+        // @ts-ignore
         var reply = new HTTPFile(this.host + method + "&qid=" + Date.now());
         if(!!ignoreParse) {
+            // @ts-ignore
             return reply.getResponse();
         }
-
+        
+        // @ts-ignore
         return JSON.parse(reply.getResponse());
     }
 
-    CanvasflowApi.prototype.getHealth = function() {
+    getHealth() {
         return this.http('/health?cf=1', true);
-    };
+    }
 
-    CanvasflowApi.prototype.getPublications = function(apiKey) {
+    getPublications(apiKey) {
         return this.http('/publications?secretkey=' + apiKey);
     };
 
-    CanvasflowApi.prototype.validate = function(apiKey) {
+    validate(apiKey) {
         return this.http('/info?secretkey=' + apiKey);
     };
 
-    CanvasflowApi.prototype.getIssues = function(apiKey, PublicationID) {
+    getIssues(apiKey, PublicationID) {
         return this.http('/issues?secretkey=' + apiKey + '&publicationId=' + PublicationID);
     };
 
-    CanvasflowApi.prototype.getStyles = function(apiKey, PublicationID) {
+    getStyles(apiKey, PublicationID) {
         return this.http('/styles?secretkey=' + apiKey + '&publicationId=' + PublicationID);
     };
 
-    CanvasflowApi.prototype.getTemplates = function(apiKey, PublicationID) {
+    getTemplates(apiKey, PublicationID) {
         return this.http('/templates?secretkey=' + apiKey + '&publicationId=' + PublicationID);
     };
 }

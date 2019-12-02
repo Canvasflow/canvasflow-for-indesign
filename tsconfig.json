@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "none",
+        "noLib": true,
+        "allowJs": true,
+        "removeComments": true,
+        "types": [
+            "types-for-adobe/indesign/2015.3"
+        ],
+        "outFile": "./Canvasflow.jsx"
+    },
+    "exclude": [
+        "node_modules",
+        "modules",
+        "build",
+        "dist"
+    ]
+}

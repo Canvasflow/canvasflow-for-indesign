@@ -1,13 +1,17 @@
-//@include "env.js"
-var ScriptBuilder = function(os, baseDirName) {
-    var $ = this;
-    
-    $.os = os;
-    $.baseDirName = baseDirName;
-    $.getResizeImageScript = function(files, resizingImageLockFilePath, shouldDeleteFiles) {
+class ScriptBuilder {
+    os: string;
+    baseDirName: string;
+    constructor(os, baseDirName) {
+        this.os = os;
+        this.baseDirName = baseDirName;
+    }
+
+    getResizeImageScript(files, resizingImageLockFilePath, shouldDeleteFiles) {
         var lines = [];
         if($.os === 'dos') {
             var basePath = 'userprofile';
+
+            // @ts-ignore
             if(!!getEnv('CF_USER_BASE_PATH')) {
                 basePath = 'cf_user_base_path';
             }
@@ -54,7 +58,7 @@ var ScriptBuilder = function(os, baseDirName) {
                 '\t)',
 
                 ')',
-                'del %' + basePath + '%\\' + $.baseDirName + '\\canvasflow_resizing.lock'        
+                'del %' + basePath + '%\\' + this.baseDirName + '\\canvasflow_resizing.lock'        
             )
         } else {
             lines = [
@@ -117,13 +121,17 @@ var ScriptBuilder = function(os, baseDirName) {
 
         return lines;
     }
-    $.getConvertImageScript = function(files, convertImageLockFilePath) {
+
+    getConvertImageScript(files, convertImageLockFilePath) {
         var lines = [];
         if($.os === 'dos') {
             var basePath = 'userprofile';
+            
+            // @ts-ignore
             if(!!getEnv('CF_USER_BASE_PATH')) {
                 basePath = 'cf_user_base_path';
             }
+
             lines.push(
                 '@echo off',
                 'setlocal enabledelayedexpansion'
@@ -161,7 +169,7 @@ var ScriptBuilder = function(os, baseDirName) {
 
                 ')',
             
-                'del %' + basePath + '%\\' + $.baseDirName + '\\canvasflow_convert.lock'
+                'del %' + basePath + '%\\' + this.baseDirName + '\\canvasflow_convert.lock'
             )
         } else {
             lines = [

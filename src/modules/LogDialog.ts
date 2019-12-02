@@ -1,15 +1,15 @@
-//@include "json2.js"
-//@include "error.js"
-//@include "Array.js"
+class LogDialog {
+    defaultDialogSize: Array<number> = [300,100];
+    maxLines = 100;
+    logFilePath: string;
 
-var LogDialog = function(logFilePath) { 
-    var $ = this;
-    $.defaultDialogSize = [300,100];
-    $.maxLines = 100;
+    constructor(logFilePath: string) {
+        this.logFilePath = logFilePath;
+    }
 
-    $.getLogsContent = function() {
+    getLogsContent() {
         var lines = [];
-        var logFile = new File(logFilePath);
+        var logFile = new File(this.logFilePath);
         if(!logFile.exists) {
             return 'There are no logs';
         }
@@ -20,14 +20,14 @@ var LogDialog = function(logFilePath) {
         } while(!logFile.eof);
         logFile.close();
 
-        return lines.reverse().slice(undefined, $.maxLines).join('\n');
+        return lines.reverse().slice(undefined, this.maxLines).join('\n');
     }
-    $.renderWindow = function(window) {
+
+    renderWindow(window) {
         // Log box
-        // alert(logFilePath);
         window.boxGroup= window.add('group');
         window.boxGroup.orientation = 'row';
-        window.boxGroup.box = window.boxGroup.add('edittext', [0, 0, 400, 400], $.getLogsContent(), {multiline: true,  readonly: true});
+        window.boxGroup.box = window.boxGroup.add('edittext', [0, 0, 400, 400], this.getLogsContent(), {multiline: true,  readonly: true});
 
         // Panel buttons
         window.buttonsBarGroup = window.add('group', undefined, 'buttons');
@@ -35,26 +35,27 @@ var LogDialog = function(logFilePath) {
         window.buttonsBarGroup.alignChildren = 'bottom';    
         window.buttonsBarGroup.closeBtn = window.buttonsBarGroup.add('button', undefined, 'Close');
         
-        window.buttonsBarGroup.closeBtn.onClick = function() {
+        window.buttonsBarGroup.closeBtn.onClick = () =>  {
             window.close();
         }
-        var logFile = new File(logFilePath);
+        var logFile = new File(this.logFilePath);
         if(logFile.exists) {
             window.buttonsBarGroup.openBtn = window.buttonsBarGroup.add('button', undefined, 'Open');
-            window.buttonsBarGroup.openBtn.onClick = function() {
+            window.buttonsBarGroup.openBtn.onClick = () =>  {
                 logFile.execute();
             }
         }
         window.show();
     }
 
-    $.show = function() {
+    show = () =>  {
         try {
+            // @ts-ignore
             var window = new Window('dialog', 'Logs');
             window.orientation = 'column';
             window.alignment = 'right';
-            window.preferredSize = $.defaultDialogSize;
-            $.renderWindow(window);
+            window.preferredSize = this.defaultDialogSize;
+            this.renderWindow(window);
         } catch(e) {
             logError(e);
         }
