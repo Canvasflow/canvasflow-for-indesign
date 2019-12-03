@@ -1,59 +1,57 @@
 class AboutDialog {
-    version: string;
-    
-    constructor(version) {
-        this.version = version;
-    }
+	private version: string;
 
-    show() {
-        // @ts-ignore
-        var dialog = new Window('dialog', 'Canvasflow');
-        dialog.orientation = 'column';
-        dialog.alignment = 'right';
-        dialog.preferredSize = [300,100];
-        var labelWidth = 100;
-        var valueWidth = 200;
+	constructor(version: string) {
+		this.version = version;
+	}
 
-        var title = dialog.add('statictext', undefined,'InDesign to Canvasflow');
-        title.alignment = 'left';
+	show() {
+		// @ts-ignore
+		let dialog = new Window('dialog', 'Canvasflow');
+		dialog.orientation = 'column';
+		dialog.alignment = 'right';
+		dialog.preferredSize = [300, 100];
+		let labelWidth = 100;
+		let valueWidth = 200;
 
-        var fields = [
-            {
-                label: 'Version',
-                value: this.version
-            },
-            {
-                label: 'Install path',
-                value: getBasePath()
-            },
-            {
-                label: 'Support',
-                value: 'support@canvasflow.io'
-            },
-            {
-                label: 'Website',
-                value: 'https://canvasflow.io'
-            }
-        ];
-        
-        for(var i=0; i < fields.length; i++) {
-            var field = fields[i];
-            var group = dialog.add('group');
-            group.orientation = 'row';
-            
-            group.add('statictext', [0, 0, labelWidth, 20], field.label);
-            group.add('statictext', [0, 0, valueWidth, 20], field.value);
-        }
-        dialog.add('statictext', [0, 0, labelWidth, 0], '');
-        var copyright = dialog.add('statictext', undefined,'\u00A9 2015-2019 Canvasflow Ltd');
-        copyright.alignment = 'left';
+		let title = dialog.add('statictext', undefined, 'InDesign to Canvasflow');
+		title.alignment = 'left';
 
-        dialog.buttonsBarGroup = dialog.add('group', undefined, 'buttons');
-        dialog.buttonsBarGroup.closeBtn = dialog.add('button', undefined, 'Close');
-        dialog.buttonsBarGroup.closeBtn.alignment = 'bottom';
-        dialog.buttonsBarGroup.closeBtn.onClick = () => {
-            dialog.close();
-        }
-        dialog.show();
-    }
+		let fields = [
+			{
+				label: 'Version',
+				value: this.version
+			},
+			{
+				label: 'Install path',
+				value: getBasePath()
+			},
+			{
+				label: 'Support',
+				value: 'support@canvasflow.io'
+			},
+			{
+				label: 'Website',
+				value: 'https://canvasflow.io'
+			}
+		];
+
+		for(let field of fields) {
+			let group = dialog.add('group');
+			group.orientation = 'row';
+
+			group.add('statictext', [0, 0, labelWidth, 20], field.label);
+			group.add('statictext', [0, 0, valueWidth, 20], field.value);
+		}
+
+		dialog.add('statictext', [0, 0, labelWidth, 0], '');
+		let copyright = dialog.add('statictext', undefined, '\u00A9 2015-2019 Canvasflow Ltd');
+		copyright.alignment = 'left';
+
+		dialog.buttonsBarGroup = dialog.add('group', undefined, 'buttons');
+		dialog.buttonsBarGroup.closeBtn = dialog.add('button', undefined, 'Close');
+		dialog.buttonsBarGroup.closeBtn.alignment = 'bottom';
+		dialog.buttonsBarGroup.closeBtn.onClick = () => dialog.close();
+		dialog.show();
+	}
 }

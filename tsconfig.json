@@ -4,6 +4,7 @@
         "noLib": true,
         "allowJs": true,
         "removeComments": true,
+        "noResolve": false,
         "types": [
             "types-for-adobe/indesign/2015.3"
         ],
@@ -11,8 +12,6 @@
     },
     "exclude": [
         "node_modules",
-        "modules",
-        "build",
-        "dist"
+        "build"
     ]
 }

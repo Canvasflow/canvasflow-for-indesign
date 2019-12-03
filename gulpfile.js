@@ -30,6 +30,7 @@ function build() {
         'src/modules/Builder.ts',
         'src/modules/Settings.ts',
         'src/modules/SettingsDialog.ts',
+        'src/modules/MissingImagesDialog.ts',
         'src/modules/Publisher.ts',
         'src/modules/CanvasflowPlugin.ts'
     ])
