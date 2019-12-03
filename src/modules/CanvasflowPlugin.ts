@@ -1,13 +1,21 @@
 let osName = $.os;
 class CanvasflowPlugin {
-	private os: string;
-	private version: string;
 	private title: string;
+	private os: string;
+	private version: string;	
+	private logFilePath: string;	
+	private settingsFilePath: string;
+	private resizeCommandFilePath: string;
+	private convertCommandFilePath: string;
 	
-	constructor(os: string, version: string) {
+	constructor(os: string, version: string, logFilePath: string, settingsFilePath: string, resizeCommandFilePath: string, convertCommandFilePath: string) {
+		this.title = 'Canvasflow';
 		this.os = os;
 		this.version = version;
-		this.title = 'Canvasflow';
+		this.logFilePath = logFilePath;
+		this.settingsFilePath = settingsFilePath;
+		this.resizeCommandFilePath = resizeCommandFilePath;
+		this.convertCommandFilePath = convertCommandFilePath;
 	}
 
 	install() {
@@ -21,17 +29,18 @@ class CanvasflowPlugin {
 		// @ts-ignore
 		let canvasflowScriptActionSettings = app.scriptMenuActions.add('&Settings');
 		canvasflowScriptActionSettings.eventListeners.add('onInvoke', () => {
-			let settingsFile = new File(settingsFilePath);
+			let settingsFile = new File(this.settingsFilePath);
 			if (!settingsFile.parent.exists) {
 				alert('Please run the Install command, help please refer to the help documentation');
 				return;
 			}
 
+			let logger: Logger;
 			try {
-				let logger = new Logger(logFilePath, this.os, this.version);
+				logger = new Logger(this.logFilePath, this.os, this.version);
 				logger.start('Settings');
 				let settingsDialog = new SettingsDialog(
-					settingsFilePath,
+					this.settingsFilePath,
 					isInternal,
 					logger
 				);
@@ -46,12 +55,12 @@ class CanvasflowPlugin {
 		// @ts-ignore
 		let canvasflowScriptActionPublish = app.scriptMenuActions.add('&Publish');
 		canvasflowScriptActionPublish.eventListeners.add('onInvoke', () => {
-			let settingsFile = new File(settingsFilePath);
+			let settingsFile = new File(this.settingsFilePath);
 			if (!settingsFile.exists) {
 				alert('Please open Settings first and register the api key');
 				return;
 			}
-			let logger = new Logger(logFilePath, this.os, this.version);
+			const logger = new Logger(this.logFilePath, this.os, this.version);
 			try {
 				settingsFile.open('r');
 				// @ts-ignore
@@ -73,12 +82,12 @@ class CanvasflowPlugin {
 				}
 
 				if (!!app.activeDocument) {
-					let settings = new Settings(settingsFilePath);
+					let settings = new Settings(this.settingsFilePath);
 					let builder = new Builder(
 						settings,
-						resizeCommandFilePath,
-						convertCommandFilePath,
-						os,
+						this.resizeCommandFilePath,
+						this.convertCommandFilePath,
+						this.os,
 						logger
 					);
 					let canvasflowApi = new CanvasflowApi(`http://${settingsData.endpoint}/v2`);
@@ -105,17 +114,17 @@ class CanvasflowPlugin {
 		// @ts-ignore
 		let canvasflowScriptActionBuild = app.scriptMenuActions.add('&Build');
 		canvasflowScriptActionBuild.eventListeners.add('onInvoke', () => {
-			let logger = new Logger(logFilePath, this.os, this.version);
+			let logger = new Logger(this.logFilePath, this.os, this.version);
 			try {
 				if (app.documents.length != 0) {
 					let response = confirm('Do you wish to proceed? \nThis will generate the deliverable ZIP file, but will NOT publish to Canvasflow.\n\nPlease do this only if instructed by a member of the Canvasflow support team.');
 					if (response) {
-						let settings = new Settings(settingsFilePath);
+						let settings = new Settings(this.settingsFilePath);
 						let builder = new Builder(
 							settings,
-							resizeCommandFilePath,
-							convertCommandFilePath,
-							os,
+							this.resizeCommandFilePath,
+							this.convertCommandFilePath,
+							this.os,
 							logger
 						);
 						logger.start('Build', app.activeDocument);
@@ -153,8 +162,7 @@ class CanvasflowPlugin {
 		let canvasflowScriptActionLogs = app.scriptMenuActions.add('&Logs');
 		canvasflowScriptActionLogs.eventListeners.add('onInvoke', () => {
 			try {
-				let logFilePath = `${getBasePath()}/cf-indesign/canvasflow.log`;
-				let logDialog = new LogDialog(logFilePath);
+				let logDialog = new LogDialog(this.logFilePath);
 				logDialog.show();
 			} catch (e) {
 				alert(e.message);
@@ -184,5 +192,5 @@ class CanvasflowPlugin {
 }
 
 // @ts-ignore
-let canvasflowPlugin = new CanvasflowPlugin($.os, version);
+let canvasflowPlugin = new CanvasflowPlugin($.os, version, logFilePath, settingsFilePath, resizeCommandFilePath, convertCommandFilePath);
 canvasflowPlugin.install();

@@ -59,7 +59,7 @@ class Builder {
 		return '';
 	}
 
-	getUUIDReplacer(c): string {
+	getUUIDReplacer(c: any): string {
 		let dt = new Date().getTime();
 		let r = (dt + Math.random() * 16) % 16 | 0;
 		dt = Math.floor(dt / 16);
@@ -511,7 +511,7 @@ class Builder {
 		return `${id}.${targetExt}`;
 	}
 
-	getVisibleBounds(graphic) {
+	getVisibleBounds(graphic: Graphic) {
 		let bounds = graphic.visibleBounds;
 		return {
 			xi: bounds[1],
@@ -889,8 +889,7 @@ class Builder {
 		let baseDirectory = `${app.activeDocument.filePath}/`;
 		this.filePath = `${baseDirectory}${app.activeDocument.name}`;
 		const ext = app.activeDocument.name.split('.').pop();
-		this.baseDirectory =
-			baseDirectory + app.activeDocument.name.replace('.' + ext, '');
+		this.baseDirectory = `${baseDirectory}${app.activeDocument.name.replace(`.${ext}`, '')}`;
 
 		this.createExportFolder();
 		

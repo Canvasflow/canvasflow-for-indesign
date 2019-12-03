@@ -1,6 +1,6 @@
 class MissingImagesDialog {
-	images: Array<string>;
-	dialogWidth: number;
+	private images: Array<string>;
+	private dialogWidth: number;
 
 	constructor(images: Array<string>) {
 		this.images = images;

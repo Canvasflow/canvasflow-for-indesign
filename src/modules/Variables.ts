@@ -1,23 +1,20 @@
-var apiKeySetting = 1;
-var isInternal = true;
-var canvasflowSettingsKey = 'Settings';
-var baseDirName = 'cf-indesign';
+let isInternal = true;
+let baseDirName = 'cf-indesign';
 
-var os = 'unix';
+let os = 'unix';
 if(/^Win(.)*/gm.test($.os)) {
-    os = 'dos';
+	os = 'dos';
 }
 
-var settingsFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_settings.json';
-var resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_resize.command';
-var convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.command';
+let settingsFilePath = `${getBasePath()}/${baseDirName}/canvasflow_settings.json`;
+let resizeCommandFilePath = `${getBasePath()}/${baseDirName}/canvasflow_resize.command`;
+let convertCommandFilePath = `${getBasePath()}/${baseDirName}/canvasflow_convert.command`;
 
 if(os === 'dos') {
-    resizeCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_resize.bat';
-    convertCommandFilePath = getBasePath() + '/' + baseDirName + '/canvasflow_convert.bat';
+	resizeCommandFilePath = `${getBasePath()}/${baseDirName}/canvasflow_resize.bat`;
+	convertCommandFilePath = `${getBasePath()}/${baseDirName}/canvasflow_convert.bat`;
 }
 
-var defaultHost = 'api.canvasflow.io';
-var logFilePath = getBasePath() + '/' + baseDirName + '/canvasflow.log';
-var logger;
-var isDebugEnable = true;
+let defaultHost = 'api.canvasflow.io';
+let logFilePath = `${getBasePath()}/${baseDirName}/canvasflow.log`;
+let isDebugEnable = true;

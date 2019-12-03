@@ -1,26 +1,28 @@
 class Publisher {
-	baseDirectory: string;
-	filePath: string;
-	uuid: string;
-	host: string;
-	canvasflowApi: CanvasflowApi;
-	dialog: any;
-	pagesRange: any;
-	builder: Builder;
-	boundary: string;
-	articleName: string;
-	valuesWidth: number;
-	styles: Array<any>;
-	defaultValueDim: Array<number>;
+	private uuid: string;
+	private host: string;
+	private canvasflowApi: CanvasflowApi;
+	
+	private builder: Builder;
+	private boundary: string;
+	private articleName: string;
+	private valuesWidth: number;
+	private styles: Array<any>;
+	
+	private savedSettings: any;
+	private templateDefault: any;
+	private templates: Array<any>;
+	private selectedTemplate: any;
+	private document: Document;
+	private logger: Logger;
 
-	savedSettings: any;
-	templateDefault: any;
-	templates: Array<any>;
-	selectedTemplate: any;
-	document: Document;
-	logger: Logger;
+	public baseDirectory: string;
+	public filePath: string;
+	public defaultValueDim: Array<number>;
+	public dialog: any;
+	public pagesRange: any;
 
-	constructor(canvasflowSettings: Settings,host: string,builder: Builder,canvasflowApi: CanvasflowApi,logger: Logger) {
+	constructor(canvasflowSettings: Settings, host: string, builder: Builder, canvasflowApi: CanvasflowApi, logger: Logger) {
 		this.baseDirectory = '';
 		this.filePath = '';
 		this.uuid = '';
@@ -48,20 +50,15 @@ class Publisher {
 		this.templates = [this.templateDefault];
 	}
 
-	createTextFormParam(property, value) {
+	createTextFormParam(property: string, value: string) {
 		return (
-			`--${this.boundary}` +
-			'\r\n' +
-			`Content-Disposition: form-data; name="${property}"` + 
-			'\r\n' +
-			'\r\n' +
-			value +
-			'\r\n' +
-			'\r\n'
+			`--${this.boundary}\r\n` +
+			`Content-Disposition: form-data; name="${property}"\r\n\r\n` + 
+			`${value}\r\n\r\n`
 		);
 	}
 
-	getTextFormParams(textProperties) {
+	getTextFormParams(textProperties: any) {
 		let response = [];
 		for (let property in textProperties) {
 			response.push(this.createTextFormParam(property, textProperties[property]));
@@ -71,19 +68,10 @@ class Publisher {
 
 	createFileFormParam(property: string, fileName: string, fileContent: any) {
 		return (
-			'--' +
-			this.boundary +
-			'\r\n' +
-			'Content-Disposition: form-data; name="' +
-			property +
-			'"; filename="' +
-			fileName +
-			'"\r\n' +
-			'Content-Type: application/octet-stream\r\n' +
-			'\r\n' +
-			fileContent +
-			'\r\n' +
-			'\r\n'
+			`--${this.boundary}\r\n` +
+			`Content-Disposition: form-data; name="${property}"; filename="${fileName}"\r\n` +
+			'Content-Type: application/octet-stream\r\n\r\n' +
+			`${fileContent}\r\n\r\n`
 		);
 	}
 
@@ -134,15 +122,15 @@ class Publisher {
 			this.uuid = this.builder.getDocumentID();
 
 			this.logger.log('---------------------------');
-			this.logger.log('Api Key: ' + apiKey);
-			this.logger.log('ID: ' + this.uuid);
-			this.logger.log('PublicationID: ' + PublicationID);
-			this.logger.log('IssueID: ' + IssueID);
-			this.logger.log('StyleID: ' + StyleID);
-			this.logger.log('TemplateID: ' + TemplateID);
-			this.logger.log('Creation Mode: ' + creationMode);
-			this.logger.log('Content Order: ' + contentOrder);
-			this.logger.log('Article Name: ' + articleName);
+			this.logger.log(`Api Key: ${apiKey}`);
+			this.logger.log(`ID: ${this.uuid}`);
+			this.logger.log(`PublicationID: ${PublicationID}`);
+			this.logger.log(`IssueID: ${IssueID}`);
+			this.logger.log(`StyleID: ${StyleID}`);
+			this.logger.log(`TemplateID: ${TemplateID}`);
+			this.logger.log(`Creation Mode: ${creationMode}`);
+			this.logger.log(`Content Order: ${contentOrder}`);
+			this.logger.log(`Article Name: ${articleName}`);
 			this.logger.log('---------------------------');
 
 			let form = {
@@ -168,25 +156,17 @@ class Publisher {
 
 			let content = this.getFileFormParams(form.file)
 				.concat(this.getTextFormParams(form.text))
-				.concat(['--' + this.boundary + '--\r\n\r'])
+				.concat([`--${this.boundary}--\r\n\r`]) 
 				.join('');
 
-			let cs =
-				'POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n' +
-				'Content-Length: ' +
-				content.length +
-				'\r\n' +
-				'Content-Type: multipart/form-data; boundary=' +
-				this.boundary +
-				'\r\n' +
-				'Host: ' +
-				host +
-				'\r\n' +
-				'Authorization: ' +
-				apiKey +
-				'\r\n' +
-				'Accept: */*\r\n' +
-				'\r\n' +
+				
+
+			let cs = 'POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n' +
+				`Content-Length: ${content.length}\r\n` + 
+				`Content-Type: multipart/form-data; boundary=${this.boundary}\r\n` + 
+				`Host: ${host}\r\n` +
+				`Authorization: ${apiKey}\r\n` +
+				'Accept: */*\r\n\r\n' +
 				content;
 
 			conn.write(cs);
@@ -204,9 +184,7 @@ class Publisher {
 				return false;
 			}
 		} else {
-			throw new Error(
-				'Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.'
-			);
+			throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
 		}
 	}
 
@@ -216,20 +194,14 @@ class Publisher {
 
 		let publications = this.canvasflowApi.getPublications(apiKey);
 		if (!publications.length) {
-			throw new Error(
-				'Error \nYou have no Publications in your Canvasflow account. Please create a publication and try again.'
-			);
+			throw new Error('Error \nYou have no Publications in your Canvasflow account. Please create a publication and try again.');
 		}
-		let matches = publications.filter(
-			publication => publication.id == PublicationID
-		);
+		let matches = publications.filter((publication: any) => publication.id == PublicationID);
 		if (!!matches.length) {
 			return matches[0];
 		}
 
-		throw new Error(
-			'Error \nThe currently selected Publication does not exist. Please open "Settings" and select a Publication.'
-		);
+		throw new Error('Error \nThe currently selected Publication does not exist. Please open "Settings" and select a Publication.');
 	}
 
 	getIssues() {
@@ -239,10 +211,10 @@ class Publisher {
 		return this.canvasflowApi.getIssues(apiKey, PublicationID);
 	}
 
-	getIssue(issues) {
+	getIssue(issues: any) {
 		let IssueID = this.savedSettings.IssueID;
 		if (!!IssueID) {
-			let matches = issues.filter(issue => issue.id == IssueID);
+			let matches = issues.filter((issue: any) => issue.id == IssueID);
 
 			if (!!matches.length) {
 				return matches[0];
@@ -257,10 +229,10 @@ class Publisher {
 		return this.canvasflowApi.getStyles(apiKey, PublicationID);
 	}
 
-	getStyle(styles) {
+	getStyle(styles: any) {
 		let StyleID = this.savedSettings.StyleID;
 		if (!!StyleID) {
-			let matches = styles.filter(style => style.id == StyleID);
+			let matches = styles.filter((style: any) => style.id == StyleID);
 
 			if (!!matches.length) {
 				return matches[0];
@@ -275,10 +247,10 @@ class Publisher {
 		return this.canvasflowApi.getTemplates(apiKey, PublicationID);
 	}
 
-	getTemplate(templates) {
+	getTemplate(templates: any) {
 		let TemplateID = this.savedSettings.TemplateID;
 		if (!!TemplateID) {
-			let matches = templates.filter(template => template.id == TemplateID);
+			let matches = templates.filter((template: any) => template.id == TemplateID);
 
 			if (!!matches.length) {
 				return matches[0];
@@ -287,7 +259,7 @@ class Publisher {
 		return templates[0];
 	}
 
-	createDropDownList(dropDownGroup, items) {
+	createDropDownList(dropDownGroup: any, items: any) {
 		return dropDownGroup.add(
 			'dropdownlist',
 			[0, 0, this.valuesWidth, 20],
@@ -296,15 +268,15 @@ class Publisher {
 		);
 	}
 
-	getItemsName(items) {
+	getItemsName(items: Array<any>) {
 		let response = [];
-		for (let i = 0; i < items.length; i++) {
-			response.push(items[i].name);
+		for(let item of items) {
+			response.push(item.name);
 		}
 		return response;
 	}
 
-	getSelectedIndex(items, id) {
+	getSelectedIndex(items: Array<any>, id: any) {
 		for (let i = 0; i < items.length; i++) {
 			if (items[i].id == id) {
 				return i;
@@ -313,7 +285,7 @@ class Publisher {
 		return 0;
 	}
 
-	isValidPagesRangeSyntax(input) {
+	isValidPagesRangeSyntax(input: any) {
 		const results = /^([0-9]+)(-)+([0-9]+)$/.exec(input);
 		let lowerRange = parseInt(results[1]);
 		let higherRange = parseInt(results[3]);
@@ -335,20 +307,14 @@ class Publisher {
 		}
 
 		if (lowerRange > totalOfPages) {
-			alert(
-				'The lower range "' +
-					lowerRange +
-					'" should be smaller than the total of pages "' +
-					totalOfPages +
-					'"'
-			);
+			alert(`The lower range "${lowerRange}" should be smaller than the total of pages "${totalOfPages}"`);
 			return false;
 		}
 
 		return true;
 	}
 
-	isValidPagesSyntax(input) {
+	isValidPagesSyntax(input: any) {
 		if (!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
 			return this.isValidPagesRangeSyntax(input);
 		} else if (!!/^(\d)+(,\d+)*$/.exec(input)) {
@@ -359,9 +325,9 @@ class Publisher {
 		return false;
 	}
 
-	displayStyles(settingsDialog) {
+	displayStyles(settingsDialog: any) {
 		if (this.selectedTemplate.id != '-1') {
-			this.savedSettings.StyleID = '' + this.selectedTemplate.StyleID;
+			this.savedSettings.StyleID = `${this.selectedTemplate.StyleID}`;
 			settingsDialog.styleGroup.dropDown.selection = this.getSelectedIndex(
 				this.styles,
 				this.savedSettings.StyleID
@@ -370,16 +336,13 @@ class Publisher {
 			return;
 		}
 		settingsDialog.styleGroup.enabled = true;
-		this.savedSettings.StyleID =
-			'' + this.styles[settingsDialog.styleGroup.dropDown.selection.index].id;
+		this.savedSettings.StyleID = `${this.styles[settingsDialog.styleGroup.dropDown.selection.index].id}`;
 	}
 
-	onTemplateChange(dialog) {
+	onTemplateChange(dialog: any) {
 		let selectedTemplate = this.templates[0];
 		if (this.savedSettings.TemplateID != '-1') {
-			selectedTemplate = this.templates[
-				this.getSelectedIndex(this.templates, this.savedSettings.TemplateID)
-			];
+			selectedTemplate = this.templates[this.getSelectedIndex(this.templates, this.savedSettings.TemplateID)];
 		}
 		this.selectedTemplate = selectedTemplate;
 		this.displayStyles(dialog);
@@ -402,7 +365,7 @@ class Publisher {
 
 		let endpoint = this.savedSettings.endpoint;
 
-		this.canvasflowApi = new CanvasflowApi('http://' + endpoint + '/v2');
+		this.canvasflowApi = new CanvasflowApi(`http://${endpoint}/v2`);
 
 		// Intro
 		let intro =
@@ -444,8 +407,7 @@ class Publisher {
 			defaultValueDim,
 			this.articleName
 		);
-		dialog.articleNameGroup.articleName.helpTip =
-			'The name of the published article. If left empty will default to the InDesign filename.';
+		dialog.articleNameGroup.articleName.helpTip = 'The name of the published article. If left empty will default to the InDesign filename.';
 		// dialog.articleNameGroup.pages.helpTip = '';
 
 		// Issue
@@ -463,8 +425,7 @@ class Publisher {
 				issues,
 				issue.id
 			);
-			dialog.issueGroup.dropDown.helpTip =
-				'The Issue the article will be published to.';
+			dialog.issueGroup.dropDown.helpTip = 'The Issue the article will be published to.';
 			dialog.issueGroup.dropDown.onChange = () => {
 				this.savedSettings.IssueID =
 					'' + issues[dialog.issueGroup.dropDown.selection.index].id;
@@ -487,12 +448,10 @@ class Publisher {
 			templates,
 			template.id
 		);
-		dialog.templateGroup.dropDown.helpTip =
-			'The Template applied when published.';
+		dialog.templateGroup.dropDown.helpTip = 'The Template applied when published.';
 		dialog.templateGroup.dropDown.onChange = () => {
 			try {
-				this.savedSettings.TemplateID =
-					'' + this.templates[dialog.templateGroup.dropDown.selection.index].id;
+				this.savedSettings.TemplateID = `${this.templates[dialog.templateGroup.dropDown.selection.index].id}`;
 				this.onTemplateChange(dialog);
 			} catch (e) {
 				alert(e.message);
@@ -516,8 +475,7 @@ class Publisher {
 		);
 		dialog.styleGroup.dropDown.helpTip = 'The Style applied when published.';
 		dialog.styleGroup.dropDown.onChange = () => {
-			this.savedSettings.StyleID =
-				'' + styles[dialog.styleGroup.dropDown.selection.index].id;
+			this.savedSettings.StyleID = `${styles[dialog.styleGroup.dropDown.selection.index].id}`;
 		};
 
 		// Creation Mode
@@ -533,8 +491,7 @@ class Publisher {
 			dialog.creationModeGroup,
 			creationModeOptions
 		);
-		dialog.creationModeGroup.dropDown.helpTip =
-			'Whether a single or multiple articles will be created.';
+		dialog.creationModeGroup.dropDown.helpTip = 'Whether a single or multiple articles will be created.';
 		if (this.savedSettings.creationMode === 'document') {
 			dialog.creationModeGroup.dropDown.selection = 0;
 		} else {
@@ -561,8 +518,7 @@ class Publisher {
 			dialog.contentOrderGroup,
 			contentOrderOptions
 		);
-		dialog.contentOrderGroup.helpTip =
-			'The order in which content will be processed.';
+		dialog.contentOrderGroup.helpTip = 'The order in which content will be processed.';
 		dialog.contentOrderGroup.dropDown.selection = 0;
 		dialog.contentOrderGroup.dropDown.enabled = true;
 		this.savedSettings.contentOrder = 'natural';
@@ -579,8 +535,7 @@ class Publisher {
 			defaultValueDim,
 			!!this.savedSettings.pages ? this.savedSettings.pages : ''
 		);
-		dialog.pagesGroup.pages.helpTip =
-			'Pages to be published. If empty, all pages are published.';
+		dialog.pagesGroup.pages.helpTip = 'Pages to be published. If empty, all pages are published.';
 
 		// Separator
 		dialog.separator = dialog.add('panel');
@@ -615,9 +570,7 @@ class Publisher {
 			}
 
 			let ext = app.activeDocument.name.split('.').pop();
-			this.articleName = !!dialog.articleNameGroup.articleName.text
-				? dialog.articleNameGroup.articleName.text
-				: app.activeDocument.name.replace('.' + ext, '');
+			this.articleName = !!dialog.articleNameGroup.articleName.text ? dialog.articleNameGroup.articleName.text : app.activeDocument.name.replace(`.${ext}`, '');
 
 			this.savedSettings.pages = pages;
 			dialog.close(1);
@@ -638,12 +591,12 @@ class Publisher {
 		if (app.documents.length != 0) {
 			let zipFilePath = '';
 			const ext = app.activeDocument.name.split('.').pop();
-			this.articleName = app.activeDocument.name.replace('.' + ext, '');
+			this.articleName = app.activeDocument.name.replace(`.${ext}`, '');
 			let response = this.displayConfirmDialog();
 			if (!!response) {
-				let baseDirectory = app.activeDocument.filePath + '/';
-				this.filePath = baseDirectory + app.activeDocument.name;
-				this.baseDirectory = baseDirectory + app.activeDocument.name.replace('.' + ext, '');
+				let baseDirectory = `${app.activeDocument.filePath}/`;
+				this.filePath = `${baseDirectory}${app.activeDocument.name}`; 
+				this.baseDirectory = `${baseDirectory}${app.activeDocument.name.replace(`.${ext}`, '')}`;
 				this.builder.savedSettings = this.savedSettings;
 				
 				// Search if there are unlinked images

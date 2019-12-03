@@ -1,7 +1,7 @@
 class LogDialog {
-	defaultDialogSize: Array<number> = [300, 100];
-	maxLines = 100;
-	logFilePath: string;
+	private defaultDialogSize: Array<number> = [300, 100];
+	private maxLines = 100;
+	private logFilePath: string;
 
 	constructor(logFilePath: string) {
 		this.logFilePath = logFilePath;
