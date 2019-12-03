@@ -1,0 +1,8 @@
+{
+	"rules": {
+		"quotemark": [true, "single", "avoid-escape"],
+		"indent": [true, "tabs", 4],
+    "max-line-length": [false],
+    "no-var-keyword": true
+	}
+}
