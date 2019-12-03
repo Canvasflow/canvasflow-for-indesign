@@ -1,44 +1,30 @@
-//@include "http.js"
 class CanvasflowApi {
-    host: string;
+	private host: string;
 
-    constructor(host) {
-        this.host = host;
-    }
+	constructor(host: string) {
+		this.host = host;
+	}
 
-    http(method, ignoreParse?){
-        // @ts-ignore
-        var reply = new HTTPFile(this.host + method + "&qid=" + Date.now());
-        if(!!ignoreParse) {
-            // @ts-ignore
-            return reply.getResponse();
-        }
-        
-        // @ts-ignore
-        return JSON.parse(reply.getResponse());
-    }
+	http(uri: string, ignoreParse: boolean = false) {
+		// @ts-ignore
+		const reply: any = new HTTPFile(`${this.host}${uri}&qid=${Date.now()}`);
+		if (!!ignoreParse) {
+			return reply.getResponse();
+		}
 
-    getHealth() {
-        return this.http('/health?cf=1', true);
-    }
+		// @ts-ignore
+		return JSON.parse(reply.getResponse());
+	}
 
-    getPublications(apiKey) {
-        return this.http('/publications?secretkey=' + apiKey);
-    };
+	getHealth = () => this.http('/health?cf=1', true);
 
-    validate(apiKey) {
-        return this.http('/info?secretkey=' + apiKey);
-    };
+	getPublications = (apiKey: string) => this.http(`/publications?secretkey=${apiKey}`);
 
-    getIssues(apiKey, PublicationID) {
-        return this.http('/issues?secretkey=' + apiKey + '&publicationId=' + PublicationID);
-    };
+	validate = (apiKey: string) => this.http(`/info?secretkey=${apiKey}`);
 
-    getStyles(apiKey, PublicationID) {
-        return this.http('/styles?secretkey=' + apiKey + '&publicationId=' + PublicationID);
-    };
+	getIssues = (apiKey: string, PublicationID: any) =>  this.http(`/issues?secretkey=${apiKey}&publicationId=${PublicationID}`);
 
-    getTemplates(apiKey, PublicationID) {
-        return this.http('/templates?secretkey=' + apiKey + '&publicationId=' + PublicationID);
-    };
+	getStyles = (apiKey: string, PublicationID: any) => this.http(`/styles?secretkey=${apiKey}&publicationId=${PublicationID}`);
+
+	getTemplates = (apiKey: string, PublicationID: any) => this.http(`/templates?secretkey=${apiKey}&publicationId=${PublicationID}`);
 }
