@@ -3,6 +3,9 @@ class Logger {
 	private file: File;
 	private os: string;
 	private version: string;
+	private applicationVersion: string;
+
+	private engineVersion: string;
 
 	private startTime: any;
 	private endTime: any;
@@ -11,6 +14,9 @@ class Logger {
 		this.logFilePath = logFilePath;
 		this.file = new File(logFilePath);
 		this.os = os;
+		this.applicationVersion = app.version;
+		this.engineVersion = $.version;
+
 		this.version = version;
 		if (!this.file.exists) {
 			this.file.encoding = 'UTF-8';
@@ -44,7 +50,10 @@ class Logger {
 		this.file.writeln(`Date: "${currentDate}"`);
 		this.file.writeln(`Action: "${action}"`);
 		this.file.writeln(`OS: "${this.os}"`);
-		this.file.writeln(`Version: "${this.version}"`);
+		this.file.writeln(`InDesign Version: "${this.applicationVersion}"`);
+		this.file.writeln(`Engine Version: "${this.engineVersion}"`);
+		this.file.writeln(`Plugin Version: "${this.version}"`);
+		
 		this.file.writeln(`Start time: "${this.pad(now.getHours())}:${this.pad(now.getMinutes())}:${this.pad(now.getSeconds())}"`);
 		this.file.writeln('---------------------------');
 	}
