@@ -138,10 +138,14 @@ class Builder {
 	}
 
 	cleanSubstringContent(substring: any) {
-		if (typeof substring === 'string') {
-			return substring.replace(/(1396984945)*/, '\u201C');
+		try {
+			if (typeof substring === 'string') {
+				return substring.replace(/(1396984945)*/, '\u201C');
+			}
+			return substring.toString().replace(/(1396984945)*/, '\u201C');
+		} catch(e) {
+			return substring;
 		}
-		return substring.toString().replace(/(1396984945)*/, '\u201C');
 	}
 
 	getRealCharacter(content: any) {
