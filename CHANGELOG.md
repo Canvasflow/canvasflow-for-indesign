@@ -1,4 +1,8 @@
 # Changelog
+## [0.14.2] - 2019-12-04
+- Keep track of `InDesign version` in the log file 
+- Keep track of `ExtendedScript Version` in the log file
+  
 ## [0.14.1] - 2019-12-04
 - `try/catch` inside `cleanSubstringContent` so it returns the original `substring` if `replace` fails
 
