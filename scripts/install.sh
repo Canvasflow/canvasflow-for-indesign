@@ -1,5 +1,11 @@
 #!/bin/bash
+sudo su
 cd "/Applications/Adobe InDesign CC 2019/Scripts/startup scripts"
+
+# Try to remove existing installation if exist
+rm -f Canvasflow.jsx
+
+# Download new version of the plugin
 curl https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v0.14.3/Canvasflow.jsx -o Canvasflow.jsx
 
 # Create plugin installation folder
