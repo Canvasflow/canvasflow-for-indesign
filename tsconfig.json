@@ -6,7 +6,7 @@
         "removeComments": true,
         "noResolve": false,
         "types": [
-            "types-for-adobe/indesign/2015.3"
+            "types-for-adobe/InDesign/2015.3"
         ],
         "outFile": "./Canvasflow.jsx"
     },

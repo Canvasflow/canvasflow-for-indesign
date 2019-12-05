@@ -1,18 +1,17 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const gulp = require("gulp");
+const gulp = require('gulp');
 const ts = require('gulp-typescript');
-const strip = require("gulp-strip-comments");
-const beautify = require("gulp-beautify");
-const removeEmptyLines = require("gulp-remove-empty-lines");
-const buildPath = process.env.BUILD_PATH || path.join(__dirname, "build");
-const package = require("./package.json");
+const beautify = require('gulp-beautify');
+
+const buildPath = process.env.BUILD_PATH || path.join(__dirname, 'build');
+const package = require('./package.json');
 const tsProject = ts.createProject('tsconfig.json');
 
 function prependEngine(cb) {
-    const filePath = path.join(buildPath, "Canvasflow.jsx");
-    var fileContent = fs.readFileSync(filePath, "utf-8");
+    const filePath = path.join(buildPath, 'Canvasflow.jsx');
+    var fileContent = fs.readFileSync(filePath, 'utf-8');
     fs.writeFileSync(filePath,`//@targetengine "session"\n\nvar version='${package.version}'; \n\n ${fileContent}`);
     cb();
 }
@@ -37,16 +36,10 @@ function build() {
     .pipe(tsProject())
     
     return tsResult.js
-      .pipe(strip())
       .pipe(
         beautify({
           indent_size: 4,
           indent_with_tabs: true
-        })
-      )
-      .pipe(
-        removeEmptyLines({
-          removeComments: true
         })
       )
       .pipe(gulp.dest('build'));
@@ -54,8 +47,6 @@ function build() {
 
 const buildTask = gulp.series(build, prependEngine);
 
-gulp.task("default", buildTask);
-gulp.task("build", buildTask);
-gulp.task("watch", function() {
-  return gulp.watch("src/**", buildTask);
-});
+gulp.task('default', buildTask);
+gulp.task('build', buildTask);
+gulp.task('watch', () => gulp.watch('src/**', buildTask));
