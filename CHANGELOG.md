@@ -1,4 +1,7 @@
 # Changelog
+## [0.14.3] - 2019-12-05
+- Fix bug when building and publishing on `Windows`
+  
 ## [0.14.2] - 2019-12-04
 - Keep track of `InDesign version` in the log file 
 - Keep track of `ExtendedScript Version` in the log file

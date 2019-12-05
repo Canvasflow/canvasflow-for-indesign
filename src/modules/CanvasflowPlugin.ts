@@ -1,4 +1,3 @@
-let osName = $.os;
 class CanvasflowPlugin {
 	private title: string;
 	private os: string;
@@ -10,8 +9,8 @@ class CanvasflowPlugin {
 	
 	constructor(os: string, version: string, logFilePath: string, settingsFilePath: string, resizeCommandFilePath: string, convertCommandFilePath: string) {
 		this.title = 'Canvasflow';
-		this.os = os;
 		this.version = version;
+		this.os = os;
 		this.logFilePath = logFilePath;
 		this.settingsFilePath = settingsFilePath;
 		this.resizeCommandFilePath = resizeCommandFilePath;
@@ -192,5 +191,5 @@ class CanvasflowPlugin {
 }
 
 // @ts-ignore
-let canvasflowPlugin = new CanvasflowPlugin($.os, version, logFilePath, settingsFilePath, resizeCommandFilePath, convertCommandFilePath);
+let canvasflowPlugin = new CanvasflowPlugin(os, version, logFilePath, settingsFilePath, resizeCommandFilePath, convertCommandFilePath);
 canvasflowPlugin.install();
