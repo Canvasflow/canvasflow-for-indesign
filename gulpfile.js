@@ -7,11 +7,26 @@ const beautify = require('gulp-beautify');
 const buildPath = process.env.BUILD_PATH || path.join(__dirname, 'build');
 const package = require('./package.json');
 const tsProject = ts.createProject('tsconfig.json');
+const format = require("string-template")
 
 function prependEngine(cb) {
     const filePath = path.join(buildPath, 'Canvasflow.jsx');
-    var fileContent = fs.readFileSync(filePath, 'utf-8');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
     fs.writeFileSync(filePath,`//@targetengine "session"\n\nvar version='${package.version}'; \n\n ${fileContent}`);
+    cb();
+}
+
+function createInstallScript(cb) {
+    let installScriptFilePath = path.join(__dirname, 'scripts', 'install.sh');
+    if(fs.existsSync(installScriptFilePath)) {
+        fs.unlinkSync(installScriptFilePath)
+    }
+    fs.writeFileSync(installScriptFilePath, '', 'utf-8');
+
+    const installTemplatePath = path.join(__dirname, 'templates', 'install.txt');
+
+    const scriptContent = fs.readFileSync(installTemplatePath, 'utf-8');
+    fs.writeFileSync(installScriptFilePath, format(scriptContent, { version: package.version}));
     cb();
 }
 
@@ -42,7 +57,7 @@ function build() {
     .pipe(gulp.dest('build'));
 }
 
-const buildTask = gulp.series(build, prependEngine);
+const buildTask = gulp.series(build, prependEngine, createInstallScript);
 
 gulp.task('default', buildTask);
 gulp.task('build', buildTask);

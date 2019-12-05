@@ -1,4 +1,8 @@
 # Changelog
+## [0.14.4] - 2019-12-05
+- Enable support for `pdf` image link
+- Add support for image link without a file path
+
 ## [0.14.3] - 2019-12-05
 - Fix bug when building and publishing on `Windows`
   
