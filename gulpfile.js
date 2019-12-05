@@ -4,7 +4,6 @@ const path = require('path');
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const beautify = require('gulp-beautify');
-
 const buildPath = process.env.BUILD_PATH || path.join(__dirname, 'build');
 const package = require('./package.json');
 const tsProject = ts.createProject('tsconfig.json');
@@ -17,7 +16,7 @@ function prependEngine(cb) {
 }
 
 function build() {
-    const tsResult =  gulp.src([
+    return gulp.src([
         'src/polyfills/*.js',  
         'src/helper/*.js',
         'src/modules/Variables.ts',
@@ -34,15 +33,13 @@ function build() {
         'src/modules/CanvasflowPlugin.ts'
     ])
     .pipe(tsProject())
-    
-    return tsResult.js
-      .pipe(
-        beautify({
-          indent_size: 4,
-          indent_with_tabs: true
-        })
-      )
-      .pipe(gulp.dest('build'));
+    .pipe(
+      beautify({
+        indent_size: 4,
+        indent_with_tabs: true
+      })
+    )
+    .pipe(gulp.dest('build'));
 }
 
 const buildTask = gulp.series(build, prependEngine);
