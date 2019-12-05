@@ -9,7 +9,7 @@ class ScriptBuilder {
 
 	getResizeImageScript(files: Array<string>, resizingImageLockFilePath: string, shouldDeleteFiles: Array<boolean>) {
 		let lines = [];
-		if($.os === 'dos') {
+		if(this.os === 'dos') {
 			let basePath = 'userprofile';
 
 			// @ts-ignore
@@ -125,7 +125,7 @@ class ScriptBuilder {
 
 	getConvertImageScript(files: Array<string>, convertImageLockFilePath: string) {
 		let lines = [];
-		if($.os === 'dos') {
+		if(this.os === 'dos') {
 			let basePath = 'userprofile';
 			
 			// @ts-ignore
