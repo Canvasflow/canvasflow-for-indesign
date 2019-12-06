@@ -61,4 +61,4 @@ const buildTask = gulp.series(build, prependEngine, createInstallScript);
 
 gulp.task('default', buildTask);
 gulp.task('build', buildTask);
-gulp.task('watch', () => gulp.watch('src/**', buildTask));
+gulp.task('watch', () => gulp.watch(['src/**', 'templates/**'], buildTask));
