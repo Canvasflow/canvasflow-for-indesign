@@ -75,13 +75,13 @@ class SettingsDialog {
 		}
 	}
 
-	getPublications = (apiKey: string) => this.canvasflowApi.getPublications(apiKey);
+	getPublications = (apiKey: string) => this.canvasflowApi.getPublications(apiKey).filter((item :any) => !!item.id);
 
-	getIssues = (apiKey: string, PublicationID: any) => this.canvasflowApi.getIssues(apiKey, PublicationID);
+	getIssues = (apiKey: string, PublicationID: any) => this.canvasflowApi.getIssues(apiKey, PublicationID).filter((item :any) => !!item.id);
 
-	getStyles = (apiKey: string, PublicationID: any) => this.canvasflowApi.getStyles(apiKey, PublicationID);
+	getStyles = (apiKey: string, PublicationID: any) => this.canvasflowApi.getStyles(apiKey, PublicationID).filter((item :any) => !!item.id);
 
-	getTemplates = (apiKey: string, PublicationID: any) => this.canvasflowApi.getTemplates(apiKey, PublicationID);
+	getTemplates = (apiKey: string, PublicationID: any) => this.canvasflowApi.getTemplates(apiKey, PublicationID).filter((item :any) => !!item.id);
 
 	getItemIndexByID(items: Array<any>, id: any) {
 		for (let i = 0; i < items.length; i++) {

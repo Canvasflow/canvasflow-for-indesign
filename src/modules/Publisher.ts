@@ -192,7 +192,7 @@ class Publisher {
 		let apiKey = this.savedSettings.apiKey;
 		let PublicationID = this.savedSettings.PublicationID;
 
-		let publications = this.canvasflowApi.getPublications(apiKey);
+		let publications = this.canvasflowApi.getPublications(apiKey).filter((item :any) => !!item.id);
 		if (!publications.length) {
 			throw new Error('Error \nYou have no Publications in your Canvasflow account. Please create a publication and try again.');
 		}
@@ -208,7 +208,7 @@ class Publisher {
 		let apiKey = this.savedSettings.apiKey;
 		let PublicationID = this.savedSettings.PublicationID;
 
-		return this.canvasflowApi.getIssues(apiKey, PublicationID);
+		return this.canvasflowApi.getIssues(apiKey, PublicationID).filter((item :any) => !!item.id);
 	}
 
 	getIssue(issues: any) {
@@ -226,7 +226,7 @@ class Publisher {
 	getStyles() {
 		let apiKey = this.savedSettings.apiKey;
 		let PublicationID = this.savedSettings.PublicationID;
-		return this.canvasflowApi.getStyles(apiKey, PublicationID);
+		return this.canvasflowApi.getStyles(apiKey, PublicationID).filter((item :any) => !!item.id);
 	}
 
 	getStyle(styles: any) {
@@ -244,7 +244,7 @@ class Publisher {
 	getTemplates() {
 		let apiKey = this.savedSettings.apiKey;
 		let PublicationID = this.savedSettings.PublicationID;
-		return this.canvasflowApi.getTemplates(apiKey, PublicationID);
+		return this.canvasflowApi.getTemplates(apiKey, PublicationID).filter((item :any) => !!item.id);
 	}
 
 	getTemplate(templates: any) {
