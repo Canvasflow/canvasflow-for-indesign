@@ -401,9 +401,13 @@ class Builder {
 	}
 
 	checkIfGraphicImageExist(graphic: Graphic): boolean {
-		let linkPath: any = graphic.itemLink.filePath;
-		let originalImageFile = new File(linkPath);
-		return originalImageFile.exists;
+		try {
+			let linkPath: any = graphic.itemLink.filePath;
+			let originalImageFile = new File(linkPath);
+			return originalImageFile.exists;
+		} catch(e) {
+			return false;
+		}
 	}
 
 	exportImageRepresentation(image: any, imageDirectory: string, id: number) {
@@ -434,7 +438,8 @@ class Builder {
 			'qtif',
 			'psd',
 			'sgi',
-			'tga'
+			'tga',
+			'pdf'
 		];
 
 		return exts.indexOf(ext) === -1;
@@ -442,6 +447,13 @@ class Builder {
 
 	saveGraphicToImage(graphic: Graphic, imageDirectory: string) {
 		let id = graphic.id;
+
+		if(!graphic.itemLink) {
+			if (!!this.logger) {
+				this.logger.log(`Image with ID "${id}" do not have and itemLink associated with it`, 'timestamp');
+			}
+			return this.exportImageRepresentation(graphic, imageDirectory, id);
+		}
 
 		let linkPath: any = graphic.itemLink.filePath;
 		let originalImageFile = File(linkPath);
@@ -875,10 +887,12 @@ class Builder {
 			if(!!page && !!page.allGraphics) {
 				for(const graphic of page.allGraphics) {
 					if(graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
-						const linkPath: any = graphic.itemLink.filePath
-						const originalImageFile = new File(linkPath);
-						if(!originalImageFile.exists) {
-							missingImages.push(originalImageFile.fsName);
+						if(!this.checkIfGraphicImageExist(graphic)) {
+							if(!!graphic.itemLink) {
+								const linkPath: any = graphic.itemLink.filePath
+								const originalImageFile = new File(linkPath);
+								missingImages.push(originalImageFile.fsName);
+							}
 						}
 					}
 				}
