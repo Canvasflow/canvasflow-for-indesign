@@ -45,6 +45,7 @@ function build() {
         'src/modules/SettingsDialog.ts',
         'src/modules/MissingImagesDialog.ts',
         'src/modules/Publisher.ts',
+        'src/modules/Updater.ts',
         'src/modules/CanvasflowPlugin.ts'
     ])
     .pipe(tsProject())

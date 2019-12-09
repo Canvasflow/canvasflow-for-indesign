@@ -187,9 +187,31 @@ class CanvasflowPlugin {
 		canvasflowScriptMenu.menuSeparators.add(LocationOptions.AT_END);
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionLogs);
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionAbout);
+
+		// @ts-ignore
+		let scriptUpdate = app.scriptMenuActions.add('&Update');
+		scriptUpdate.eventListeners.add('onInvoke', () => tryToUpdatePlugin());
+		canvasflowScriptMenu.menuItems.add(scriptUpdate);
 	}
 }
 
 // @ts-ignore
 let canvasflowPlugin = new CanvasflowPlugin(os, version, logFilePath, settingsFilePath, resizeCommandFilePath, convertCommandFilePath);
 canvasflowPlugin.install();
+// tryToUpdatePlugin()
+
+function tryToUpdatePlugin() {
+	try {
+		let settings = new Settings(settingsFilePath);
+		let settingsData = settings.getSavedSettings();
+		
+		// @ts-ignore
+		let api = new CanvasflowApi(`http://${settingsData.endpoint}/v2`);
+		
+		// @ts-ignore
+		let update = new Updater(api, version, updateCommandFilePath);
+		update.run();
+	} catch(e) {
+		alert(e.message);
+	}
+}

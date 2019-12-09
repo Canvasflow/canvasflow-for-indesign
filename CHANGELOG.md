@@ -1,6 +1,7 @@
 # Changelog
 ## [DEVELOP]
-- Add `README.md`
+- Add `README`
+- Add `LICENSE`
   
 ## [0.14.4] - 2019-12-05
 - Enable support for `pdf` image link
