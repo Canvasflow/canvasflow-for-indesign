@@ -1,9 +1,8 @@
 #!/bin/bash
 reset
 clear
-
-echo "You need admin rights to install the Canvasflow plugin"
-echo "Please insert your password 🔓"
+echo "Admin rights required to update the plugin"
+echo "Please enter your password 🔓"
 echo ""
 sudo echo "Initializing plugin update"
 if sudo -n true 2>/dev/null; then 
@@ -12,7 +11,7 @@ else
     echo ""
     echo "😞 Authentication failed, please try again"
     echo ""
-    read -p "Press enter to close"
+    read -p "Press Enter to close"
     clear
     exit 1
 fi
@@ -22,10 +21,10 @@ cd "`ls | grep -E 'Adobe InDesign*'`"
 cd "./Scripts/startup scripts"
 
 # Try to remove existing installation if exist
-sudo rm -f Canvasflow.jsx && echo "✅ Remove plugin older version"
+sudo rm -f Canvasflow.jsx && echo "✅ Remove old plugin"
 
 # Download new version of the plugin
-sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v0.14.4/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download plugin newer version"
+sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v0.14.4/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
 
 # Create plugin installation folder
 cd ~
@@ -52,8 +51,8 @@ echo "✅ Create update command"
 echo ""
 echo "🙌 Installation Complete"
 echo ""
-echo "You need to restart InDesign so the changes apply"
+echo "Please restart InDesign to apply the changes"
 
 echo ""
-read -p "Press enter to close"
+read -p "Press Enter to close"
 exit 0
