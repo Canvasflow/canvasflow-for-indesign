@@ -15,7 +15,7 @@ let updateCommandFilePath = `${getBasePath()}/${baseDirName}/Update.command`;
 if(os === 'dos') {
 	resizeCommandFilePath = `${getBasePath()}/${baseDirName}/canvasflow_resize.bat`;
 	convertCommandFilePath = `${getBasePath()}/${baseDirName}/canvasflow_convert.bat`;
-	convertCommandFilePath = `${getBasePath()}/${baseDirName}/Update.bat`;
+	updateCommandFilePath = `${getBasePath()}/${baseDirName}/Update.bat`;
 
 }
 

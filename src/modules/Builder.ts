@@ -88,7 +88,7 @@ class Builder {
 		return uuid;
 	}
 
-	getItemPosition(bounds) {
+	getItemPosition(bounds: any) {
 		let xi = bounds[1];
 		let yi = bounds[0];
 		let xf = bounds[3];
@@ -520,7 +520,8 @@ class Builder {
 		if (targetExt !== ext) {
 			let dataFile = new File(this.convertCommandFilePath);
 			if (!dataFile.exists) {
-				throw new Error('The command required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@canvasflow.io if you require assistance.');
+				alert(this.convertCommandFilePath);
+				throw new Error('The command "convert" required to process images has not been correctly executed.  Please refer to the plugin documentation before attempting to publish again.  Please contact support@canvasflow.io if you require assistance.');
 			}
 			this.imagesToConvert.push((new File(`${imageDirectory}/${id}.${ext}`)).fsName);
 		}
@@ -603,6 +604,7 @@ class Builder {
 		dataFile.lineFeed = 'Unix';
 
 		this.writeToFileScript(dataFile,this.getResizeImagesScriptContent(files, shouldDeleteFiles));
+		
 
 		dataFile.execute();
 		dataFile.close();
@@ -699,7 +701,6 @@ class Builder {
 		// @ts-ignore
 		dataFile.write(JSON.stringify(response));
 		dataFile.close();
-		alert('y');
 	}
 
 	createPackage(baseFile: File) {

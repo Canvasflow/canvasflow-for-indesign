@@ -188,10 +188,12 @@ class CanvasflowPlugin {
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionLogs);
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionAbout);
 
-		// @ts-ignore
-		let scriptUpdate = app.scriptMenuActions.add('&Update');
-		scriptUpdate.eventListeners.add('onInvoke', () => tryToUpdatePlugin());
-		canvasflowScriptMenu.menuItems.add(scriptUpdate);
+		if(this.os === 'unix') {
+			// @ts-ignore
+			let scriptUpdate = app.scriptMenuActions.add('&Update');
+			scriptUpdate.eventListeners.add('onInvoke', () => tryToUpdatePlugin());
+			canvasflowScriptMenu.menuItems.add(scriptUpdate);
+		}
 	}
 }
 
