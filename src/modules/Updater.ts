@@ -11,9 +11,7 @@ class Updater {
 	}
 
 	getLatestVersion() {
-		if (this.api.getHealth() === null) return;
-
-		let response: any = this.api.getVersion();
+		let response = this.api.getVersion();
 		this.latestVersion = response.version;
 
 		return this.latestVersion;
