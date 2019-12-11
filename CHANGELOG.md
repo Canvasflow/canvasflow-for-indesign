@@ -1,4 +1,11 @@
 # Changelog
+## [0.15.0] - 2019-12-11
+- Add `README`
+- Add `LICENSE`
+- Add `Update` functionality in `About` dialog
+- Fix bug on `Windows` when processing `psd` and `pdf` inside `graphics`
+- Improve `install` process on `macOS`
+  
 ## [0.14.4] - 2019-12-05
 - Enable support for `pdf` image link
 - Add support for image link without a file path

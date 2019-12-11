@@ -21,45 +21,51 @@ class ScriptBuilder {
 				'setlocal enabledelayedexpansion'
 			)
 			for(let i = 0; i < files.length; i++) {
-				lines.push('set Files['+i+']="'+files[i]+'"')
+				lines.push(`set Files[${i}]="${files[i]}"`)
 			}
 			lines.push(
-				'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
-				'\tset original_image=!Files[%%n]!',
-				'\tset ext=""',
-				'\tset parent_dir=""',
-				'\tset filename=""',
-				'\tfor %%i in (!original_image!) do set ext=%%~xi',
-				'\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
-				'\tfor %%f in (!original_image!) do set filename=%%~nf',
+				`for /l %%n in (0,1,${files.length - 1}) do (`,
+					'\tset original_image=!Files[%%n]!',
+					'\tset ext=""',
+					'\tset parent_dir=""',
+					'\tset filename=""',
+					'\tfor %%i in (!original_image!) do set ext=%%~xi',
+					'\tfor %%a in (!original_image!) do set parent_dir=%%~dpa',
+					'\tfor %%f in (!original_image!) do set filename=%%~nf',
 
-				'\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
+					'\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
+				
+					'\tif "!ext!"==".psd" (',
+						`\t\tset image_width_command="magick identify -ping -format '%%w' !original_image![0]"`,
+					'\t) else (',
+						'\t\tif "!ext!"==".pdf" (',
+							`\t\t\tset image_width_command="magick identify -ping -format '%%w' !original_image![0]"`,
+						'\t\t)',
+					'\t)',
 
-				'\tset image_width=""',
-				'\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
-				'\tset image_width=!image_width:\'=!',
+					'\tset image_width=""',
+					'\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
+					'\tset image_width=!image_width:\'=!',
 
-				'\tset target_filename="!parent_dir!!filename!.jpg"',
-				'\tif !image_width! gtr 2048 (',
-				'\t\tif "!ext!" neq ".tif" (',
-				'\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image! !target_filename!',
-				'\t\t) else (',
-				'\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] -quality 50 !target_filename!',
-				'\t\t)',
-				'\t) else (',
-				'\t\tif "!ext!" neq ".tif" (',
-				'\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
-				'\t\t) else (',
-				'\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] -quality 50 !target_filename!',
-				'\t\t)',
-				'\t)',
-
-				'\tif "!ext!" neq ".jpg" (',
-				'\t\tdel "!parent_dir!!filename!!ext!"',
-				'\t)',
-
+					'\tset target_filename="!parent_dir!!filename!.jpg"',
+					'\tif !image_width! gtr 2048 (',
+						'\t\tif "!ext!" neq ".tif" (',
+							`\t\t\tif "!ext!"==".psd" (magick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] !target_filename!) else (if "!ext!"==".pdf" (magick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] !target_filename!) else (magick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image! !target_filename!))`,
+						'\t\t) else (',
+							'\t\t\tmagick convert -colorspace sRGB -density 2048 -geometry 2048x !original_image![0] -quality 50 !target_filename!',
+						'\t\t)',
+					'\t) else (',
+						'\t\tif "!ext!" neq ".tif" (',
+							`\t\t\tif "!ext!"==".psd" (magick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!) else (if "!ext!"==".pdf" (magick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!) else (magick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!))`,
+						'\t\t) else (',
+							'\t\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] -quality 50 !target_filename!',
+						'\t\t)',
+					'\t)',
+					'\tif "!ext!" neq ".jpg" (',
+						'\t\tdel "!parent_dir!!filename!!ext!"',
+					'\t)',
 				')',
-				'del %' + basePath + '%\\' + this.baseDirName + '\\canvasflow_resizing.lock'        
+				`del %${basePath}%\\${this.baseDirName}\\canvasflow_resizing.lock`
 			)
 		} else {
 			lines = [
@@ -70,8 +76,8 @@ class ScriptBuilder {
 				"YELLOW='\033[0;33m'",
 				"RED='\033[0;31m'",
 				'clear',
-				'files=( ' + files.join(' ') + ' )',
-				'should_delete_files=( ' + shouldDeleteFiles.join(' ') + ' )',
+				`files=( ${files.join(' ')} )`,
+				`should_delete_files=( ${shouldDeleteFiles.join(' ')} )`,
 				'total_of_images=${#files[@]}',
 				'processed_images=0',
 				'index=0',
@@ -116,7 +122,7 @@ class ScriptBuilder {
 				'\t\tfi',
 				'\t\tindex=${index}+1;',
 				'done',
-				'rm -f ' + resizingImageLockFilePath
+				`rm -f ${resizingImageLockFilePath}`
 			];
 		}
 
@@ -138,10 +144,10 @@ class ScriptBuilder {
 				'setlocal enabledelayedexpansion'
 			)
 			for(let i = 0; i < files.length; i++) {
-				lines.push('set Files['+i+']="'+files[i]+'"')
+				lines.push(`set Files[${i}]="${files[i]}"`)
 			}
 			lines.push(
-				'for /l %%n in (0,1,' + (files.length - 1) + ') do (',
+				`for /l %%n in (0,1,${files.length - 1}) do (`,
 				'\tset original_image=!Files[%%n]!',
 				'\tset ext=""',
 				'\tset parent_dir=""',
@@ -153,13 +159,21 @@ class ScriptBuilder {
 
 				'\tset image_width_command="magick identify -ping -format \'%%w\' !original_image!"',
 
+				'\tif "!ext!"==".psd" (',
+					`\t\tset image_width_command="magick identify -ping -format '%%w' !original_image![0]"`,
+				'\t) else (',
+					'\t\tif "!ext!"==".pdf" (',
+						`\t\t\tset image_width_command="magick identify -ping -format '%%w' !original_image![0]"`,
+					'\t\t)',
+				'\t)',
+
 				'\tset image_width=""',
 				'\tfor /f "delims=" %%a in (\'!image_width_command!\') do set image_width=%%a',
 				'\tset image_width=!image_width:\'=!',
 
 				'\tset target_filename="!parent_dir!!filename!.jpg"',
 				'\tif "!ext!" neq ".tif" (',
-				'\t\tmagick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!',
+				`\t\tif "!ext!"==".psd" (magick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!) else (if "!ext!"==".pdf" (magick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!) else (magick convert -colorspace sRGB -density !image_width! !original_image! !target_filename!))`,
 				'\t) else (',
 				'\t\tmagick convert -colorspace sRGB -density !image_width! !original_image![0] !target_filename!',
 				'\t)',
@@ -169,8 +183,7 @@ class ScriptBuilder {
 				'\t)',
 
 				')',
-			
-				'del %' + basePath + '%\\' + this.baseDirName + '\\canvasflow_convert.lock'
+				`del %${basePath}%\\${this.baseDirName}\\canvasflow_convert.lock`
 			)
 		} else {
 			lines = [
@@ -181,7 +194,7 @@ class ScriptBuilder {
 				"RED='\033[0;31m'",
 	
 				'clear',
-				'files=( ' + files.join(' ') + ' )',
+				`files=( ${files.join(' ')} )`,
 				'total_of_images=${#files[@]}',
 				'processed_images=0',
 				'for file in "${files[@]}"',
@@ -217,7 +230,7 @@ class ScriptBuilder {
 				'\t\tremove_command="rm \\\"${file}\\\""',
 				'\t\teval $remove_command',
 				'done',
-				'rm -f ' + convertImageLockFilePath
+				`rm -f ${convertImageLockFilePath}`
 			]
 		}
 

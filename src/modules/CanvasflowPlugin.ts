@@ -150,7 +150,7 @@ class CanvasflowPlugin {
 		let canvasflowScriptActionAbout = app.scriptMenuActions.add('&About');
 		canvasflowScriptActionAbout.eventListeners.add('onInvoke', () => {
 			try {
-				let aboutDialog = new AboutDialog(this.version);
+				let aboutDialog = new AboutDialog(this.version, this.os, this.settingsFilePath, updateCommandFilePath);
 				aboutDialog.show();
 			} catch (e) {
 				alert(e.message);
@@ -187,9 +187,11 @@ class CanvasflowPlugin {
 		canvasflowScriptMenu.menuSeparators.add(LocationOptions.AT_END);
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionLogs);
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionAbout);
+
 	}
 }
 
 // @ts-ignore
 let canvasflowPlugin = new CanvasflowPlugin(os, version, logFilePath, settingsFilePath, resizeCommandFilePath, convertCommandFilePath);
 canvasflowPlugin.install();
+// tryToUpdatePlugin()

@@ -18,6 +18,8 @@ class CanvasflowApi {
 
 	getHealth = () => this.http('/health?cf=1', true);
 
+	getVersion = () => this.http('/plugins/indesign/version?cf=1');
+
 	getPublications = (apiKey: string) => this.http(`/publications?secretkey=${apiKey}`);
 
 	validate = (apiKey: string) => this.http(`/info?secretkey=${apiKey}`);
