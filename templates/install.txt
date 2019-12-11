@@ -30,8 +30,6 @@ sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/d
 cd ~
 mkdir -p cf-indesign && cd cf-indesign && echo "✅ Create base directory"
 
-
-
 # Create resize command
 touch canvasflow_resize.command && chmod +x canvasflow_resize.command && echo "✅ Create resize command"
 

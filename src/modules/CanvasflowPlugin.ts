@@ -150,7 +150,7 @@ class CanvasflowPlugin {
 		let canvasflowScriptActionAbout = app.scriptMenuActions.add('&About');
 		canvasflowScriptActionAbout.eventListeners.add('onInvoke', () => {
 			try {
-				let aboutDialog = new AboutDialog(this.version);
+				let aboutDialog = new AboutDialog(this.version, this.os, this.settingsFilePath, updateCommandFilePath);
 				aboutDialog.show();
 			} catch (e) {
 				alert(e.message);
@@ -188,12 +188,6 @@ class CanvasflowPlugin {
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionLogs);
 		canvasflowScriptMenu.menuItems.add(canvasflowScriptActionAbout);
 
-		if(this.os === 'unix') {
-			// @ts-ignore
-			let scriptUpdate = app.scriptMenuActions.add('&Update');
-			scriptUpdate.eventListeners.add('onInvoke', () => tryToUpdatePlugin());
-			canvasflowScriptMenu.menuItems.add(scriptUpdate);
-		}
 	}
 }
 
@@ -201,19 +195,3 @@ class CanvasflowPlugin {
 let canvasflowPlugin = new CanvasflowPlugin(os, version, logFilePath, settingsFilePath, resizeCommandFilePath, convertCommandFilePath);
 canvasflowPlugin.install();
 // tryToUpdatePlugin()
-
-function tryToUpdatePlugin() {
-	try {
-		let settings = new Settings(settingsFilePath);
-		let settingsData = settings.getSavedSettings();
-		
-		// @ts-ignore
-		let api = new CanvasflowApi(`http://${settingsData.endpoint}/v2`);
-		
-		// @ts-ignore
-		let update = new Updater(api, version, updateCommandFilePath);
-		update.run();
-	} catch(e) {
-		alert(e.message);
-	}
-}
