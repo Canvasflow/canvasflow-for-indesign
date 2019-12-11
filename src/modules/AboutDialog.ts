@@ -76,16 +76,17 @@ class AboutDialog {
 	displayUpdateMessage(fields: Array<any>) {
 		try {
 			if(!this.updater.isUpdateRequired()) return;
-			this.latestVersion = this.updater.latestVersion;
-			
-			const message = this.dialog.add('statictext', undefined, 'UPDATE AVAILABLE');
-			message.alignment = 'center';
-			message.graphics.foregroundColor = message.graphics.newPen (this.dialog.graphics.PenType.SOLID_COLOR, [0.54,0.77,0.56], 1);
-			
-			fields.push({
-				label: 'Latest version',
-				value: this.latestVersion
-			});
+			this.latestVersion = this.updater.getLatestVersion();
+			if(!!this.latestVersion) {
+				const message = this.dialog.add('statictext', undefined, 'UPDATE AVAILABLE');
+				message.alignment = 'center';
+				message.graphics.foregroundColor = message.graphics.newPen (this.dialog.graphics.PenType.SOLID_COLOR, [0.54,0.77,0.56], 1);
+				
+				fields.push({
+					label: 'Latest version',
+					value: this.latestVersion
+				});
+			}
 		} catch(e) {
 			this.latestVersion = null;
 		}

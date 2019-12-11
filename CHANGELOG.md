@@ -1,4 +1,7 @@
 # Changelog
+## [0.15.1] - 2019-12-11
+- Fix 🐛 when processing the latest version when is a fresh install
+  
 ## [0.15.0] - 2019-12-11
 - Add `README`
 - Add `LICENSE`
