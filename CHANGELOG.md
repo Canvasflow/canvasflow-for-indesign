@@ -4,6 +4,7 @@
 - Add `LICENSE`
 - Add `Update` functionality in `About` dialog
 - Fix bug on `Windows` when processing `psd` and `pdf` inside `graphics`
+- Improve `install` process on `macOS`
   
 ## [0.14.4] - 2019-12-05
 - Enable support for `pdf` image link
