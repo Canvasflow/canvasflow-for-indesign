@@ -150,16 +150,16 @@ class Publisher {
 					templateId: TemplateID.trim(),
 					styleId: StyleID.trim(),
 					contentType: 'indesign',
-					articleId: this.uuid
+					articleId: this.uuid,
+					os: this.logger.os,
+					version: this.logger.version
 				}
 			};
 
 			let content = this.getFileFormParams(form.file)
 				.concat(this.getTextFormParams(form.text))
 				.concat([`--${this.boundary}--\r\n\r`]) 
-				.join('');
-
-				
+				.join('');	
 
 			let cs = 'POST /v1/index.cfm?endpoint=/article HTTP/1.1\r\n' +
 				`Content-Length: ${content.length}\r\n` + 

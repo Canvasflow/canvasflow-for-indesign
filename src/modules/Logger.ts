@@ -1,14 +1,14 @@
 class Logger {
 	private logFilePath: string;
 	private file: File;
-	private os: string;
-	private version: string;
 	private applicationVersion: string;
-
 	private engineVersion: string;
 
 	private startTime: any;
 	private endTime: any;
+
+	public os: string;
+	public version: string;
 
 	constructor(logFilePath: string, os: string, version: string) {
 		this.logFilePath = logFilePath;

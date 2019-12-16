@@ -27,7 +27,9 @@ sudo rm -f Canvasflow.jsx && echo "✅ Remove old plugin"
 sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v{version}/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
 
 # Create plugin installation folder
-cd ~
+
+# TODO Test this script
+[[ -z "$CF_USER_BASE_PATH" ]] && cd ~ || cd $CF_USER_BASE_PATH
 mkdir -p cf-indesign && cd cf-indesign && echo "✅ Create base directory"
 
 # Create resize command
