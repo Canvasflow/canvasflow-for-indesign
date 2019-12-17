@@ -331,7 +331,7 @@ class SettingsDialog {
 	displayPublications(settingsDialog: any) {
 		this.publications = this.getPublications(this.settings.apiKey);
 		if (this.publications.length === 0) {
-			throw new Error('Error\n You have no Publications in your Canvasflow account. Please create a publication and try again.');
+			throw new Error('⛔️ Error\n You have no Publications in your Canvasflow account. Please create a publication and try again.');
 		}
 
 		let selectedPublication = this.publications[0];
@@ -341,7 +341,7 @@ class SettingsDialog {
 				this.settings.PublicationID
 			);
 			if (selectedPublication === null) {
-				alert('Warning \nThe currently selected Publication no longer exists in your Canvasflow account. The first Publication in the account has been automatically chosen.');
+				alert('⚠️ Warning \nThe currently selected Publication no longer exists in your Canvasflow account. The first Publication in the account has been automatically chosen.');
 				selectedPublication = this.publications[0];
 				this.settings.PublicationID = selectedPublication.id;
 				this.settings.IssueID = '';
@@ -466,7 +466,7 @@ class SettingsDialog {
 
 		this.canvasflowApi = new CanvasflowApi(`http://${selectedEndpoint.id}/v2`);
 		if (this.canvasflowApi.getHealth() === null) {
-			throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
+			throw new Error('⛔️ Error \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
 		}
 
 		// API KEY
@@ -501,7 +501,7 @@ class SettingsDialog {
 			if (!this.isValidApiKey) {
 				this.settingsDialog.buttonsBarGroup.saveBtn.visible = false;
 				this.hidePublication(this.settingsDialog);
-				alert('The API key entered is not valid. Please check and try again.');
+				alert('⛔️ Error \nThe API key entered is not valid. Please check and try again.');
 				return;
 			}
 
@@ -524,7 +524,7 @@ class SettingsDialog {
 				this.settings.apiKey
 			);
 			if (!this.isValidApiKey) {
-				alert('The API key entered is not valid. Please check and try again.');
+				alert('⛔️ Error \nThe API key entered is not valid. Please check and try again.');
 			}
 		}
 		this.settingsDialog.apiKeyGroup.apiKey.onChanging = () => {
@@ -744,14 +744,13 @@ class SettingsDialog {
 				this.settings.pages = pages;
 
 				if (this.publicationType === 'issue' && !this.settings.IssueID) {
-					alert('This Publication has no Issues. Please create an Issue and try again.');
+					alert('☢️ Warning \nThis Publication has no Issues. Please create an Issue and try again.');
 					return;
 				}
 
 				this.canvasflowSettings.save(this.settings);
 				this.settingsDialog.close();
 			} catch (e) {
-				alert(`Error line: ${e.line} \n Message: ${e.message}`);
 				this.logger.logError(e);
 			}
 		};
