@@ -24,11 +24,11 @@ cd "./Scripts/startup scripts"
 sudo rm -f Canvasflow.jsx && echo "✅ Remove old plugin"
 
 # Download new version of the plugin
-sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v0.15.1/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
+sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v0.16.0/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
 
 # Create plugin installation folder
 
-# TODO Test this script
+# Create base directory
 [[ -z "$CF_USER_BASE_PATH" ]] && cd ~ || cd $CF_USER_BASE_PATH
 mkdir -p cf-indesign && cd cf-indesign && echo "✅ Create base directory"
 
@@ -51,8 +51,8 @@ echo "✅ Create update command"
 echo ""
 echo "🙌 Installation Complete"
 echo ""
+echo "Installation path: $(pwd)"
 echo "Please restart InDesign to apply the changes"
-
 echo ""
 read -p "Press Enter to close"
 exit 0

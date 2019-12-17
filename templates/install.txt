@@ -28,7 +28,7 @@ sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/d
 
 # Create plugin installation folder
 
-# TODO Test this script
+# Create base directory
 [[ -z "$CF_USER_BASE_PATH" ]] && cd ~ || cd $CF_USER_BASE_PATH
 mkdir -p cf-indesign && cd cf-indesign && echo "✅ Create base directory"
 
@@ -51,8 +51,8 @@ echo "✅ Create update command"
 echo ""
 echo "🙌 Installation Complete"
 echo ""
+echo "Installation path: $(pwd)"
 echo "Please restart InDesign to apply the changes"
-
 echo ""
 read -p "Press Enter to close"
 exit 0

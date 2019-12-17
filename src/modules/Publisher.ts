@@ -184,7 +184,7 @@ class Publisher {
 				return false;
 			}
 		} else {
-			throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
+			throw new Error('⛔️ Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
 		}
 	}
 
@@ -194,14 +194,14 @@ class Publisher {
 
 		let publications = this.canvasflowApi.getPublications(apiKey).filter((item :any) => !!item.id);
 		if (!publications.length) {
-			throw new Error('Error \nYou have no Publications in your Canvasflow account. Please create a publication and try again.');
+			throw new Error('⛔️ Error \nYou have no Publications in your Canvasflow account. Please create a publication and try again.');
 		}
 		let matches = publications.filter((publication: any) => publication.id == PublicationID);
 		if (!!matches.length) {
 			return matches[0];
 		}
 
-		throw new Error('Error \nThe currently selected Publication does not exist. Please open "Settings" and select a Publication.');
+		throw new Error('⛔️ Error \nThe currently selected Publication does not exist. Please open "Settings" and select a Publication.');
 	}
 
 	getIssues() {
@@ -585,7 +585,7 @@ class Publisher {
 
 	publish() {
 		if (this.canvasflowApi.getHealth() === null) {
-			throw new Error('Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
+			throw new Error('⛔️ Error: \nThe Canvasflow service is not accessible. Please check your internet connection and try again.');
 		}
 
 		if (app.documents.length != 0) {
