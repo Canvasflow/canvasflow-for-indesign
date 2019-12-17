@@ -885,14 +885,20 @@ class Builder {
 		do {
 			let pageIndex = pages.shift() - 1;
 			const page = document.pages[pageIndex];
-			if(!!page && !!page.allGraphics) {
-				for(const graphic of page.allGraphics) {
-					if(graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
-						if(!this.checkIfGraphicImageExist(graphic)) {
-							if(!!graphic.itemLink) {
-								const linkPath: any = graphic.itemLink.filePath
-								const originalImageFile = new File(linkPath);
-								missingImages.push(originalImageFile.fsName);
+			
+			if(!!page) {
+				if(!page.isValid) {
+					throw new Error(`⛔️ Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
+				}
+				if(!!page.allGraphics) {
+					for(const graphic of page.allGraphics) {
+						if(graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
+							if(!this.checkIfGraphicImageExist(graphic)) {
+								if(!!graphic.itemLink) {
+									const linkPath: any = graphic.itemLink.filePath
+									const originalImageFile = new File(linkPath);
+									missingImages.push(originalImageFile.fsName);
+								}
 							}
 						}
 					}
@@ -954,6 +960,9 @@ class Builder {
 		do {
 			let pageIndex = pages.shift() - 1;
 			let page = document.pages[pageIndex];
+			if(!page.isValid) {
+				throw new Error(`⛔️ Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
+			}
 			let position = this.getItemPosition(page.bounds);
 			let pageData = {
 				id: page.id,
