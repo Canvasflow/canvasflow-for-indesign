@@ -888,7 +888,7 @@ class Builder {
 			
 			if(!!page) {
 				if(!page.isValid) {
-					throw new Error(`⛔️ Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
+					throw new Error(`Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
 				}
 				if(!!page.allGraphics) {
 					for(const graphic of page.allGraphics) {
@@ -961,7 +961,7 @@ class Builder {
 			let pageIndex = pages.shift() - 1;
 			let page = document.pages[pageIndex];
 			if(!page.isValid) {
-				throw new Error(`⛔️ Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
+				throw new Error(`Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
 			}
 			let position = this.getItemPosition(page.bounds);
 			let pageData = {
