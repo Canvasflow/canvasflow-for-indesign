@@ -784,10 +784,13 @@ class Builder {
 		return baseFile.fsName + '.zip';
 	}
 
-	getDefaultPages(): Array<number> {
+	getDefaultPages(): Array<any> {
 		let pages = [];
 		for (let i = 0; i < this.document.pages.length; i++) {
-			pages.push(i + 1);
+			const page = this.document.pages[i];
+			if(page.isValid) {
+				pages.push(page.name);
+			}
 		}
 		return pages;
 	}
@@ -860,8 +863,11 @@ class Builder {
 		return pages;
 	}
 
-	getPagesToProcess(): Array<number> {
+	getPagesToProcess(): Array<any> {
 		let settingPages = this.savedSettings.pages;
+		if(!settingPages) {
+			return this.getDefaultPages();
+		}
 
 		const pages = [];
 		for(let item of settingPages.split(',')) {
