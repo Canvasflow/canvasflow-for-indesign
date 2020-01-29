@@ -863,32 +863,68 @@ class Builder {
 	getPagesToProcess(): Array<number> {
 		let settingPages = this.savedSettings.pages;
 
-		let pages = this.getDefaultPages();
-
-		if (!!settingPages) {
-			if (!!/^([0-9]+)(-)+([0-9]+)$/.exec(settingPages)) {
-				pages = this.getRangePages(settingPages);
-			} else if (!!/^(\d)+(,\d+)*$/.exec(settingPages)) {
-				pages = this.getCSVPages(settingPages);
+		const pages = [];
+		for(let item of settingPages.split(',')) {
+			if(/([0-9]*)-([0-9]*)/.test(item)) {
+				for(let page of this.getPagesFromRange(item)) {
+					pages.push(page);
+				}
 			} else {
-				throw new Error('The range for pages has an invalid syntax');
+				pages.push(parseInt(item));
 			}
+		}
+		return pages;
+	}
+
+	getPagesFromRange(range) {
+		const result = range.match(/([0-9]*)-([0-9]*)/);
+		let lower: number;
+		let higher: number;
+		let pages = [];
+
+		if(parseInt(result[1]) > parseInt(result[2])) {
+			lower = parseInt(result[2]);
+			higher = parseInt(result[1]);
+			for(let page = higher; page >= lower; page--) {
+				pages.push(page);
+			}
+		} else if(parseInt(result[1]) < parseInt(result[2])) {
+			lower = parseInt(result[1]);
+			higher = parseInt(result[2]);
+			for(let page = lower; page <= higher; page++) {
+				pages.push(page);
+			}
+		} else {
+			return [parseInt(result[1])];
 		}
 
 		return pages;
 	}
 
+	getInvalidPages() {
+		const document = app.activeDocument;
+		const invalidPages = []
+		const pages = [...this.getPagesToProcess()];
+		for(let pageNumber of pages) {
+			if(!document.pages.itemByName(`${pageNumber}`).isValid) {
+				invalidPages.push(pageNumber);
+			}
+		}
+
+		return invalidPages;
+	}
+
 	getMissingImages(): Array<string> {
 		const document = app.activeDocument;
 		const missingImages = [];
-		const pages = this.getPagesToProcess();
+		const pages = [...this.getPagesToProcess()];
 		do {
-			let pageIndex = pages.shift() - 1;
-			const page = document.pages[pageIndex];
+			const pageNumber = pages.shift();
+			const page = document.pages.itemByName(`${pageNumber}`);
 			
 			if(!!page) {
 				if(!page.isValid) {
-					throw new Error(`⛔️ Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
+					throw new Error(`Error\nPage number ${pageNumber} does not exist. Please enter a valid page range and try again`)
 				}
 				if(!!page.allGraphics) {
 					for(const graphic of page.allGraphics) {
@@ -957,23 +993,33 @@ class Builder {
 		w.progressBar.preferredSize.width = 300;
 		w.show();
 
+		let pageDataMapping = {};
+
 		do {
-			let pageIndex = pages.shift() - 1;
-			let page = document.pages[pageIndex];
-			if(!page.isValid) {
-				throw new Error(`⛔️ Error\nPage number ${pageIndex + 1} does not exist. Please enter a valid page range and try again`)
+			let pageData: any;
+			let pageNumber = pages.shift();
+			
+			if(!!pageDataMapping[`${pageNumber}`]) {
+				pageData = pageDataMapping[`${pageNumber}`];
+			} else {
+				let page = document.pages.itemByName(`${pageNumber}`);
+				if(!page.isValid) {
+					throw new Error(`Error\nPage number ${pageNumber} does not exist. Please enter a valid page range and try again`)
+				}
+				let position = this.getItemPosition(page.bounds);
+				pageData = {
+					id: page.id,
+					x: position.x,
+					y: position.y,
+					width: position.width,
+					height: position.height,
+					items: []
+				};
+				this.getTextFrames(page, pageData.items);
+				this.getImages(page, pageData.items, baseDirectory);
+				pageDataMapping[`${pageNumber}`] = pageData;
 			}
-			let position = this.getItemPosition(page.bounds);
-			let pageData = {
-				id: page.id,
-				x: position.x,
-				y: position.y,
-				width: position.width,
-				height: position.height,
-				items: []
-			};
-			this.getTextFrames(page, pageData.items);
-			this.getImages(page, pageData.items, baseDirectory);
+			
 			response.pages.push(pageData);
 			w.progressBar.value = w.progressBar.value + 1;
 			w.progressText.text = `Page ${w.progressBar.value} of ${totalOfPages}`;

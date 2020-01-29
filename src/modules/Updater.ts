@@ -22,7 +22,7 @@ class Updater {
 	update() {
 		let dataFile = new File(this.filePath);
 		if (!dataFile.exists) {
-			throw new Error(`⛔️ Error \nThe update file "${this.filePath}" do not exist \nPlease re-install the plugin`);
+			throw new Error(`Error \nThe update file "${this.filePath}" do not exist \nPlease re-install the plugin`);
 		}
 
 		dataFile.execute();
