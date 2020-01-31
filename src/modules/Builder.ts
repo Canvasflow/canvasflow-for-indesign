@@ -382,9 +382,17 @@ class Builder {
 					StoryID = textFrame.parentStory.id;
 				} catch (e) {}
 
+				let tag;
+				try {
+					tag = textFrame.parentStory.associatedXMLElement.properties.markupTag.name;
+				} catch(e) {
+					tag = undefined;
+				}
+
 				data.push({
 					type: 'TextFrame',
 					id: textFrame.id,
+					tag: tag,
 					label: textFrame.label,
 					storyId: StoryID,
 					next: next,
@@ -545,9 +553,18 @@ class Builder {
 				let imagePath = this.saveGraphicToImage(graphic, imageDirectory);
 				let position = this.getItemPosition(graphic.parent.geometricBounds);
 				let visibleBounds = this.getVisibleBounds(graphic);
+
+				let tag;
+				try {
+					tag = graphic.associatedXMLElement.properties.markupTag.name
+				} catch(e) {
+					tag = undefined;
+				}
+
 				data.push({
 					type: 'Image',
 					id: graphic.id,
+					tag: tag,
 					label: graphic.label,
 					content: imagePath,
 					width: position.width,
