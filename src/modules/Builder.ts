@@ -551,8 +551,8 @@ class Builder {
 		for(let graphic of graphics) {
 			if (graphic.isValid && graphic.visible && !!graphic.itemLayer.visible) {
 				let imagePath = this.saveGraphicToImage(graphic, imageDirectory);
-				let position = this.getItemPosition(graphic.parent.geometricBounds);
-				let visibleBounds = this.getVisibleBounds(graphic);
+				let position = this.getItemPosition(graphic.parent.visibleBounds);
+				let image = this.getItemPosition(graphic.geometricBounds);
 
 				let tag;
 				try {
@@ -570,7 +570,7 @@ class Builder {
 					width: position.width,
 					height: position.height,
 					position: position,
-					visibleBounds: visibleBounds
+					image: image
 				});
 			}
 		}
