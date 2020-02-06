@@ -57,7 +57,7 @@ class AboutDialog {
 		}
 
 		this.dialog.add('statictext', [0, 0, labelWidth, 0], '');
-		let copyright = this.dialog.add('statictext', undefined, '\u00A9 2015-2019 Canvasflow Ltd');
+		let copyright = this.dialog.add('statictext', undefined, '\u00A9 2015-2020 Canvasflow Ltd');
 		copyright.alignment = 'left';	
 
 		this.dialog.buttonsBarGroup = this.dialog.add('group', undefined, 'buttons');
