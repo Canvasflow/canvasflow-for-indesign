@@ -315,14 +315,7 @@ class Publisher {
 	}
 
 	isValidPagesSyntax(input: any) {
-		if (!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
-			return this.isValidPagesRangeSyntax(input);
-		} else if (!!/^(\d)+(,\d+)*$/.exec(input)) {
-			return true;
-		}
-
-		alert('The range for pages has an invalid syntax');
-		return false;
+		return !!input.match(/^(\d+(-\d+)?)(,\d+(-\d+)?)*$/);
 	}
 
 	displayStyles(settingsDialog: any) {
@@ -561,10 +554,11 @@ class Publisher {
 		this.displayStyles(dialog);
 
 		dialog.buttonsBarGroup.saveBtn.onClick = () => {
-			let pages = dialog.pagesGroup.pages.text;
+			let pages = dialog.pagesGroup.pages.text.replace(/\s/g,'');
 
 			if (!!pages.length) {
 				if (!this.isValidPagesSyntax(pages)) {
+					alert('The page syntax is invalid');
 					return;
 				}
 			}
@@ -598,6 +592,12 @@ class Publisher {
 				this.filePath = `${baseDirectory}${app.activeDocument.name}`; 
 				this.baseDirectory = `${baseDirectory}${app.activeDocument.name.replace(`.${ext}`, '')}`;
 				this.builder.savedSettings = this.savedSettings;
+
+				const invalidPages = this.builder.getInvalidPages();
+				if(!!invalidPages.length) {
+					alert(`The following pages do not exist in the article: ${invalidPages.join(', ')}`)
+					return;
+				}
 				
 				// Search if there are unlinked images
 				const missingImages = this.builder.getMissingImages();

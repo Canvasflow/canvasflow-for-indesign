@@ -135,14 +135,7 @@ class SettingsDialog {
 	}
 
 	isValidPagesSyntax(input: any) {
-		if (!!/^([0-9]+)(-)+([0-9]+)$/.exec(input)) {
-			return this.isValidPagesRangeSyntax(input);
-		} else if (!!/^(\d)+(,\d+)*$/.exec(input)) {
-			return true;
-		}
-
-		alert('The range for pages has an invalid syntax');
-		return false;
+		return /^[0-9]+(?:(?:\s*,\s*|-)[0-9]+)*$/.test(input);
 	}
 
 	hidePublication(settingsDialog: any) {
@@ -692,7 +685,7 @@ class SettingsDialog {
 		);
 		this.settingsDialog.pagesGroup.visible = false;
 		if (!!this.settings.pages) {
-			this.settingsDialog.pagesGroup.pages.text = this.settings.pages;
+			this.settingsDialog.pagesGroup.pages.text = this.settings.pages.replace(/\s/g,'');
 		}
 
 		if (!!this.isValidApiKey) {
@@ -733,10 +726,11 @@ class SettingsDialog {
 					this.settings.endpoint = this.endpoints[this.settingsDialog.endpointDropDownGroup.dropDown.selection.index].id;
 				}
 
-				let pages = this.settingsDialog.pagesGroup.pages.text;
+				let pages = this.settingsDialog.pagesGroup.pages.text.replace(/\s/g,'');
 
 				if (!!pages.length) {
 					if (!this.isValidPagesSyntax(pages)) {
+						alert('The range for pages has an invalid syntax');
 						return;
 					}
 				}
