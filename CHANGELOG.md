@@ -1,4 +1,7 @@
 # Changelog
+## [1.0.1] - 2020-02-06
+- Remove script that throws an error when installing
+
 ## [1.0.0] - 2020-02-06
 - Send `visibleBounds` for images
 - Refactor `pages` input
