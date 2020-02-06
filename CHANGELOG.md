@@ -1,4 +1,9 @@
 # Changelog
+## [1.0.0] - 2020-02-06
+- Send `visibleBounds` for images
+- Refactor `pages` input
+- Support for `tags` in `Textframes` and `Images`
+
 ## [0.16.0] - 2019-12-17
 - Send `os` and plugin `version` on publish for debugging
 - Take `env` variable `CF_USER_BASE_PATH` into account when `installing/updating` with `install.sh`
