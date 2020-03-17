@@ -64,7 +64,7 @@ class SettingsDialog {
 		this.logger = logger;
 		this.document = app.activeDocument;
 
-		this.creationModeOptions = ['Document', 'Page'];
+		this.creationModeOptions = ['Template', 'Document', 'Page'];
 		// @ts-ignore
 		this.creationModeOptionsValues = this.creationModeOptions.map((option: string) => option.toLowerCase());
 	}
@@ -94,6 +94,15 @@ class SettingsDialog {
 		}
 		return null;
 	}
+
+	hideTemplateOption(dialog: any) {
+		dialog.templateDropDownGroup.visible = false;
+	}
+
+	showTemplateOption(dialog: any) {
+		dialog.templateDropDownGroup.visible = true;
+	}
+
 
 	getItemByID(items: any, id: any) {
 		let matches = items.filter((item: any) => item.id == id);
@@ -283,6 +292,9 @@ class SettingsDialog {
 		}
 		settingsDialog.templateDropDownGroup.dropDown.selection = selection;
 		settingsDialog.templateDropDownGroup.visible = true;
+		if(this.settings.creationMode !== 'template') {
+			this.hideTemplateOption(settingsDialog);
+		}
 	}
 
 	displayStyles(settingsDialog: any, PublicationID: any) {
@@ -594,6 +606,11 @@ class SettingsDialog {
 		this.settingsDialog.creationModeDropDownGroup.visible = false;
 		this.settingsDialog.creationModeDropDownGroup.dropDown.onChange = () => {
 			this.settings.creationMode = this.creationModeOptionsValues[this.settingsDialog.creationModeDropDownGroup.dropDown.selection.index];
+			if(this.settings.creationMode === 'template') {
+				this.showTemplateOption(this.settingsDialog);
+			} else {
+				this.hideTemplateOption(this.settingsDialog)
+			}
 		};
 
 		// Add Article Content Order
@@ -643,6 +660,10 @@ class SettingsDialog {
 			this.settings.TemplateID =`${this.templates[this.settingsDialog.templateDropDownGroup.dropDown.selection.index].id}`;
 			this.onTemplateChange();
 		};
+
+		if(this.settings.creationMode !== 'template') {
+			this.hideTemplateOption(this.settingsDialog);
+		}
 
 		// STYLES
 		this.settingsDialog.styleDropDownGroup = this.settingsDialog.add(
@@ -734,6 +755,10 @@ class SettingsDialog {
 				if (this.publicationType === 'issue' && !this.settings.IssueID) {
 					alert('Warning \nThis Publication has no Issues. Please create an Issue and try again.');
 					return;
+				}
+
+				if(this.settings.creationMode !== 'template') {
+					this.settings.TemplateID = '-1';
 				}
 
 				this.canvasflowSettings.save(this.settings);
