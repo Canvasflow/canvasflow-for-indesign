@@ -25,6 +25,7 @@ class SettingsDialog {
 	private document: Document;
 
 	public creationModeOptions: Array<string>;
+	public creationModeOptionsValues: Array<string>;
 
 	constructor(canvasflowSettingsPath: string, internal: boolean, logger: Logger) {
 		this.canvasflowSettings = new Settings(canvasflowSettingsPath);
@@ -64,6 +65,8 @@ class SettingsDialog {
 		this.document = app.activeDocument;
 
 		this.creationModeOptions = ['Document', 'Page'];
+		// @ts-ignore
+		this.creationModeOptionsValues = this.creationModeOptions.map((option: string) => option.toLowerCase());
 	}
 
 	validateApiKey(canvasflowApi, apiKey) {
@@ -368,14 +371,9 @@ class SettingsDialog {
 
 	displayArticleCreationMode(settingsDialog: any) {
 		settingsDialog.creationModeDropDownGroup.visible = true;
-		let selection = 0;
-		let creationMode = 'document';
-		if (this.settings.creationMode === 'page') {
-			creationMode = 'page';
-			selection = 1;
-		}
-
-		this.settings.creationMode = creationMode;
+		
+		// @ts-ignore
+		let selection = this.creationModeOptionsValues.indexOf(this.settings.creationMode);
 
 		settingsDialog.creationModeDropDownGroup.dropDown.selection = selection;
 	}
@@ -577,7 +575,7 @@ class SettingsDialog {
 		};
 
 		// CREATION MODE
-		let creationModeOptions = ['Document', 'Page'];
+		let creationModeOptions = this.creationModeOptions;
 		this.settingsDialog.creationModeDropDownGroup = this.settingsDialog.add(
 			'group',
 			undefined,
@@ -595,11 +593,7 @@ class SettingsDialog {
 		);
 		this.settingsDialog.creationModeDropDownGroup.visible = false;
 		this.settingsDialog.creationModeDropDownGroup.dropDown.onChange = () => {
-			if (this.settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 0) {
-				this.settings.creationMode = 'document';
-			} else {
-				this.settings.creationMode = 'page';
-			}
+			this.settings.creationMode = this.creationModeOptionsValues[this.settingsDialog.creationModeDropDownGroup.dropDown.selection.index];
 		};
 
 		// Add Article Content Order
