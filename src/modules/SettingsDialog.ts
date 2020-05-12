@@ -25,6 +25,7 @@ class SettingsDialog {
 	private document: Document;
 
 	public creationModeOptions: Array<string>;
+	public creationModeOptionsValues: Array<string>;
 
 	constructor(canvasflowSettingsPath: string, internal: boolean, logger: Logger) {
 		this.canvasflowSettings = new Settings(canvasflowSettingsPath);
@@ -63,7 +64,9 @@ class SettingsDialog {
 		this.logger = logger;
 		this.document = app.activeDocument;
 
-		this.creationModeOptions = ['Document', 'Page'];
+		this.creationModeOptions = ['Template', 'Document', 'Page'];
+		// @ts-ignore
+		this.creationModeOptionsValues = this.creationModeOptions.map((option: string) => option.toLowerCase());
 	}
 
 	validateApiKey(canvasflowApi, apiKey) {
@@ -91,6 +94,15 @@ class SettingsDialog {
 		}
 		return null;
 	}
+
+	hideTemplateOption(dialog: any) {
+		dialog.templateDropDownGroup.visible = false;
+	}
+
+	showTemplateOption(dialog: any) {
+		dialog.templateDropDownGroup.visible = true;
+	}
+
 
 	getItemByID(items: any, id: any) {
 		let matches = items.filter((item: any) => item.id == id);
@@ -280,6 +292,9 @@ class SettingsDialog {
 		}
 		settingsDialog.templateDropDownGroup.dropDown.selection = selection;
 		settingsDialog.templateDropDownGroup.visible = true;
+		if(this.settings.creationMode !== 'template') {
+			this.hideTemplateOption(settingsDialog);
+		}
 	}
 
 	displayStyles(settingsDialog: any, PublicationID: any) {
@@ -368,14 +383,9 @@ class SettingsDialog {
 
 	displayArticleCreationMode(settingsDialog: any) {
 		settingsDialog.creationModeDropDownGroup.visible = true;
-		let selection = 0;
-		let creationMode = 'document';
-		if (this.settings.creationMode === 'page') {
-			creationMode = 'page';
-			selection = 1;
-		}
-
-		this.settings.creationMode = creationMode;
+		
+		// @ts-ignore
+		let selection = this.creationModeOptionsValues.indexOf(this.settings.creationMode);
 
 		settingsDialog.creationModeDropDownGroup.dropDown.selection = selection;
 	}
@@ -577,7 +587,7 @@ class SettingsDialog {
 		};
 
 		// CREATION MODE
-		let creationModeOptions = ['Document', 'Page'];
+		let creationModeOptions = this.creationModeOptions;
 		this.settingsDialog.creationModeDropDownGroup = this.settingsDialog.add(
 			'group',
 			undefined,
@@ -595,10 +605,11 @@ class SettingsDialog {
 		);
 		this.settingsDialog.creationModeDropDownGroup.visible = false;
 		this.settingsDialog.creationModeDropDownGroup.dropDown.onChange = () => {
-			if (this.settingsDialog.creationModeDropDownGroup.dropDown.selection.index === 0) {
-				this.settings.creationMode = 'document';
+			this.settings.creationMode = this.creationModeOptionsValues[this.settingsDialog.creationModeDropDownGroup.dropDown.selection.index];
+			if(this.settings.creationMode === 'template') {
+				this.showTemplateOption(this.settingsDialog);
 			} else {
-				this.settings.creationMode = 'page';
+				this.hideTemplateOption(this.settingsDialog)
 			}
 		};
 
@@ -649,6 +660,10 @@ class SettingsDialog {
 			this.settings.TemplateID =`${this.templates[this.settingsDialog.templateDropDownGroup.dropDown.selection.index].id}`;
 			this.onTemplateChange();
 		};
+
+		if(this.settings.creationMode !== 'template') {
+			this.hideTemplateOption(this.settingsDialog);
+		}
 
 		// STYLES
 		this.settingsDialog.styleDropDownGroup = this.settingsDialog.add(
@@ -740,6 +755,10 @@ class SettingsDialog {
 				if (this.publicationType === 'issue' && !this.settings.IssueID) {
 					alert('Warning \nThis Publication has no Issues. Please create an Issue and try again.');
 					return;
+				}
+
+				if(this.settings.creationMode !== 'template') {
+					this.settings.TemplateID = '-1';
 				}
 
 				this.canvasflowSettings.save(this.settings);

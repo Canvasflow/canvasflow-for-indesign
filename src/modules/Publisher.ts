@@ -109,7 +109,7 @@ class Publisher {
 		let IssueID = this.savedSettings.IssueID || '';
 		let TemplateID = this.savedSettings.TemplateID || '';
 		let StyleID = this.savedSettings.StyleID || '';
-		let creationMode = this.savedSettings.creationMode || 'document';
+		let creationMode = this.savedSettings.creationMode || 'template';
 		let contentOrder = this.savedSettings.contentOrder || 'natural';
 
 		if (conn.open(host, 'BINARY')) {
@@ -341,6 +341,20 @@ class Publisher {
 		this.displayStyles(dialog);
 	}
 
+	hideTemplateOption(dialog: any) {
+		this.savedSettings.TemplateID = '-1';
+
+		dialog.templateGroup.visible = false;
+		this.onTemplateChange(dialog);
+	}
+
+	showTemplateOption(dialog: any) {
+		this.savedSettings.TemplateID = '-1';
+
+		dialog.templateGroup.visible = true;
+		this.onTemplateChange(dialog);
+	}
+
 	displayConfirmDialog() {
 		// @ts-ignore
 		let dialog = new Window('dialog', 'Publish to Canvasflow', undefined, {
@@ -425,6 +439,67 @@ class Publisher {
 			};
 		}
 
+		// STYLEs
+		let styles = this.getStyles();
+		this.styles = styles;
+		let style = this.getStyle(styles);
+		dialog.styleGroup = dialog.add('group');
+		dialog.styleGroup.orientation = 'row';
+		dialog.styleGroup.add('statictext', defaultLabelDim, 'Style');
+		dialog.styleGroup.dropDown = this.createDropDownList(
+			dialog.styleGroup,
+			this.getItemsName(styles)
+		);
+		dialog.styleGroup.dropDown.selection = this.getSelectedIndex(
+			styles,
+			style.id
+		);
+		dialog.styleGroup.dropDown.helpTip = 'The Style applied when published.';
+		dialog.styleGroup.dropDown.onChange = () => {
+			this.savedSettings.StyleID = `${styles[dialog.styleGroup.dropDown.selection.index].id}`;
+		};
+
+		// Creation Mode
+		let creationModeOptions = ['Template', 'Document', 'Page'];
+		
+		// @ts-ignore
+		let creationModeOptionsValues = creationModeOptions.map((option: string) => option.toLowerCase());
+
+		dialog.creationModeGroup = dialog.add('group');
+		dialog.creationModeGroup.orientation = 'row';
+		dialog.creationModeGroup.add(
+			'statictext',
+			defaultLabelDim,
+			'Article Creation'
+		);
+		dialog.creationModeGroup.dropDown = this.createDropDownList(
+			dialog.creationModeGroup,
+			creationModeOptions
+		);
+		dialog.creationModeGroup.dropDown.helpTip = 'Whether a single or multiple articles will be created.';
+		dialog.creationModeGroup.dropDown.selection = creationModeOptionsValues.indexOf(this.savedSettings.creationMode);
+		/*if (this.savedSettings.creationMode === 'template') {
+			dialog.creationModeGroup.dropDown.selection = 0;
+		} else if(this.savedSettings.creationMode === 'document') {
+			dialog.creationModeGroup.dropDown.selection = 1;
+		} else {
+			dialog.creationModeGroup.dropDown.selection = 2;
+		}*/
+
+		dialog.creationModeGroup.dropDown.onChange = () => {
+			this.savedSettings.creationMode = creationModeOptionsValues[dialog.creationModeGroup.dropDown.selection.index];
+			if(this.savedSettings.creationMode === 'template') {
+				this.showTemplateOption(dialog);
+			} else {
+				this.hideTemplateOption(dialog);
+			}
+			/*if (dialog.creationModeGroup.dropDown.selection.index === 0) {
+				this.savedSettings.creationMode = 'template';
+			} else {
+				this.savedSettings.creationMode = 'page';
+			}*/
+		};
+
 		// TEMPLATES
 		let templates = [this.templateDefault].concat(this.getTemplates());
 		let template = this.getTemplate(templates);
@@ -451,52 +526,10 @@ class Publisher {
 			}
 		};
 
-		// STYLEs
-		let styles = this.getStyles();
-		this.styles = styles;
-		let style = this.getStyle(styles);
-		dialog.styleGroup = dialog.add('group');
-		dialog.styleGroup.orientation = 'row';
-		dialog.styleGroup.add('statictext', defaultLabelDim, 'Style');
-		dialog.styleGroup.dropDown = this.createDropDownList(
-			dialog.styleGroup,
-			this.getItemsName(styles)
-		);
-		dialog.styleGroup.dropDown.selection = this.getSelectedIndex(
-			styles,
-			style.id
-		);
-		dialog.styleGroup.dropDown.helpTip = 'The Style applied when published.';
-		dialog.styleGroup.dropDown.onChange = () => {
-			this.savedSettings.StyleID = `${styles[dialog.styleGroup.dropDown.selection.index].id}`;
-		};
-
-		// Creation Mode
-		let creationModeOptions = ['Document', 'Page'];
-		dialog.creationModeGroup = dialog.add('group');
-		dialog.creationModeGroup.orientation = 'row';
-		dialog.creationModeGroup.add(
-			'statictext',
-			defaultLabelDim,
-			'Article Creation'
-		);
-		dialog.creationModeGroup.dropDown = this.createDropDownList(
-			dialog.creationModeGroup,
-			creationModeOptions
-		);
-		dialog.creationModeGroup.dropDown.helpTip = 'Whether a single or multiple articles will be created.';
-		if (this.savedSettings.creationMode === 'document') {
-			dialog.creationModeGroup.dropDown.selection = 0;
-		} else {
-			dialog.creationModeGroup.dropDown.selection = 1;
+		// Hide template option if the creation mode is not template
+		if(this.savedSettings.creationMode !== 'template') {
+			this.hideTemplateOption(dialog);
 		}
-		dialog.creationModeGroup.dropDown.onChange = () => {
-			if (dialog.creationModeGroup.dropDown.selection.index === 0) {
-				this.savedSettings.creationMode = 'document';
-			} else {
-				this.savedSettings.creationMode = 'page';
-			}
-		};
 
 		// Article Content Order
 		let contentOrderOptions = ['Natural'];
