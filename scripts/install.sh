@@ -17,38 +17,50 @@ else
 fi
 
 cd "/Applications"
-cd "`ls | grep -E 'Adobe InDesign*'`"
-cd "./Scripts/startup scripts"
+IFS_backup=$IFS
+IFS=$'\n'
+targets=($(ls | grep -E 'Adobe InDesign*'))
+app_dir=($(pwd))
+for target in "${targets[@]}"
+do
+    echo "----------------------"
+    echo "Processing '${target}'"
+    echo "----------------------"
+    echo ""
+    start_up_path="${app_dir}/${target}/Scripts/startup scripts";
+    # echo "${start_up_path}"
+    cd "$start_up_path"
+    # Try to remove existing installation if exist
+    sudo rm -f Canvasflow.jsx & echo "✅ Remove old plugin"
 
-# Try to remove existing installation if exist
-sudo rm -f Canvasflow.jsx && echo "✅ Remove old plugin"
+    # Download new version of the plugin
+    sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v1.1.0/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
 
-# Download new version of the plugin
-sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v1.1.0/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
+    # Create base directory
+    [[ -z "$CF_USER_BASE_PATH" ]] && cd ~ || cd $CF_USER_BASE_PATH
+    mkdir -p cf-indesign && cd cf-indesign && echo "✅ Create base directory"
 
-# Create plugin installation folder
+    # Create resize command
+    touch canvasflow_resize.command && chmod +x canvasflow_resize.command && echo "✅ Create resize command"
 
-# Create base directory
-[[ -z "$CF_USER_BASE_PATH" ]] && cd ~ || cd $CF_USER_BASE_PATH
-mkdir -p cf-indesign && cd cf-indesign && echo "✅ Create base directory"
+    # Create convert command
+    touch canvasflow_convert.command && chmod +x canvasflow_convert.command && echo "✅ Create convert command"
 
-# Create resize command
-touch canvasflow_resize.command && chmod +x canvasflow_resize.command && echo "✅ Create resize command"
+    # Create Update Script
+    rm -f Update.command
+    echo '#!/bin/bash' >> Update.command
+    echo '' >> Update.command
+    echo 'curl https://raw.githubusercontent.com/Canvasflow/canvasflow-for-indesign/master/scripts/install.sh | bash' >> Update.command
+    chmod +x Update.command
 
-# Create convert command
-touch canvasflow_convert.command && chmod +x canvasflow_convert.command && echo "✅ Create convert command"
+    chmod -R 777 .
 
-# Create Update Script
-rm -f Update.command
-echo '#!/bin/bash' >> Update.command
-echo '' >> Update.command
-echo 'curl https://raw.githubusercontent.com/Canvasflow/canvasflow-for-indesign/master/scripts/install.sh | bash' >> Update.command
-chmod +x Update.command
+    echo "✅ Create update command"
+    echo ""
+    
+done
+IFS=$IFS_backup
 
-chmod -R 777 .
-
-echo "✅ Create update command"
-echo ""
 echo "🙌 Installation Complete"
 echo ""
 echo "Installation path: $(pwd)"
