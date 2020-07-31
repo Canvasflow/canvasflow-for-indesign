@@ -24,11 +24,11 @@ app_dir=($(pwd))
 for target in "${targets[@]}"
 do
     echo "----------------------"
-    echo "Processing '${target}'"
+    echo "Processing '$target'"
     echo "----------------------"
     echo ""
-    start_up_path="${app_dir}/${target}/Scripts/startup scripts";
-    # echo "${start_up_path}"
+    start_up_path="$app_dir/$target/Scripts/startup scripts";
+    # echo "$start_up_path"
     cd "$start_up_path"
     # Try to remove existing installation if exist
     sudo rm -f Canvasflow.jsx & echo "✅ Remove old plugin"
@@ -60,10 +60,9 @@ do
     
 done
 IFS=$IFS_backup
-
 echo "🙌 Installation Complete"
-echo ""
-echo "Installation path: $(pwd)"
+    echo ""
+    echo "Installation path: $(pwd)"
 echo "Please restart InDesign to apply the changes"
 echo ""
 read -p "Press Enter to close"
