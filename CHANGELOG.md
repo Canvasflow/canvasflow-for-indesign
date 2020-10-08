@@ -1,4 +1,7 @@
 # Changelog
+## [1.1.1] - 2020-10-08
+- Remove `\ufffc` character in text components
+  
 ## [1.0.1] - 2020-02-06
 - Remove script that throws an error when installing
 

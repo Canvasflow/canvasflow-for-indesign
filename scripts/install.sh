@@ -34,7 +34,7 @@ do
     sudo rm -f Canvasflow.jsx & echo "✅ Remove old plugin"
 
     # Download new version of the plugin
-    sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v1.1.0/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
+    sudo curl -s -L https://github.com/Canvasflow/canvasflow-for-indesign/releases/download/v1.1.1/Canvasflow.jsx -o Canvasflow.jsx && echo "✅ Download new version"
 
     # Create base directory
     [[ -z "$CF_USER_BASE_PATH" ]] && cd ~ || cd $CF_USER_BASE_PATH
