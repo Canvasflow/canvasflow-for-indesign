@@ -140,9 +140,11 @@ class Builder {
 	cleanSubstringContent(substring: any) {
 		try {
 			if (typeof substring === 'string') {
-				return substring.replace(/(1396984945)*/, '\u201C');
+				return substring.replace(/(1396984945)*/, '\u201C')
+				.replace(/\ufffc/gi, '');
 			}
-			return substring.toString().replace(/(1396984945)*/, '\u201C');
+			return substring.toString().replace(/(1396984945)*/, '\u201C')
+			.replace(/\ufffc/gi, '');
 		} catch(e) {
 			return substring;
 		}
@@ -307,7 +309,7 @@ class Builder {
 		}
 
 		if (substring !== null) {
-			substring.content = this.cleanSubstringContent(substring.content);
+			substring.content = this.cleanSubstringContent(substring.content).replace(/\ufffc/gi, '');
 			data.push(substring);
 		}
 
@@ -338,7 +340,7 @@ class Builder {
 			}
 
 			response.push({
-				content: paragraph.contents,
+				content: paragraph.contents.replace(/\ufffc/gi, ''),
 				font: {
 					fontFamily: paragraph.appliedFont.fontFamily,
 					fontSize: paragraph.pointSize
@@ -397,7 +399,7 @@ class Builder {
 					storyId: StoryID,
 					next: next,
 					previous: previous,
-					content: textFrame.contents,
+					content: textFrame.contents.replace(/\ufffc/gi, ''),
 					width: position.width,
 					height: position.height,
 					font: this.getFontFromParagraphs(textFrame),
@@ -1006,7 +1008,7 @@ class Builder {
 		app.activeDocument.viewPreferences.verticalMeasurementUnits = 2054187384;
 
 		// @ts-ignore
-		let w = new Window('palette', 'Processing pages');
+		let w: any = new Window('palette', 'Processing pages');
 		w.progressBar = w.add('progressbar', undefined, 0, totalOfPages);
 		w.progressText = w.add(
 			'statictext',
